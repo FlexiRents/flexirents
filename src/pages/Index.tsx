@@ -1,12 +1,167 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Building2, Home, Users, CheckCircle } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import heroImage from "@/assets/hero-property.jpg";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen">
+      <Navbar />
+
+      {/* Hero Section */}
+      <section className="relative pt-16 min-h-[600px] flex items-center">
+        <div className="absolute inset-0 z-0">
+          <img
+            src={heroImage}
+            alt="Modern luxury property"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70" />
+        </div>
+        
+        <div className="container mx-auto px-4 py-20 relative z-10">
+          <div className="max-w-2xl text-primary-foreground">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              Find Your Perfect Space with FlexiRents
+            </h1>
+            <p className="text-xl mb-8 opacity-90">
+              Discover premium properties for rent or sale, plus personalized assistance services tailored to your needs.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button variant="hero" size="xl" asChild>
+                <Link to="/rentals">
+                  Browse Rentals <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="xl" asChild className="bg-background/10 backdrop-blur-sm border-primary-foreground text-primary-foreground hover:bg-background/20">
+                <Link to="/flexi-assist">Flexi-Assist Services</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-secondary/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Why Choose FlexiRents?</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              We offer comprehensive property solutions and personalized services all in one place.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-card p-8 rounded-lg shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4">
+                <Building2 className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Property Rentals</h3>
+              <p className="text-muted-foreground mb-4">
+                From cozy 1-bedrooms to spacious family apartments. Find your ideal rental property.
+              </p>
+              <Link to="/rentals" className="text-accent font-semibold hover:underline inline-flex items-center">
+                Explore Rentals <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="bg-card p-8 rounded-lg shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4">
+                <Home className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Properties for Sale</h3>
+              <p className="text-muted-foreground mb-4">
+                Invest in homes, commercial properties, or land. Build your real estate portfolio.
+              </p>
+              <Link to="/sales" className="text-accent font-semibold hover:underline inline-flex items-center">
+                View Properties <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="bg-card p-8 rounded-lg shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4">
+                <Users className="h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">Flexi-Assist Services</h3>
+              <p className="text-muted-foreground mb-4">
+                Personal assistance from drivers to caregivers. Get help when you need it.
+              </p>
+              <Link to="/flexi-assist" className="text-accent font-semibold hover:underline inline-flex items-center">
+                Book Services <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-4xl font-bold mb-8">Trust & Transparency</h2>
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div className="flex gap-3">
+                <CheckCircle className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="font-semibold mb-1">Verified Properties</h4>
+                  <p className="text-muted-foreground text-sm">
+                    All properties undergo thorough verification before listing.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <CheckCircle className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="font-semibold mb-1">Transparent Pricing</h4>
+                  <p className="text-muted-foreground text-sm">
+                    Clear pricing with no hidden fees. What you see is what you pay.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <CheckCircle className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="font-semibold mb-1">Vetted Service Providers</h4>
+                  <p className="text-muted-foreground text-sm">
+                    All Flexi-Assist professionals are background-checked and rated.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <CheckCircle className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
+                <div>
+                  <h4 className="font-semibold mb-1">24/7 Support</h4>
+                  <p className="text-muted-foreground text-sm">
+                    Our team is always available to assist with your needs.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-[var(--gradient-hero)]">
+        <div className="container mx-auto px-4 text-center text-primary-foreground">
+          <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Whether you're looking for a property or need assistance services, FlexiRents has you covered.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Button variant="hero" size="xl" asChild>
+              <Link to="/rentals">Find Properties</Link>
+            </Button>
+            <Button variant="outline" size="xl" asChild className="bg-background/10 backdrop-blur-sm border-primary-foreground text-primary-foreground hover:bg-background/20">
+              <Link to="/list-property">List Your Property</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };

@@ -8,7 +8,174 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ChevronDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+const propertyDescriptions = [
+  "Newly Renovated",
+  "Move-in Ready",
+  "Pet Friendly",
+  "Furnished",
+  "Unfurnished",
+  "Corner Unit",
+  "High Ceilings",
+  "Natural Light",
+  "Open Floor Plan",
+  "Hardwood Floors",
+];
+
+const propertyAmenities = [
+  "Swimming Pool",
+  "Gym/Fitness Center",
+  "Parking Space",
+  "Balcony/Terrace",
+  "Air Conditioning",
+  "Heating",
+  "Laundry Room",
+  "Storage Unit",
+  "Garden/Yard",
+  "Security System",
+  "Elevator",
+  "Wheelchair Accessible",
+];
+
+const propertyFacilities = [
+  "24/7 Security",
+  "Concierge Service",
+  "Playground",
+  "BBQ Area",
+  "Community Center",
+  "Business Center",
+  "Guest Parking",
+  "Bike Storage",
+  "Pet Spa",
+  "Rooftop Deck",
+  "Package Room",
+  "EV Charging",
+];
+
+interface PropertyFeaturesSectionProps {
+  formData: any;
+  setFormData: (data: any) => void;
+}
+
+const PropertyFeaturesSection = ({ formData, setFormData }: PropertyFeaturesSectionProps) => {
+  const [openSections, setOpenSections] = useState({
+    descriptions: false,
+    amenities: false,
+    facilities: false,
+  });
+
+  const handleFeatureToggle = (category: "descriptions" | "amenities" | "facilities", feature: string) => {
+    const currentFeatures = formData.features[category];
+    const newFeatures = currentFeatures.includes(feature)
+      ? currentFeatures.filter((f: string) => f !== feature)
+      : [...currentFeatures, feature];
+    
+    setFormData({
+      ...formData,
+      features: {
+        ...formData.features,
+        [category]: newFeatures,
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Descriptions */}
+      <Collapsible
+        open={openSections.descriptions}
+        onOpenChange={(open) => setOpenSections({ ...openSections, descriptions: open })}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors">
+          <span className="font-semibold">Property Descriptions</span>
+          <ChevronDown className={`h-5 w-5 transition-transform ${openSections.descriptions ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-4 pl-4">
+          <div className="grid grid-cols-2 gap-3">
+            {propertyDescriptions.map((desc) => (
+              <div key={desc} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`desc-${desc}`}
+                  checked={formData.features.descriptions.includes(desc)}
+                  onCheckedChange={() => handleFeatureToggle("descriptions", desc)}
+                />
+                <label
+                  htmlFor={`desc-${desc}`}
+                  className="text-sm cursor-pointer select-none"
+                >
+                  {desc}
+                </label>
+              </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Amenities */}
+      <Collapsible
+        open={openSections.amenities}
+        onOpenChange={(open) => setOpenSections({ ...openSections, amenities: open })}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors">
+          <span className="font-semibold">Amenities</span>
+          <ChevronDown className={`h-5 w-5 transition-transform ${openSections.amenities ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-4 pl-4">
+          <div className="grid grid-cols-2 gap-3">
+            {propertyAmenities.map((amenity) => (
+              <div key={amenity} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`amenity-${amenity}`}
+                  checked={formData.features.amenities.includes(amenity)}
+                  onCheckedChange={() => handleFeatureToggle("amenities", amenity)}
+                />
+                <label
+                  htmlFor={`amenity-${amenity}`}
+                  className="text-sm cursor-pointer select-none"
+                >
+                  {amenity}
+                </label>
+              </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Facilities */}
+      <Collapsible
+        open={openSections.facilities}
+        onOpenChange={(open) => setOpenSections({ ...openSections, facilities: open })}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors">
+          <span className="font-semibold">Facilities</span>
+          <ChevronDown className={`h-5 w-5 transition-transform ${openSections.facilities ? "rotate-180" : ""}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-4 pl-4">
+          <div className="grid grid-cols-2 gap-3">
+            {propertyFacilities.map((facility) => (
+              <div key={facility} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`facility-${facility}`}
+                  checked={formData.features.facilities.includes(facility)}
+                  onCheckedChange={() => handleFeatureToggle("facilities", facility)}
+                />
+                <label
+                  htmlFor={`facility-${facility}`}
+                  className="text-sm cursor-pointer select-none"
+                >
+                  {facility}
+                </label>
+              </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+};
 
 const ListProperty = () => {
   const { toast } = useToast();
@@ -24,6 +191,11 @@ const ListProperty = () => {
     ownerName: "",
     ownerEmail: "",
     ownerPhone: "",
+    features: {
+      descriptions: [] as string[],
+      amenities: [] as string[],
+      facilities: [] as string[],
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -47,6 +219,11 @@ const ListProperty = () => {
       ownerName: "",
       ownerEmail: "",
       ownerPhone: "",
+      features: {
+        descriptions: [],
+        amenities: [],
+        facilities: [],
+      },
     });
   };
 
@@ -203,6 +380,16 @@ const ListProperty = () => {
                     placeholder="Describe your property's features and amenities"
                     rows={4}
                     required
+                  />
+                </div>
+
+                {/* Property Features */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Property Features</h3>
+                  
+                  <PropertyFeaturesSection
+                    formData={formData}
+                    setFormData={setFormData}
                   />
                 </div>
 

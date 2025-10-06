@@ -18,6 +18,11 @@ const rentals = [
     sqft: 650,
     location: "Downtown District",
     type: "rent" as const,
+    features: {
+      descriptions: ["Newly Renovated", "Move-in Ready", "High Ceilings"],
+      amenities: ["Air Conditioning", "Heating", "Balcony/Terrace", "Parking Space"],
+      facilities: ["24/7 Security", "Elevator", "Package Room"],
+    },
   },
   {
     id: 2,
@@ -29,6 +34,11 @@ const rentals = [
     sqft: 800,
     location: "City Center",
     type: "rent" as const,
+    features: {
+      descriptions: ["Furnished", "Corner Unit", "Natural Light"],
+      amenities: ["Swimming Pool", "Gym/Fitness Center", "Air Conditioning", "Storage Unit"],
+      facilities: ["Concierge Service", "Business Center", "Rooftop Deck"],
+    },
   },
   {
     id: 3,
@@ -40,6 +50,11 @@ const rentals = [
     sqft: 1400,
     location: "Suburban Area",
     type: "rent" as const,
+    features: {
+      descriptions: ["Pet Friendly", "Open Floor Plan", "Garden/Yard"],
+      amenities: ["Laundry Room", "Parking Space", "Garden/Yard", "Storage Unit"],
+      facilities: ["Guest Parking", "Playground", "BBQ Area"],
+    },
   },
   {
     id: 4,
@@ -51,6 +66,11 @@ const rentals = [
     sqft: 700,
     location: "Midtown",
     type: "rent" as const,
+    features: {
+      descriptions: ["Move-in Ready", "Hardwood Floors"],
+      amenities: ["Air Conditioning", "Parking Space", "Security System"],
+      facilities: ["Elevator", "Bike Storage"],
+    },
   },
   {
     id: 5,
@@ -62,6 +82,11 @@ const rentals = [
     sqft: 1200,
     location: "Waterfront",
     type: "rent" as const,
+    features: {
+      descriptions: ["Newly Renovated", "High Ceilings", "Natural Light"],
+      amenities: ["Swimming Pool", "Gym/Fitness Center", "Balcony/Terrace", "Parking Space"],
+      facilities: ["24/7 Security", "Concierge Service", "Rooftop Deck", "EV Charging"],
+    },
   },
   {
     id: 6,
@@ -73,6 +98,11 @@ const rentals = [
     sqft: 1800,
     location: "Residential District",
     type: "rent" as const,
+    features: {
+      descriptions: ["Pet Friendly", "Open Floor Plan", "Hardwood Floors"],
+      amenities: ["Laundry Room", "Parking Space", "Garden/Yard", "Air Conditioning"],
+      facilities: ["Playground", "Community Center", "Guest Parking"],
+    },
   },
 ];
 

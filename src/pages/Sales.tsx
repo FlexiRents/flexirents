@@ -18,6 +18,11 @@ const properties = [
     sqft: 2800,
     location: "Suburban Heights",
     type: "sale" as const,
+    features: {
+      descriptions: ["Newly Renovated", "Move-in Ready", "Open Floor Plan"],
+      amenities: ["Swimming Pool", "Garden/Yard", "Parking Space", "Air Conditioning"],
+      facilities: ["24/7 Security", "Community Center", "Playground"],
+    },
   },
   {
     id: 2,
@@ -29,6 +34,11 @@ const properties = [
     sqft: 1900,
     location: "Downtown Area",
     type: "sale" as const,
+    features: {
+      descriptions: ["Newly Renovated", "High Ceilings", "Hardwood Floors"],
+      amenities: ["Parking Space", "Balcony/Terrace", "Storage Unit"],
+      facilities: ["Elevator", "Bike Storage"],
+    },
   },
   {
     id: 3,
@@ -38,6 +48,11 @@ const properties = [
     sqft: 5000,
     location: "Business District",
     type: "sale" as const,
+    features: {
+      descriptions: ["Move-in Ready", "High Ceilings", "Natural Light"],
+      amenities: ["Parking Space", "Air Conditioning", "Elevator"],
+      facilities: ["24/7 Security", "Business Center", "Guest Parking"],
+    },
   },
   {
     id: 4,
@@ -47,6 +62,11 @@ const properties = [
     sqft: 8000,
     location: "Main Street",
     type: "sale" as const,
+    features: {
+      descriptions: ["Corner Unit", "High Ceilings"],
+      amenities: ["Parking Space", "Storage Unit"],
+      facilities: ["24/7 Security", "Guest Parking", "EV Charging"],
+    },
   },
   {
     id: 5,
@@ -56,6 +76,11 @@ const properties = [
     sqft: 12000,
     location: "City Outskirts",
     type: "sale" as const,
+    features: {
+      descriptions: ["Move-in Ready"],
+      amenities: [],
+      facilities: [],
+    },
   },
   {
     id: 6,
@@ -65,6 +90,11 @@ const properties = [
     sqft: 20000,
     location: "Highway Access",
     type: "sale" as const,
+    features: {
+      descriptions: [],
+      amenities: [],
+      facilities: [],
+    },
   },
 ];
 

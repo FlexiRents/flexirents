@@ -61,7 +61,11 @@ const FlexiAssist = () => {
 
   const handleSelectService = (serviceId: number) => {
     const service = services.find((s) => s.id === serviceId);
-    navigate("/checkout", { state: { type: "service", service } });
+    if (service) {
+      // Pass only serializable data without the icon
+      const { icon, ...serializableService } = service;
+      navigate("/checkout", { state: { type: "service", service: serializableService } });
+    }
   };
 
   return (

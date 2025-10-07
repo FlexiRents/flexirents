@@ -97,97 +97,97 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-secondary/30">
+      <section className="py-20 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-accent mb-2">15,000+</div>
-              <p className="text-muted-foreground text-lg">Happy Customers</p>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="text-center bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-3">15,000+</div>
+              <p className="text-foreground font-semibold text-lg">Happy Customers</p>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-accent mb-2">98.5%</div>
-              <p className="text-muted-foreground text-lg">Satisfaction Rate</p>
+            <div className="text-center bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-3">98.5%</div>
+              <p className="text-foreground font-semibold text-lg">Satisfaction Rate</p>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-accent mb-2">2,500+</div>
-              <p className="text-muted-foreground text-lg">Partner Property Owners</p>
+            <div className="text-center bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+              <div className="text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-3">2,500+</div>
+              <p className="text-foreground font-semibold text-lg">Partner Property Owners</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Success Stories Section */}
-      <section className="py-20">
+      <section className="py-20 bg-secondary/20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Success Stories</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Success Stories</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               See what our satisfied customers have to say about their FlexiRents experience.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-card p-6 rounded-lg shadow-[var(--shadow-card)]">
-              <div className="flex items-center gap-1 mb-4 text-accent">
+            <div className="bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all border border-border/50">
+              <div className="flex items-center gap-1 mb-6 text-accent">
                 {[...Array(5)].map((_, i) => (
                   <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground mb-6 leading-relaxed">
                 "Finding my dream apartment was so easy with FlexiRents. The flexible payment plan made it affordable, and the team was incredibly supportive throughout."
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold">
+              <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-accent text-lg">
                   SA
                 </div>
                 <div>
-                  <p className="font-semibold">Sarah Anderson</p>
+                  <p className="font-semibold text-foreground">Sarah Anderson</p>
                   <p className="text-sm text-muted-foreground">Apartment Renter</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-card p-6 rounded-lg shadow-[var(--shadow-card)]">
-              <div className="flex items-center gap-1 mb-4 text-accent">
+            <div className="bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all border border-border/50">
+              <div className="flex items-center gap-1 mb-6 text-accent">
                 {[...Array(5)].map((_, i) => (
                   <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground mb-6 leading-relaxed">
                 "Purchased my first commercial property through FlexiRents. The process was transparent, and their guidance helped me make the right investment decision."
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold">
+              <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-accent text-lg">
                   MO
                 </div>
                 <div>
-                  <p className="font-semibold">Michael Okonkwo</p>
+                  <p className="font-semibold text-foreground">Michael Okonkwo</p>
                   <p className="text-sm text-muted-foreground">Property Investor</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-card p-6 rounded-lg shadow-[var(--shadow-card)]">
-              <div className="flex items-center gap-1 mb-4 text-accent">
+            <div className="bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all border border-border/50">
+              <div className="flex items-center gap-1 mb-6 text-accent">
                 {[...Array(5)].map((_, i) => (
                   <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-foreground mb-6 leading-relaxed">
                 "The Flexi-Assist service is a lifesaver! Having a reliable driver and caregiver on demand has made managing my busy schedule so much easier."
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold">
+              <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-accent text-lg">
                   EA
                 </div>
                 <div>
-                  <p className="font-semibold">Emeka Afolabi</p>
+                  <p className="font-semibold text-foreground">Emeka Afolabi</p>
                   <p className="text-sm text-muted-foreground">Flexi-Assist Client</p>
                 </div>
               </div>

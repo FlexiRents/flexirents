@@ -27,12 +27,13 @@ const Checkout = () => {
     if (type === "rental" && property) {
       const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
       const months = parseInt(duration);
-      const baseAmount = monthlyPrice * months;
-      const commission = baseAmount * 0.10;
-      const total = baseAmount + commission;
+      const baseRent = monthlyPrice * months;
+      const deposit = monthlyPrice * 6;
+      const commission = baseRent * 0.10;
+      const total = deposit + commission;
 
       setCalculations({
-        baseAmount,
+        baseAmount: baseRent,
         commission,
         total,
       });
@@ -124,19 +125,31 @@ const Checkout = () => {
 
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between">
+                        <span className="text-muted-foreground">Payment per Month</span>
+                        <span className="font-semibold">
+                          ${(calculations.baseAmount / parseInt(duration)).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Base Rent ({duration} months)</span>
                         <span className="font-semibold">
                           ${calculations.baseAmount.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Commission (10%)</span>
+                        <span className="text-muted-foreground">Deposit (6 months)</span>
+                        <span className="font-semibold">
+                          ${((calculations.baseAmount / parseInt(duration)) * 6).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Commission (10% of base rent)</span>
                         <span className="font-semibold">
                           ${calculations.commission.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                        <span>Total Amount</span>
+                        <span>Total (Initial Pay)</span>
                         <span className="text-accent">
                           ${calculations.total.toLocaleString()}
                         </span>
@@ -221,7 +234,9 @@ const Checkout = () => {
                 <div className="bg-secondary/30 p-3 rounded-lg flex items-start gap-2 text-sm">
                   <Calculator className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-muted-foreground">
-                    All prices include a 10% commission for FlexiRents platform services and support.
+                    {type === "rental" 
+                      ? "For rentals: Pay 6 months deposit upfront plus 10% commission on total base rent. Remaining months paid monthly."
+                      : "All prices include a 10% commission for FlexiRents platform services and support."}
                   </p>
                 </div>
               </CardContent>

@@ -16,7 +16,7 @@ const Checkout = () => {
   const { type, property, service } = location.state || {};
 
   const [duration, setDuration] = useState("12");
-  const [hours, setHours] = useState("1");
+  const [hours, setHours] = useState("8");
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -196,14 +196,26 @@ const Checkout = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="hours">Number of Hours</Label>
-                      <Input
-                        id="hours"
-                        type="number"
-                        min="1"
-                        value={hours}
-                        onChange={(e) => setHours(e.target.value)}
-                      />
+                      <Label htmlFor="hours">Service Duration (Hours)</Label>
+                      <Select value={hours} onValueChange={setHours}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 Hour</SelectItem>
+                          <SelectItem value="2">2 Hours</SelectItem>
+                          <SelectItem value="3">3 Hours</SelectItem>
+                          <SelectItem value="4">4 Hours</SelectItem>
+                          <SelectItem value="5">5 Hours</SelectItem>
+                          <SelectItem value="6">6 Hours</SelectItem>
+                          <SelectItem value="7">7 Hours</SelectItem>
+                          <SelectItem value="8">8 Hours</SelectItem>
+                          <SelectItem value="9">9 Hours</SelectItem>
+                          <SelectItem value="10">10 Hours</SelectItem>
+                          <SelectItem value="11">11 Hours</SelectItem>
+                          <SelectItem value="12">12 Hours</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="pt-4 border-t space-y-2">

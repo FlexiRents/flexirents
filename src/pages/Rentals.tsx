@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SlidersHorizontal } from "lucide-react";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import property3br from "@/assets/property-3br.jpg";
@@ -109,6 +111,8 @@ const rentals = [
 const Rentals = () => {
   const navigate = useNavigate();
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [bedroomFilter, setBedroomFilter] = useState("all");
 
   const handleSelectProperty = (propertyId: number) => {
     setSelectedProperty(propertyId);
@@ -116,21 +120,81 @@ const Rentals = () => {
     navigate("/checkout", { state: { type: "rental", property } });
   };
 
+  const filteredRentals = rentals.filter((rental) => {
+    const price = parseInt(rental.price.replace(/[^0-9]/g, ""));
+    
+    // Price filter
+    if (priceFilter === "under1500" && price >= 1500) return false;
+    if (priceFilter === "1500-2500" && (price < 1500 || price >= 2500)) return false;
+    if (priceFilter === "over2500" && price < 2500) return false;
+    
+    // Bedroom filter
+    if (bedroomFilter === "1" && rental.beds !== 1) return false;
+    if (bedroomFilter === "2" && rental.beds !== 2) return false;
+    if (bedroomFilter === "3+" && rental.beds < 3) return false;
+    
+    return true;
+  });
+
   return (
     <div className="min-h-screen">
       <Navbar />
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <div className="mb-12">
+          <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Properties for Rent</h1>
             <p className="text-muted-foreground text-lg">
               Find your perfect rental home from our curated selection of properties.
             </p>
           </div>
 
+          {/* Filters */}
+          <div className="bg-card p-6 rounded-lg shadow-[var(--shadow-card)] mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <SlidersHorizontal className="h-5 w-5 text-accent" />
+              <h2 className="text-lg font-semibold">Filter Properties</h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Price Range</label>
+                <Select value={priceFilter} onValueChange={setPriceFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Prices" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Prices</SelectItem>
+                    <SelectItem value="under1500">Under $1,500/month</SelectItem>
+                    <SelectItem value="1500-2500">$1,500 - $2,500/month</SelectItem>
+                    <SelectItem value="over2500">Over $2,500/month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bedrooms</label>
+                <Select value={bedroomFilter} onValueChange={setBedroomFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Bedrooms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Bedrooms</SelectItem>
+                    <SelectItem value="1">1 Bedroom</SelectItem>
+                    <SelectItem value="2">2 Bedrooms</SelectItem>
+                    <SelectItem value="3+">3+ Bedrooms</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-muted-foreground">
+              Showing {filteredRentals.length} of {rentals.length} properties
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {rentals.map((property) => (
+            {filteredRentals.map((property) => (
               <PropertyCard
                 key={property.id}
                 {...property}
@@ -138,6 +202,12 @@ const Rentals = () => {
               />
             ))}
           </div>
+
+          {filteredRentals.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">No properties match your filters. Try adjusting your criteria.</p>
+            </div>
+          )}
         </div>
       </div>
 

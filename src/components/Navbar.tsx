@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Heart } from "lucide-react";
 import { useState } from "react";
+import { useWishlist } from "@/contexts/WishlistContext";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { wishlist } = useWishlist();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -28,6 +30,14 @@ const Navbar = () => {
             </Link>
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors">
               List Property
+            </Link>
+            <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors">
+              <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
+              {wishlist.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {wishlist.length}
+                </span>
+              )}
             </Link>
             <Button variant="hero" asChild>
               <Link to="/checkout">Get Started</Link>
@@ -74,6 +84,14 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 List Property
+              </Link>
+              <Link
+                to="/wishlist"
+                className="text-foreground hover:text-accent transition-colors flex items-center gap-2"
+                onClick={() => setIsOpen(false)}
+              >
+                <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
+                Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
               </Link>
               <Button variant="hero" asChild onClick={() => setIsOpen(false)}>
                 <Link to="/checkout">Get Started</Link>

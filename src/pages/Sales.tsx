@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Search } from "lucide-react";
 import property3br from "@/assets/property-3br.jpg";
 import propertyCommercial from "@/assets/property-commercial.jpg";
 import propertyLand from "@/assets/property-land.jpg";
@@ -108,6 +109,7 @@ const properties = [
 
 const Sales = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
   const [priceFilter, setPriceFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -119,6 +121,10 @@ const Sales = () => {
   };
 
   const filteredProperties = properties.filter((property) => {
+    const matchesSearch =
+      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.location.toLowerCase().includes(searchQuery.toLowerCase());
+
     const price = parseInt(property.price.replace(/[^0-9]/g, ""));
     
     // Price filter
@@ -131,7 +137,7 @@ const Sales = () => {
     if (categoryFilter === "commercial" && property.propertyCategory !== "commercial") return false;
     if (categoryFilter === "land" && property.propertyCategory !== "land") return false;
     
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -142,9 +148,20 @@ const Sales = () => {
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Properties for Sale</h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg mb-6">
               Invest in your future with our premium selection of properties, from homes to commercial real estate.
             </p>
+            
+            <div className="max-w-md relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by property name or location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           {/* Filters */}

@@ -1,9 +1,11 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bed, Bath, Square, Check } from "lucide-react";
+import { Bed, Bath, Square, Check, Heart } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface PropertyFeatures {
   descriptions?: string[];
@@ -12,6 +14,7 @@ interface PropertyFeatures {
 }
 
 interface PropertyCardProps {
+  id: number;
   image: string;
   title: string;
   price: string;
@@ -25,6 +28,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({
+  id,
   image,
   title,
   price,
@@ -37,12 +41,38 @@ const PropertyCard = ({
   onSelect,
 }: PropertyCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { toast } = useToast();
+  const inWishlist = isInWishlist(id);
   
   const hasFeatures = features && (
     features.descriptions?.length || 
     features.amenities?.length || 
     features.facilities?.length
   );
+
+  const handleWishlistToggle = () => {
+    if (inWishlist) {
+      removeFromWishlist(id);
+      toast({
+        title: "Removed from wishlist",
+        description: `${title} has been removed from your wishlist.`,
+      });
+    } else {
+      addToWishlist({
+        id,
+        type: type === "rent" ? "rental" : "sale",
+        title,
+        price,
+        location,
+        image,
+      });
+      toast({
+        title: "Added to wishlist",
+        description: `${title} has been added to your wishlist.`,
+      });
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-all duration-300">
@@ -55,6 +85,17 @@ const PropertyCard = ({
         <div className="absolute top-4 right-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-semibold">
           {type === "rent" ? "For Rent" : "For Sale"}
         </div>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="absolute top-4 left-4"
+          onClick={handleWishlistToggle}
+        >
+          <Heart
+            className="h-4 w-4"
+            fill={inWishlist ? "currentColor" : "none"}
+          />
+        </Button>
       </div>
       <CardContent className="pt-4">
         <h3 className="font-semibold text-lg mb-2">{title}</h3>

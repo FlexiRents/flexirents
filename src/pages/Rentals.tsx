@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Search } from "lucide-react";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import property3br from "@/assets/property-3br.jpg";
@@ -110,6 +111,7 @@ const rentals = [
 
 const Rentals = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
   const [priceFilter, setPriceFilter] = useState("all");
   const [bedroomFilter, setBedroomFilter] = useState("all");
@@ -121,6 +123,10 @@ const Rentals = () => {
   };
 
   const filteredRentals = rentals.filter((rental) => {
+    const matchesSearch =
+      rental.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      rental.location.toLowerCase().includes(searchQuery.toLowerCase());
+
     const price = parseInt(rental.price.replace(/[^0-9]/g, ""));
     
     // Price filter
@@ -133,7 +139,7 @@ const Rentals = () => {
     if (bedroomFilter === "2" && rental.beds !== 2) return false;
     if (bedroomFilter === "3+" && rental.beds < 3) return false;
     
-    return true;
+    return matchesSearch;
   });
 
   return (
@@ -144,9 +150,20 @@ const Rentals = () => {
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Properties for Rent</h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg mb-6">
               Find your perfect rental home from our curated selection of properties.
             </p>
+            
+            <div className="max-w-md relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by property name or location..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           {/* Filters */}

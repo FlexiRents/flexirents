@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServiceCard from "@/components/ServiceCard";
-import { Car, Baby, Paintbrush, Hammer, Wrench, Heart, Droplet } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Car, Baby, Paintbrush, Hammer, Wrench, Heart, Droplet, Search } from "lucide-react";
 
 const services = [
   {
@@ -58,6 +60,7 @@ const services = [
 
 const FlexiAssist = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSelectService = (serviceId: number) => {
     const service = services.find((s) => s.id === serviceId);
@@ -68,6 +71,11 @@ const FlexiAssist = () => {
     }
   };
 
+  const filteredServices = services.filter((service) =>
+    service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    service.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -76,19 +84,36 @@ const FlexiAssist = () => {
         <div className="container mx-auto px-4">
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Flexi-Assist Services</h1>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg mb-6">
               Professional assistance services on-demand. Book vetted professionals for any task.
             </p>
+            
+            <div className="max-w-md relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search services..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                {...service}
-                onSelect={() => handleSelectService(service.id)}
-              />
-            ))}
+            {filteredServices.length > 0 ? (
+              filteredServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  {...service}
+                  onSelect={() => handleSelectService(service.id)}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground text-lg">No services found matching your search.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

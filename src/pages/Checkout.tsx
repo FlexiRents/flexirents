@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Checkout = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const { type, property, service } = location.state || {};
 
   const [duration, setDuration] = useState("12");
@@ -127,31 +129,31 @@ const Checkout = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Payment per Month</span>
                         <span className="font-semibold">
-                          ${(calculations.baseAmount / parseInt(duration)).toLocaleString()}
+                          {formatPrice(calculations.baseAmount / parseInt(duration))}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Base Rent ({duration} months)</span>
                         <span className="font-semibold">
-                          ${calculations.baseAmount.toLocaleString()}
+                          {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Deposit (6 months)</span>
                         <span className="font-semibold">
-                          ${((calculations.baseAmount / parseInt(duration)) * 6).toLocaleString()}
+                          {formatPrice((calculations.baseAmount / parseInt(duration)) * 6)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Commission (10% of base rent)</span>
                         <span className="font-semibold">
-                          ${calculations.commission.toLocaleString()}
+                          {formatPrice(calculations.commission)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t">
                         <span>Total (Initial Pay)</span>
                         <span className="text-accent">
-                          ${calculations.total.toLocaleString()}
+                          {formatPrice(calculations.total)}
                         </span>
                       </div>
                     </div>
@@ -169,19 +171,19 @@ const Checkout = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Property Price</span>
                         <span className="font-semibold">
-                          ${calculations.baseAmount.toLocaleString()}
+                          {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Commission (10%)</span>
                         <span className="font-semibold">
-                          ${calculations.commission.toLocaleString()}
+                          {formatPrice(calculations.commission)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t">
                         <span>Total Amount</span>
                         <span className="text-accent">
-                          ${calculations.total.toLocaleString()}
+                          {formatPrice(calculations.total)}
                         </span>
                       </div>
                     </div>
@@ -224,19 +226,19 @@ const Checkout = () => {
                           Service Cost ({hours} hours)
                         </span>
                         <span className="font-semibold">
-                          ${calculations.baseAmount.toFixed(2)}
+                          {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Commission (10%)</span>
                         <span className="font-semibold">
-                          ${calculations.commission.toFixed(2)}
+                          {formatPrice(calculations.commission)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t">
                         <span>Total Amount</span>
                         <span className="text-accent">
-                          ${calculations.total.toFixed(2)}
+                          {formatPrice(calculations.total)}
                         </span>
                       </div>
                     </div>
@@ -297,7 +299,7 @@ const Checkout = () => {
                   </div>
 
                   <Button type="submit" variant="hero" size="lg" className="w-full mt-6">
-                    Complete Payment - ${calculations.total.toLocaleString()}
+                    Complete Payment - {formatPrice(calculations.total)}
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">

@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Menu, Heart } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { wishlist } = useWishlist();
+  const { currency, setCurrency } = useCurrency();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -31,6 +34,15 @@ const Navbar = () => {
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors">
               List Property
             </Link>
+            <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
+              <SelectTrigger className="w-[110px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD ($)</SelectItem>
+                <SelectItem value="GHS">GHS (₵)</SelectItem>
+              </SelectContent>
+            </Select>
             <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors">
               <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
               {wishlist.length > 0 && (
@@ -85,6 +97,17 @@ const Navbar = () => {
               >
                 List Property
               </Link>
+              <div className="py-2">
+                <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="GHS">GHS (₵)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Link
                 to="/wishlist"
                 className="text-foreground hover:text-accent transition-colors flex items-center gap-2"

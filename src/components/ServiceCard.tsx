@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Heart } from "lucide-react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ServiceCardProps {
   id: number;
@@ -16,7 +17,10 @@ interface ServiceCardProps {
 const ServiceCard = ({ id, icon, title, description, rate, onSelect }: ServiceCardProps) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const inWishlist = isInWishlist(id);
+  
+  const rateValue = parseFloat(rate.replace(/[^0-9.-]+/g, ""));
 
   const handleWishlistToggle = () => {
     if (inWishlist) {
@@ -60,7 +64,7 @@ const ServiceCard = ({ id, icon, title, description, rate, onSelect }: ServiceCa
         <p className="text-muted-foreground text-sm mb-4">{description}</p>
         <div className="flex items-center gap-2 text-primary font-semibold">
           <Clock className="h-4 w-4" />
-          <span>{rate}</span>
+          <span>{formatPrice(rateValue)}/hr</span>
         </div>
       </CardContent>
       <CardFooter>

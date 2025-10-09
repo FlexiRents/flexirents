@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface PropertyFeatures {
   descriptions?: string[];
@@ -43,7 +44,10 @@ const PropertyCard = ({
   const [showDetails, setShowDetails] = useState(false);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const inWishlist = isInWishlist(id);
+  
+  const priceValue = parseFloat(price.replace(/[^0-9.-]+/g, ""));
   
   const hasFeatures = features && (
     features.descriptions?.length || 
@@ -181,7 +185,7 @@ const PropertyCard = ({
           </div>
         )}
         
-        <div className="text-2xl font-bold text-primary">{price}</div>
+        <div className="text-2xl font-bold text-primary">{formatPrice(priceValue)}</div>
       </CardContent>
       <CardFooter>
         <Button className="w-full" variant="hero" onClick={onSelect}>

@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator } from "lucide-react";
+import { Calculator, Plus, Minus } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Checkout = () => {
@@ -17,8 +16,8 @@ const Checkout = () => {
   const { formatPrice } = useCurrency();
   const { type, property, service } = location.state || {};
 
-  const [duration, setDuration] = useState("12");
-  const [hours, setHours] = useState("8");
+  const [duration, setDuration] = useState(12);
+  const [hours, setHours] = useState(8);
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -28,9 +27,8 @@ const Checkout = () => {
   useEffect(() => {
     if (type === "rental" && property) {
       const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
-      const months = parseInt(duration);
-      const baseRent = monthlyPrice * months;
-      const deposit = monthlyPrice * 6;
+      const baseRent = monthlyPrice * duration;
+      const deposit = monthlyPrice * 1; // 1 month security deposit
       const commission = baseRent * 0.10;
       const total = deposit + commission;
 
@@ -51,8 +49,7 @@ const Checkout = () => {
       });
     } else if (type === "service" && service) {
       const hourlyRate = parseFloat(service.rate.replace(/[^0-9.-]+/g, ""));
-      const totalHours = parseFloat(hours);
-      const baseAmount = hourlyRate * totalHours;
+      const baseAmount = hourlyRate * hours;
       const commission = baseAmount * 0.10;
       const total = baseAmount + commission;
 
@@ -63,6 +60,20 @@ const Checkout = () => {
       });
     }
   }, [type, property, service, duration, hours]);
+
+  const handleDurationChange = (increment: boolean) => {
+    setDuration((prev) => {
+      const newValue = increment ? prev + 1 : prev - 1;
+      return Math.max(0, Math.min(24, newValue));
+    });
+  };
+
+  const handleHoursChange = (increment: boolean) => {
+    setHours((prev) => {
+      const newValue = increment ? prev + 1 : prev - 1;
+      return Math.max(0, Math.min(24, newValue));
+    });
+  };
 
   const handlePayment = () => {
     toast({
@@ -112,24 +123,38 @@ const Checkout = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="duration">Rental Duration</Label>
-                      <Select value={duration} onValueChange={setDuration}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="12">12 Months</SelectItem>
-                          <SelectItem value="18">18 Months</SelectItem>
-                          <SelectItem value="24">24 Months</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Rental Duration (Months)</Label>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDurationChange(false)}
+                          disabled={duration <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 text-center">
+                          <span className="text-2xl font-bold">{duration}</span>
+                          <span className="text-muted-foreground ml-1">months</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDurationChange(true)}
+                          disabled={duration >= 24}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Payment per Month</span>
                         <span className="font-semibold">
-                          {formatPrice(calculations.baseAmount / parseInt(duration))}
+                          {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -139,9 +164,9 @@ const Checkout = () => {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Deposit (6 months)</span>
+                        <span className="text-muted-foreground">Security Deposit (1 month)</span>
                         <span className="font-semibold">
-                          {formatPrice((calculations.baseAmount / parseInt(duration)) * 6)}
+                          {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -198,26 +223,31 @@ const Checkout = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="hours">Service Duration (Hours)</Label>
-                      <Select value={hours} onValueChange={setHours}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 Hour</SelectItem>
-                          <SelectItem value="2">2 Hours</SelectItem>
-                          <SelectItem value="3">3 Hours</SelectItem>
-                          <SelectItem value="4">4 Hours</SelectItem>
-                          <SelectItem value="5">5 Hours</SelectItem>
-                          <SelectItem value="6">6 Hours</SelectItem>
-                          <SelectItem value="7">7 Hours</SelectItem>
-                          <SelectItem value="8">8 Hours</SelectItem>
-                          <SelectItem value="9">9 Hours</SelectItem>
-                          <SelectItem value="10">10 Hours</SelectItem>
-                          <SelectItem value="11">11 Hours</SelectItem>
-                          <SelectItem value="12">12 Hours</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Service Duration (Hours)</Label>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleHoursChange(false)}
+                          disabled={hours <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 text-center">
+                          <span className="text-2xl font-bold">{hours}</span>
+                          <span className="text-muted-foreground ml-1">hours</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleHoursChange(true)}
+                          disabled={hours >= 24}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="pt-4 border-t space-y-2">
@@ -249,7 +279,7 @@ const Checkout = () => {
                   <Calculator className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-muted-foreground">
                     {type === "rental" 
-                      ? "For rentals: Pay 6 months deposit upfront plus 10% commission on total base rent. Remaining months paid monthly."
+                      ? "For rentals: Pay 1 month security deposit upfront plus 10% commission on total base rent. Remaining months paid monthly."
                       : "All prices include a 10% commission for FlexiRents platform services and support."}
                   </p>
                 </div>

@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal, Search } from "lucide-react";
+import { SlidersHorizontal, Search, ChevronDown, ChevronUp } from "lucide-react";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import property3br from "@/assets/property-3br.jpg";
@@ -121,6 +121,7 @@ const Rentals = () => {
   const [bedroomFilter, setBedroomFilter] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Load search query from URL on mount
   useEffect(() => {
@@ -193,12 +194,25 @@ const Rentals = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-card p-6 rounded-lg shadow-[var(--shadow-card)] mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <SlidersHorizontal className="h-5 w-5 text-accent" />
-              <h2 className="text-lg font-semibold">Filter Properties</h2>
-            </div>
-            <div className="space-y-4">
+          <div className="bg-card rounded-lg shadow-[var(--shadow-card)] mb-8">
+            <button
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className="w-full flex items-center justify-between p-6 hover:bg-accent/5 transition-colors rounded-lg"
+            >
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-5 w-5 text-accent" />
+                <h2 className="text-lg font-semibold">Filter Properties</h2>
+              </div>
+              {filtersOpen ? (
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
+
+            {filtersOpen && (
+              <div className="px-6 pb-6 pt-2 border-t">
+                <div className="space-y-4">
               {/* Price Range */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Price Range (per month)</label>
@@ -302,7 +316,9 @@ const Rentals = () => {
                   </div>
                 )}
               </div>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mb-4">

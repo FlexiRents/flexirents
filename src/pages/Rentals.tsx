@@ -9,6 +9,7 @@ import { SlidersHorizontal, Search } from "lucide-react";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import property3br from "@/assets/property-3br.jpg";
+import { ghanaRegions } from "@/data/ghanaLocations";
 
 const rentals = [
   {
@@ -113,8 +114,12 @@ const Rentals = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
-  const [priceFilter, setPriceFilter] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [propertyType, setPropertyType] = useState("all");
   const [bedroomFilter, setBedroomFilter] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [selectedCity, setSelectedCity] = useState("all");
 
   const handleSelectProperty = (propertyId: number) => {
     setSelectedProperty(propertyId);
@@ -129,18 +134,30 @@ const Rentals = () => {
 
     const price = parseInt(rental.price.replace(/[^0-9]/g, ""));
     
-    // Price filter
-    if (priceFilter === "under1500" && price >= 1500) return false;
-    if (priceFilter === "1500-2500" && (price < 1500 || price >= 2500)) return false;
-    if (priceFilter === "over2500" && price < 2500) return false;
+    // Price range filter
+    const min = minPrice ? parseInt(minPrice) : 0;
+    const max = maxPrice ? parseInt(maxPrice) : Infinity;
+    if (price < min || price > max) return false;
+    
+    // Property type filter (for future use when property types are added)
+    // Currently all rentals are apartments, but structure is ready
     
     // Bedroom filter
     if (bedroomFilter === "1" && rental.beds !== 1) return false;
     if (bedroomFilter === "2" && rental.beds !== 2) return false;
     if (bedroomFilter === "3+" && rental.beds < 3) return false;
     
+    // Location filter
+    if (selectedCity !== "all" && !rental.location.toLowerCase().includes(selectedCity.toLowerCase())) {
+      return false;
+    }
+    
     return matchesSearch;
   });
+
+  const availableCities = selectedRegion === "all" 
+    ? [] 
+    : ghanaRegions.find(r => r.name === selectedRegion)?.cities || [];
 
   return (
     <div className="min-h-screen">
@@ -172,34 +189,109 @@ const Rentals = () => {
               <SlidersHorizontal className="h-5 w-5 text-accent" />
               <h2 className="text-lg font-semibold">Filter Properties</h2>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              {/* Price Range */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Price Range</label>
-                <Select value={priceFilter} onValueChange={setPriceFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Prices" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Prices</SelectItem>
-                    <SelectItem value="under1500">Under $1,500/month</SelectItem>
-                    <SelectItem value="1500-2500">$1,500 - $2,500/month</SelectItem>
-                    <SelectItem value="over2500">Over $2,500/month</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium">Price Range (per month)</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Minimum</label>
+                    <Input 
+                      type="number" 
+                      placeholder="Min price"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Maximum</label>
+                    <Input 
+                      type="number" 
+                      placeholder="Max price"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bedrooms</label>
-                <Select value={bedroomFilter} onValueChange={setBedroomFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Bedrooms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Bedrooms</SelectItem>
-                    <SelectItem value="1">1 Bedroom</SelectItem>
-                    <SelectItem value="2">2 Bedrooms</SelectItem>
-                    <SelectItem value="3+">3+ Bedrooms</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Property Type */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Property Type</label>
+                  <Select value={propertyType} onValueChange={setPropertyType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="apartment">Apartment</SelectItem>
+                      <SelectItem value="villa">Villa</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="airbnb">AirBnB</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Bedrooms - only show for residential types */}
+                {(propertyType === "all" || propertyType === "apartment" || propertyType === "villa" || propertyType === "airbnb") && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Bedrooms</label>
+                    <Select value={bedroomFilter} onValueChange={setBedroomFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Bedrooms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Bedrooms</SelectItem>
+                        <SelectItem value="1">1 Bedroom</SelectItem>
+                        <SelectItem value="2">2 Bedrooms</SelectItem>
+                        <SelectItem value="3+">3+ Bedrooms</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {/* Location */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Region</label>
+                  <Select value={selectedRegion} onValueChange={(value) => {
+                    setSelectedRegion(value);
+                    setSelectedCity("all");
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Regions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {ghanaRegions.map((region) => (
+                        <SelectItem key={region.name} value={region.name}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedRegion !== "all" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">City</label>
+                    <Select value={selectedCity} onValueChange={setSelectedCity}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Cities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Cities</SelectItem>
+                        {availableCities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </div>
           </div>

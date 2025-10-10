@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -110,6 +110,7 @@ const properties = [
 
 const Sales = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
   const [minPrice, setMinPrice] = useState("");
@@ -118,6 +119,14 @@ const Sales = () => {
   const [bedroomFilter, setBedroomFilter] = useState("all");
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
+
+  // Load search query from URL on mount
+  useEffect(() => {
+    const urlSearch = searchParams.get("search");
+    if (urlSearch) {
+      setSearchQuery(urlSearch);
+    }
+  }, [searchParams]);
 
   const handleSelectProperty = (propertyId: number) => {
     setSelectedProperty(propertyId);

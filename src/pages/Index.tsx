@@ -1,11 +1,23 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building2, Home, Users, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowRight, Building2, Home, Users, CheckCircle, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-property.jpg";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/rentals?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -29,6 +41,30 @@ const Index = () => {
             <p className="text-xl mb-8 opacity-90">
               Discover premium properties for rent or sale, plus personalized assistance services tailored to your needs.
             </p>
+            
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="mb-8 max-w-2xl">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search by location, property type, or features..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-12 h-14 text-lg bg-background/95 backdrop-blur-sm border-2 border-primary-foreground/20 focus:border-primary-foreground/40"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="h-14 px-8 bg-accent hover:bg-accent/90 text-accent-foreground"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
+              </div>
+            </form>
+
             <div className="flex flex-wrap gap-4">
               <Button variant="hero" size="xl" asChild>
                 <Link to="/rentals">

@@ -25,6 +25,11 @@ const featuredRentals = [
     sqft: 650,
     location: "Downtown District",
     type: "rent" as const,
+    features: {
+      descriptions: ["Newly Renovated", "Move-in Ready", "Pet Friendly", "High Ceilings"],
+      amenities: ["Air Conditioning", "Balcony/Terrace", "Parking Space", "Laundry Room"],
+      facilities: ["24/7 Security", "Gym/Fitness Center", "Elevator", "Package Room"],
+    },
   },
   {
     id: 2,
@@ -36,6 +41,11 @@ const featuredRentals = [
     sqft: 800,
     location: "City Center",
     type: "rent" as const,
+    features: {
+      descriptions: ["Furnished", "Open Floor Plan", "Natural Light"],
+      amenities: ["Swimming Pool", "Air Conditioning", "Heating", "Security System"],
+      facilities: ["Concierge Service", "Rooftop Deck", "Business Center"],
+    },
   },
   {
     id: 3,
@@ -47,6 +57,11 @@ const featuredRentals = [
     sqft: 1400,
     location: "Suburban Area",
     type: "rent" as const,
+    features: {
+      descriptions: ["Pet Friendly", "Garden/Yard", "Corner Unit"],
+      amenities: ["Parking Space", "Storage Unit", "Garden/Yard", "Air Conditioning"],
+      facilities: ["Playground", "BBQ Area", "Guest Parking"],
+    },
   },
 ];
 
@@ -61,6 +76,11 @@ const featuredSales = [
     sqft: 2800,
     location: "Suburban Heights",
     type: "sale" as const,
+    features: {
+      descriptions: ["Newly Renovated", "Move-in Ready", "Hardwood Floors", "High Ceilings"],
+      amenities: ["Swimming Pool", "Gym/Fitness Center", "Parking Space", "Garden/Yard", "Security System"],
+      facilities: ["24/7 Security", "Playground", "BBQ Area", "Guest Parking"],
+    },
   },
   {
     id: 2,
@@ -72,6 +92,11 @@ const featuredSales = [
     sqft: 1900,
     location: "Downtown Area",
     type: "sale" as const,
+    features: {
+      descriptions: ["Open Floor Plan", "Natural Light", "Corner Unit"],
+      amenities: ["Air Conditioning", "Balcony/Terrace", "Parking Space", "Storage Unit"],
+      facilities: ["Elevator", "Bike Storage", "Package Room"],
+    },
   },
   {
     id: 3,
@@ -81,6 +106,11 @@ const featuredSales = [
     sqft: 5000,
     location: "Business District",
     type: "sale" as const,
+    features: {
+      descriptions: ["Move-in Ready", "Open Floor Plan", "High Ceilings"],
+      amenities: ["Elevator", "Parking Space", "Air Conditioning", "Wheelchair Accessible"],
+      facilities: ["24/7 Security", "Business Center", "EV Charging"],
+    },
   },
 ];
 

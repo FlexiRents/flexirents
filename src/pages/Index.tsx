@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Car, Heart as HeartIcon, Sparkles } from "lucide-react";
+import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Car, Heart as HeartIcon, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -141,12 +141,32 @@ const featuredServices = [
 const Index = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPropertyIndex, setCurrentPropertyIndex] = useState(0);
+
+  // Combine all properties for rotation
+  const allNewProperties = [...featuredRentals.slice(0, 2), featuredSales[0]];
+
+  // Auto-rotate properties every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPropertyIndex((prev) => (prev + 1) % allNewProperties.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [allNewProperties.length]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/rentals?search=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const nextProperty = () => {
+    setCurrentPropertyIndex((prev) => (prev + 1) % allNewProperties.length);
+  };
+
+  const prevProperty = () => {
+    setCurrentPropertyIndex((prev) => (prev - 1 + allNewProperties.length) % allNewProperties.length);
   };
 
   return (
@@ -196,65 +216,85 @@ const Index = () => {
               </div>
             </form>
 
+            {/* Newly Listed Property Carousel */}
+            <div className="bg-background/95 backdrop-blur-sm rounded-xl p-6 max-w-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                  Newly Listed
+                </h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={prevProperty}
+                    className="h-8 w-8 bg-background/50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={nextProperty}
+                    className="h-8 w-8 bg-background/50"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="relative overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{ transform: `translateX(-${currentPropertyIndex * 100}%)` }}
+                >
+                  {allNewProperties.map((property, index) => (
+                    <div key={index} className="min-w-full">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={property.image}
+                          alt={property.title}
+                          className="w-24 h-24 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-foreground mb-1">{property.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">{property.location}</p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-lg font-bold text-accent">{property.price}</span>
+                            <Button 
+                              size="sm" 
+                              variant="secondary"
+                              onClick={() => navigate(property.type === "rent" ? "/rentals" : "/sales")}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Carousel Dots */}
+              <div className="flex justify-center gap-2 mt-4">
+                {allNewProperties.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentPropertyIndex(index)}
+                    className={`h-2 rounded-full transition-all ${
+                      index === currentPropertyIndex 
+                        ? "w-8 bg-accent" 
+                        : "w-2 bg-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Newly Listed Section */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Newly Listed</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Fresh properties and services available now
-            </p>
-          </div>
-
-          {/* Newly Listed Properties */}
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold flex items-center gap-2">
-                <Building2 className="h-6 w-6 text-accent" />
-                Latest Properties
-              </h3>
-              <Button variant="ghost" asChild>
-                <Link to="/rentals">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {[...featuredRentals.slice(0, 2), featuredSales[0]].map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  {...property}
-                  onSelect={() => navigate(property.type === "rent" ? "/rentals" : "/sales")}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Newly Listed Services */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-semibold flex items-center gap-2">
-                <Users className="h-6 w-6 text-accent" />
-                Available Services
-              </h3>
-              <Button variant="ghost" asChild>
-                <Link to="/flexi-assist">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {featuredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  {...service}
-                  onSelect={() => navigate("/flexi-assist")}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Rental Properties Section */}
       <section className="py-20 bg-secondary/30">

@@ -196,15 +196,61 @@ const Index = () => {
               </div>
             </form>
 
-            <div className="flex flex-wrap gap-4">
-              <Button variant="hero" size="xl" asChild>
-                <Link to="/rentals">
-                  Browse Rentals <ArrowRight className="ml-2" />
-                </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Newly Listed Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Newly Listed</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Fresh properties and services available now
+            </p>
+          </div>
+
+          {/* Newly Listed Properties */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-semibold flex items-center gap-2">
+                <Building2 className="h-6 w-6 text-accent" />
+                Latest Properties
+              </h3>
+              <Button variant="ghost" asChild>
+                <Link to="/rentals">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button variant="outline" size="xl" asChild className="bg-background/10 backdrop-blur-sm border-primary-foreground text-primary-foreground hover:bg-background/20">
-                <Link to="/flexi-assist">Flexi-Assist Services</Link>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[...featuredRentals.slice(0, 2), featuredSales[0]].map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  {...property}
+                  onSelect={() => navigate(property.type === "rent" ? "/rentals" : "/sales")}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Newly Listed Services */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-semibold flex items-center gap-2">
+                <Users className="h-6 w-6 text-accent" />
+                Available Services
+              </h3>
+              <Button variant="ghost" asChild>
+                <Link to="/flexi-assist">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {featuredServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  {...service}
+                  onSelect={() => navigate("/flexi-assist")}
+                />
+              ))}
             </div>
           </div>
         </div>

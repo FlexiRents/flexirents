@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import FlexiBot from "@/components/FlexiBot";
 import Index from "./pages/Index";
 import Rentals from "./pages/Rentals";
 import Sales from "./pages/Sales";
@@ -35,6 +36,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <FlexiBot />
           </BrowserRouter>
         </TooltipProvider>
       </WishlistProvider>

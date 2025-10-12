@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Plus, Minus } from "lucide-react";
+import { Calculator, Plus, Minus, CreditCard, Smartphone } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Checkout = () => {
@@ -18,6 +20,8 @@ const Checkout = () => {
 
   const [duration, setDuration] = useState(12);
   const [hours, setHours] = useState(8);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
+  const [mobileProvider, setMobileProvider] = useState("");
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -290,43 +294,116 @@ const Checkout = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Payment Details</CardTitle>
-                <CardDescription>Enter your payment information</CardDescription>
+                <CardDescription>Choose your payment method</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={(e) => { e.preventDefault(); handlePayment(); }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Cardholder Name</Label>
-                    <Input id="cardName" placeholder="John Doe" required />
+                <form onSubmit={(e) => { e.preventDefault(); handlePayment(); }} className="space-y-6">
+                  {/* Payment Method Selection */}
+                  <div className="space-y-3">
+                    <Label>Payment Method</Label>
+                    <RadioGroup value={paymentMethod} onValueChange={(value: "card" | "mobile") => setPaymentMethod(value)}>
+                      <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                        <RadioGroupItem value="card" id="card" />
+                        <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-1">
+                          <CreditCard className="h-5 w-5 text-accent" />
+                          <div>
+                            <div className="font-semibold">Card Payment</div>
+                            <div className="text-xs text-muted-foreground">Pay with credit or debit card</div>
+                          </div>
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                        <RadioGroupItem value="mobile" id="mobile" />
+                        <Label htmlFor="mobile" className="flex items-center gap-2 cursor-pointer flex-1">
+                          <Smartphone className="h-5 w-5 text-accent" />
+                          <div>
+                            <div className="font-semibold">Mobile Money</div>
+                            <div className="text-xs text-muted-foreground">Pay with Vodafone or MTN</div>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      required
-                    />
-                  </div>
+                  {/* Card Payment Form */}
+                  {paymentMethod === "card" && (
+                    <div className="space-y-4 animate-in fade-in-50 duration-300">
+                      <div className="space-y-2">
+                        <Label htmlFor="cardName">Cardholder Name</Label>
+                        <Input id="cardName" placeholder="John Doe" required />
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry Date</Label>
-                      <Input id="expiry" placeholder="MM/YY" required />
+                      <div className="space-y-2">
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input
+                          id="cardNumber"
+                          placeholder="1234 5678 9012 3456"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="expiry">Expiry Date</Label>
+                          <Input id="expiry" placeholder="MM/YY" required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cvv">CVV</Label>
+                          <Input id="cvv" placeholder="123" required />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="billingAddress">Billing Address</Label>
+                        <Input
+                          id="billingAddress"
+                          placeholder="123 Main St, City, State, ZIP"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input id="cvv" placeholder="123" required />
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="billingAddress">Billing Address</Label>
-                    <Input
-                      id="billingAddress"
-                      placeholder="123 Main St, City, State, ZIP"
-                      required
-                    />
-                  </div>
+                  {/* Mobile Money Form */}
+                  {paymentMethod === "mobile" && (
+                    <div className="space-y-4 animate-in fade-in-50 duration-300">
+                      <div className="space-y-2">
+                        <Label htmlFor="provider">Mobile Money Provider</Label>
+                        <Select value={mobileProvider} onValueChange={setMobileProvider} required>
+                          <SelectTrigger id="provider">
+                            <SelectValue placeholder="Select your provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="vodafone">Vodafone Cash</SelectItem>
+                            <SelectItem value="mtn">MTN Mobile Money</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="phoneNumber">Mobile Money Number</Label>
+                        <Input
+                          id="phoneNumber"
+                          type="tel"
+                          placeholder="024 123 4567"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="accountName">Account Name</Label>
+                        <Input
+                          id="accountName"
+                          placeholder="John Doe"
+                          required
+                        />
+                      </div>
+
+                      <div className="bg-secondary/30 p-3 rounded-lg text-sm text-muted-foreground">
+                        <p>You will receive a prompt on your phone to approve the payment.</p>
+                      </div>
+                    </div>
+                  )}
 
                   <Button type="submit" variant="hero" size="lg" className="w-full mt-6">
                     Complete Payment - {formatPrice(calculations.total)}

@@ -300,9 +300,6 @@ const Index = () => {
       <section className="py-10 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4 mx-auto">
-              <Building2 className="h-8 w-8" />
-            </div>
             <h2 className="text-4xl font-bold mb-4">Property Rentals</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               From cozy 1-bedrooms to spacious family apartments. Find your ideal rental property.
@@ -333,9 +330,6 @@ const Index = () => {
       <section className="py-10 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4 mx-auto">
-              <Home className="h-8 w-8" />
-            </div>
             <h2 className="text-4xl font-bold mb-4">Properties for Sale</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Invest in homes, commercial properties, or land. Build your real estate portfolio.
@@ -366,9 +360,6 @@ const Index = () => {
       <section className="py-10 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 text-accent mb-4 mx-auto">
-              <Users className="h-8 w-8" />
-            </div>
             <h2 className="text-4xl font-bold mb-4">Flexi-Assist Services</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Personal assistance from drivers to caregivers. Get help when you need it.

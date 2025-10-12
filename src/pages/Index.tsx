@@ -487,7 +487,7 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-10 bg-secondary/30">
+      <section className="py-10 pb-4 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-8">Trust & Transparency</h2>

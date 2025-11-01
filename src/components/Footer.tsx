@@ -10,9 +10,20 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <img src={logo} alt="FlexiRents" className="h-8 mb-4 brightness-0 invert" />
-            <p className="text-sm opacity-80">
-              Your trusted partner for property rentals, sales, and personalized assistance services.
-            </p>
+            <ul className="space-y-2 text-sm opacity-80">
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>info@flexirents.com</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                <span>+1 (555) 123-4567</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>123 Main St, City</span>
+              </li>
+            </ul>
           </div>
 
           {/* Quick Links */}
@@ -30,11 +41,6 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/flexi-assist" className="hover:text-accent transition-colors">
-                  Flexi-Assist
-                </Link>
-              </li>
-              <li>
                 <Link to="/list-property" className="hover:text-accent transition-colors">
                   List Property
                 </Link>
@@ -42,6 +48,11 @@ const Footer = () => {
               <li>
                 <Link to="/refer" className="hover:text-accent transition-colors">
                   Refer To Earn
+                </Link>
+              </li>
+              <li>
+                <Link to="/career" className="hover:text-accent transition-colors">
+                  Career
                 </Link>
               </li>
             </ul>
@@ -52,28 +63,24 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm opacity-80">
               <li>Property Management</li>
-              <li>Personal Assistance</li>
+              <li>
+                <Link to="/flexi-assist" className="hover:text-accent transition-colors">
+                  Flexi-Assist
+                </Link>
+              </li>
               <li>Property Verification</li>
               <li>24/7 Support</li>
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4">Contact Us</h3>
+            <h3 className="font-semibold mb-4">Support</h3>
             <ul className="space-y-2 text-sm opacity-80">
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span>info@flexirents.com</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <span>+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>123 Main St, City</span>
-              </li>
+              <li>Help Center</li>
+              <li>FAQs</li>
+              <li>Terms of Service</li>
+              <li>Privacy Policy</li>
             </ul>
           </div>
         </div>

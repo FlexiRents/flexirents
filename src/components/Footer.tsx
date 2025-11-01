@@ -39,6 +39,11 @@ const Footer = () => {
                   List Property
                 </Link>
               </li>
+              <li>
+                <Link to="/refer" className="hover:text-accent transition-colors">
+                  Refer To Earn
+                </Link>
+              </li>
             </ul>
           </div>
 

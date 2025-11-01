@@ -13,6 +13,7 @@ import FlexiAssist from "./pages/FlexiAssist";
 import ListProperty from "./pages/ListProperty";
 import Checkout from "./pages/Checkout";
 import Wishlist from "./pages/Wishlist";
+import Refer from "./pages/Refer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/list-property" element={<ListProperty />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/refer" element={<Refer />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

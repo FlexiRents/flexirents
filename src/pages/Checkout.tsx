@@ -107,7 +107,11 @@ const Checkout = () => {
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Checkout</h1>
             <p className="text-muted-foreground text-lg">
-              Complete your booking and secure your selection
+              {type === "rental" 
+                ? "Complete your payment and secure your rent"
+                : type === "sale"
+                ? "Complete your payment and secure your sale"
+                : "Complete your booking and secure your service"}
             </p>
           </div>
 
@@ -115,7 +119,9 @@ const Checkout = () => {
             {/* Order Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle>
+                  {type === "rental" ? "Rent Summary" : type === "sale" ? "Sale Summary" : "Service Summary"}
+                </CardTitle>
                 <CardDescription>Review your selection</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

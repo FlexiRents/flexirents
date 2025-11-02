@@ -48,10 +48,10 @@ const Checkout = () => {
           securityDeposit,
         });
       } else {
-        // Flexible payment: Pay 1 month + security deposit + 12% commission
-        const firstMonth = monthlyPrice * 1;
+        // Flexible payment: Pay 50% advance + security deposit + 12% commission
+        const advance = baseRent * 0.50;
         const commission = baseRent * 0.12;
-        const total = firstMonth + securityDeposit + commission;
+        const total = advance + securityDeposit + commission;
         
         setCalculations({
           baseAmount: baseRent,
@@ -188,7 +188,7 @@ const Checkout = () => {
                           <RadioGroupItem value="flexible" id="flexible" />
                           <Label htmlFor="flexible" className="cursor-pointer flex-1">
                             <div className="font-semibold">Flexible Payment (12% commission)</div>
-                            <div className="text-xs text-muted-foreground">Pay 1 month + security deposit now, remaining months paid monthly</div>
+                            <div className="text-xs text-muted-foreground">Pay 50% advance + security deposit now, remaining balance paid over time</div>
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
@@ -238,9 +238,21 @@ const Checkout = () => {
                       ) : (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">First Month Rent</span>
+                            <span className="text-muted-foreground">Monthly Rent</span>
                             <span className="font-semibold">
                               {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Full Rent ({duration} months)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.baseAmount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Advance Payment (50% of full rent)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.baseAmount * 0.50)}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -250,13 +262,13 @@ const Checkout = () => {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (12% of {duration}-month rent)</span>
+                            <span className="text-muted-foreground">Commission (12%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.commission)}
                             </span>
                           </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total (Initial Pay)</span>
+                            <span>Total (Initial Payment)</span>
                             <span className="text-accent">
                               {formatPrice(calculations.total)}
                             </span>
@@ -363,7 +375,7 @@ const Checkout = () => {
                     {type === "rental" 
                       ? paymentPlan === "full"
                         ? "Full payment: Pay all months upfront + refundable security deposit + 10% commission. Save 2% on commission fees."
-                        : "Flexible payment: Pay first month + refundable security deposit + 12% commission upfront. Remaining months paid monthly."
+                        : "Flexible payment: Pay 50% advance + refundable security deposit + 12% commission upfront. Remaining balance paid over time."
                       : "All prices include a 10% commission for FlexiRents platform services and support."}
                   </p>
                 </div>

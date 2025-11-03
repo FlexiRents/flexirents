@@ -238,12 +238,6 @@ const Checkout = () => {
                       ) : (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Monthly Rent</span>
-                            <span className="font-semibold">
-                              {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Full Rent ({duration} months)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.baseAmount)}

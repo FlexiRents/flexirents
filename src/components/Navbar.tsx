@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo-main.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="FlexiRents" className="h-8" />
+            <img src={logo} alt="FlexiRents - Rent, Stress-Free!" className="h-10 w-auto object-contain" />
           </Link>
 
           {/* Desktop Navigation */}

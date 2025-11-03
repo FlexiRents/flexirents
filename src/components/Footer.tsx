@@ -31,8 +31,23 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm opacity-80">
               <li>
-                <Link to="/list-property" className="hover:text-accent transition-colors">
-                  List Property
+                <Link to="/about" className="hover:text-accent transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-accent transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-accent transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/faqs" className="hover:text-accent transition-colors">
+                  FAQs
                 </Link>
               </li>
               <li>
@@ -43,6 +58,11 @@ const Footer = () => {
               <li>
                 <Link to="/career" className="hover:text-accent transition-colors">
                   Career
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="hover:text-accent transition-colors">
+                  Blog
                 </Link>
               </li>
             </ul>

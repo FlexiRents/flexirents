@@ -31,16 +31,6 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm opacity-80">
               <li>
-                <Link to="/rentals" className="hover:text-accent transition-colors">
-                  Rentals
-                </Link>
-              </li>
-              <li>
-                <Link to="/sales" className="hover:text-accent transition-colors">
-                  For Sale
-                </Link>
-              </li>
-              <li>
                 <Link to="/list-property" className="hover:text-accent transition-colors">
                   List Property
                 </Link>
@@ -68,7 +58,16 @@ const Footer = () => {
                   Flexi-Assist
                 </Link>
               </li>
-              <li>Property Verification</li>
+              <li>
+                <Link to="/rentals" className="hover:text-accent transition-colors">
+                  Properties for Rentals
+                </Link>
+              </li>
+              <li>
+                <Link to="/sales" className="hover:text-accent transition-colors">
+                  Properties for Sale
+                </Link>
+              </li>
               <li>24/7 Support</li>
             </ul>
           </div>

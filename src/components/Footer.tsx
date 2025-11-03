@@ -52,12 +52,6 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm opacity-80">
-              <li>Property Management</li>
-              <li>
-                <Link to="/flexi-assist" className="hover:text-accent transition-colors">
-                  Flexi-Assist
-                </Link>
-              </li>
               <li>
                 <Link to="/rentals" className="hover:text-accent transition-colors">
                   Properties for Rentals
@@ -68,7 +62,12 @@ const Footer = () => {
                   Properties for Sale
                 </Link>
               </li>
-              <li>24/7 Support</li>
+              <li>Property Management</li>
+              <li>
+                <Link to="/flexi-assist" className="hover:text-accent transition-colors">
+                  Flexi-Assist Services
+                </Link>
+              </li>
             </ul>
           </div>
 

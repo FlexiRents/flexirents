@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Car, Heart as HeartIcon, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Car, Heart as HeartIcon, Sparkles, ChevronLeft, ChevronRight, Monitor, Hammer, Sofa, Wrench } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import ServiceCard from "@/components/ServiceCard";
+import VendorCard from "@/components/VendorCard";
 import heroImage from "@/assets/hero-property.jpg";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
@@ -135,6 +136,37 @@ const featuredServices = [
     title: "Housekeeper",
     description: "Professional housekeeping services to keep your home spotless.",
     rate: "$18",
+  },
+];
+
+const vendorCategories = [
+  {
+    id: 1,
+    icon: <Monitor className="h-8 w-8" />,
+    title: "Electronics & Appliances",
+    description: "Browse top-rated vendors for TVs, phones, laptops, and home appliances with verified quality and competitive prices.",
+    vendorCount: 45,
+  },
+  {
+    id: 2,
+    icon: <Hammer className="h-8 w-8" />,
+    title: "Construction Materials",
+    description: "Connect with trusted suppliers of cement, steel, lumber, and all building materials for your projects.",
+    vendorCount: 38,
+  },
+  {
+    id: 3,
+    icon: <Sofa className="h-8 w-8" />,
+    title: "Furniture & Home Decor",
+    description: "Discover quality furniture vendors offering modern and traditional pieces to complete your space.",
+    vendorCount: 52,
+  },
+  {
+    id: 4,
+    icon: <Wrench className="h-8 w-8" />,
+    title: "Tools & Equipment",
+    description: "Find reliable vendors for professional tools, machinery, and equipment for any job or project.",
+    vendorCount: 29,
   },
 ];
 
@@ -380,6 +412,36 @@ const Index = () => {
             <Button variant="default" size="lg" asChild>
               <Link to="/flexi-assist">
                 Book Services <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Marketplace Section */}
+      <section className="py-10 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Marketplace</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Connect with verified vendors for electronics, construction materials, and more. Quality products from trusted suppliers.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {vendorCategories.map((category) => (
+              <VendorCard
+                key={category.id}
+                {...category}
+                onExplore={() => navigate("/marketplace")}
+              />
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button variant="default" size="lg" asChild>
+              <Link to="/marketplace">
+                Browse All Vendors <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>

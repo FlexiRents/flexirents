@@ -88,6 +88,11 @@ const Footer = () => {
                   Flexi-Assist Services
                 </Link>
               </li>
+              <li>
+                <Link to="/marketplace" className="hover:text-accent transition-colors">
+                  Market Place
+                </Link>
+              </li>
             </ul>
           </div>
 

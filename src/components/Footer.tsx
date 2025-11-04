@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, MessageCircle, Twitter } from "lucide-react";
 import logo from "@/assets/logo-footer.png";
 
 const Footer = () => {
@@ -103,6 +103,9 @@ const Footer = () => {
               </a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <Instagram className="h-6 w-6" />
+              </a>
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                <Twitter className="h-6 w-6" />
               </a>
               <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <Youtube className="h-6 w-6" />

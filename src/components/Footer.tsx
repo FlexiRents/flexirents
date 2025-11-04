@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, MessageCircle } from "lucide-react";
 import logo from "@/assets/logo-footer.png";
 
 const Footer = () => {
@@ -91,15 +91,23 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Social Media */}
           <div>
-            <h3 className="font-semibold mb-4">Support</h3>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li>Help Center</li>
-              <li>FAQs</li>
-              <li>Terms of Service</li>
-              <li>Privacy Policy</li>
-            </ul>
+            <h3 className="font-semibold mb-4">Follow Us</h3>
+            <div className="flex gap-4">
+              <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                <MessageCircle className="h-6 w-6" />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                <Facebook className="h-6 w-6" />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                <Instagram className="h-6 w-6" />
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                <Youtube className="h-6 w-6" />
+              </a>
+            </div>
           </div>
         </div>
 

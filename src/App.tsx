@@ -16,6 +16,7 @@ import Wishlist from "./pages/Wishlist";
 import Refer from "./pages/Refer";
 import Career from "./pages/Career";
 import Marketplace from "./pages/Marketplace";
+import VendorRegistration from "./pages/VendorRegistration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/refer" element={<Refer />} />
               <Route path="/career" element={<Career />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/vendor-registration" element={<VendorRegistration />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

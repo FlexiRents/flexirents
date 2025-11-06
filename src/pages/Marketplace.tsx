@@ -244,9 +244,16 @@ const Marketplace = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Marketplace
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
             Discover verified vendors for all your property and home needs
           </p>
+          <Button 
+            onClick={() => navigate("/vendor-registration")}
+            size="lg"
+            className="mb-4"
+          >
+            Become a Vendor
+          </Button>
         </div>
 
         {/* Search and Filters */}

@@ -4,7 +4,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServiceCard from "@/components/ServiceCard";
 import { Input } from "@/components/ui/input";
-import { Car, Baby, Paintbrush, Hammer, Wrench, Heart, Droplet, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, Baby, Paintbrush, Hammer, Wrench, Heart, Droplet, Search, UserPlus } from "lucide-react";
 
 const services = [
   {
@@ -83,10 +84,22 @@ const FlexiAssist = () => {
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Flexi-Assist Services</h1>
-            <p className="text-muted-foreground text-lg mb-6">
-              Professional assistance services on-demand. Book vetted professionals for any task.
-            </p>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+              <div className="flex-1">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">Flexi-Assist Services</h1>
+                <p className="text-muted-foreground text-lg">
+                  Professional assistance services on-demand. Book vetted professionals for any task.
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate("/service-provider-registration")}
+                className="md:self-start"
+                size="lg"
+              >
+                <UserPlus className="mr-2 h-5 w-5" />
+                Become a Service Provider
+              </Button>
+            </div>
             
             <div className="max-w-md relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

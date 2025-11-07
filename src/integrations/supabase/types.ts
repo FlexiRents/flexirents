@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      service_provider_registrations: {
+        Row: {
+          availability: string
+          certifications: string | null
+          contact_name: string
+          created_at: string
+          description: string
+          email: string
+          hourly_rate: string
+          id: string
+          location: string
+          phone: string
+          provider_name: string
+          region: string
+          service_category: string
+          status: string
+          updated_at: string
+          years_experience: number
+        }
+        Insert: {
+          availability: string
+          certifications?: string | null
+          contact_name: string
+          created_at?: string
+          description: string
+          email: string
+          hourly_rate: string
+          id?: string
+          location: string
+          phone: string
+          provider_name: string
+          region: string
+          service_category: string
+          status?: string
+          updated_at?: string
+          years_experience: number
+        }
+        Update: {
+          availability?: string
+          certifications?: string | null
+          contact_name?: string
+          created_at?: string
+          description?: string
+          email?: string
+          hourly_rate?: string
+          id?: string
+          location?: string
+          phone?: string
+          provider_name?: string
+          region?: string
+          service_category?: string
+          status?: string
+          updated_at?: string
+          years_experience?: number
+        }
+        Relationships: []
+      }
       vendor_registrations: {
         Row: {
           business_category: string

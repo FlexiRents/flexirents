@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Heart } from "lucide-react";
+import { Menu, Heart, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "@/assets/logo-main.png";
 
@@ -11,6 +12,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { wishlist } = useWishlist();
   const { currency, setCurrency } = useCurrency();
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -51,9 +53,22 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
-            <Button variant="hero" asChild>
-              <Link to="/checkout">Get Started</Link>
-            </Button>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {user.email}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Button variant="hero" asChild>
+                <Link to="/auth">Login</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -116,9 +131,22 @@ const Navbar = () => {
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
                 Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
               </Link>
-              <Button variant="hero" asChild onClick={() => setIsOpen(false)}>
-                <Link to="/checkout">Get Started</Link>
-              </Button>
+              {user ? (
+                <>
+                  <div className="text-sm text-muted-foreground flex items-center gap-2 py-2">
+                    <User className="h-4 w-4" />
+                    {user.email}
+                  </div>
+                  <Button variant="outline" onClick={() => { signOut(); setIsOpen(false); }}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button variant="hero" asChild onClick={() => setIsOpen(false)}>
+                  <Link to="/auth">Login</Link>
+                </Button>
+              )}
             </div>
           </div>
         )}

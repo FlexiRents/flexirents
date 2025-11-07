@@ -1,80 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ServiceCard from "@/components/ServiceCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Car, Baby, Paintbrush, Hammer, Wrench, Heart, Droplet, Search, UserPlus } from "lucide-react";
-
-const services = [
-  {
-    id: 1,
-    icon: <Car className="h-6 w-6" />,
-    title: "Driver",
-    description: "Professional drivers for your daily commute or special occasions.",
-    rate: "$25/hour",
-  },
-  {
-    id: 2,
-    icon: <Baby className="h-6 w-6" />,
-    title: "Nanny",
-    description: "Experienced childcare professionals to look after your little ones.",
-    rate: "$20/hour",
-  },
-  {
-    id: 3,
-    icon: <Paintbrush className="h-6 w-6" />,
-    title: "Painter",
-    description: "Expert painters for interior and exterior painting projects.",
-    rate: "$30/hour",
-  },
-  {
-    id: 4,
-    icon: <Hammer className="h-6 w-6" />,
-    title: "Carpenter",
-    description: "Skilled carpenters for furniture, repairs, and custom woodwork.",
-    rate: "$35/hour",
-  },
-  {
-    id: 5,
-    icon: <Wrench className="h-6 w-6" />,
-    title: "Mechanic",
-    description: "Mobile mechanics for vehicle repairs and maintenance.",
-    rate: "$40/hour",
-  },
-  {
-    id: 6,
-    icon: <Heart className="h-6 w-6" />,
-    title: "Caregiver",
-    description: "Compassionate caregivers for elderly or special needs care.",
-    rate: "$22/hour",
-  },
-  {
-    id: 7,
-    icon: <Droplet className="h-6 w-6" />,
-    title: "Car Washer",
-    description: "Professional car washing and detailing services at your location.",
-    rate: "$18/hour",
-  },
-];
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Search, UserPlus, MapPin, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import RatingStars from "@/components/RatingStars";
 
 const FlexiAssist = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [providers, setProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSelectService = (serviceId: number) => {
-    const service = services.find((s) => s.id === serviceId);
-    if (service) {
-      // Pass only serializable data without the icon
-      const { icon, ...serializableService } = service;
-      navigate("/checkout", { state: { type: "service", service: serializableService } });
+  useEffect(() => {
+    fetchProviders();
+  }, []);
+
+  const fetchProviders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("service_provider_registrations")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch ratings for each provider
+      const providersWithRatings = await Promise.all(
+        (data || []).map(async (provider) => {
+          const { data: ratingData } = await supabase.rpc("get_average_rating", {
+            p_target_type: "service_provider",
+            p_target_id: provider.id,
+          });
+
+          const { data: countData } = await supabase.rpc("get_review_count", {
+            p_target_type: "service_provider",
+            p_target_id: provider.id,
+          });
+
+          return {
+            ...provider,
+            averageRating: ratingData || 0,
+            reviewCount: countData || 0,
+          };
+        })
+      );
+
+      setProviders(providersWithRatings);
+    } catch (error) {
+      console.error("Error fetching providers:", error);
+      toast({
+        title: "Error",
+        description: "Could not load service providers.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredServices = services.filter((service) =>
-    service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    service.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProviders = providers.filter(
+    (provider) =>
+      provider.provider_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      provider.service_category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      provider.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -113,21 +108,73 @@ const FlexiAssist = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredServices.length > 0 ? (
-              filteredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  {...service}
-                  onSelect={() => handleSelectService(service.id)}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-lg">No services found matching your search.</p>
-              </div>
-            )}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading service providers...</p>
+            </div>
+          ) : filteredProviders.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProviders.map((provider) => (
+                <Card 
+                  key={provider.id} 
+                  className="hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 cursor-pointer"
+                  onClick={() => navigate(`/service-provider/${provider.id}`)}
+                >
+                  <CardContent className="pt-6">
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-lg mb-1">{provider.provider_name}</h3>
+                      <p className="text-sm text-primary font-medium">{provider.service_category}</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mb-3">
+                      <RatingStars rating={provider.averageRating} size={14} />
+                      <span className="text-xs text-muted-foreground">
+                        ({provider.reviewCount})
+                      </span>
+                    </div>
+
+                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
+                      {provider.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span>{provider.location}, {provider.region}</span>
+                    </div>
+
+                    <div className="text-primary font-semibold">
+                      {provider.hourly_rate}/hr
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/service-provider/${provider.id}`);
+                      }}
+                    >
+                      View Profile
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground text-lg mb-4">
+                {searchQuery 
+                  ? "No service providers found matching your search." 
+                  : "No service providers available yet."}
+              </p>
+              {searchQuery && (
+                <Button variant="outline" onClick={() => setSearchQuery("")}>
+                  Clear Search
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

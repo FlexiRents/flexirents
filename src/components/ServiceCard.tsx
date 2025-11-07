@@ -69,7 +69,7 @@ const ServiceCard = ({ id, icon, title, description, rate, onSelect }: ServiceCa
       </CardContent>
       <CardFooter>
         <Button className="w-full" variant="outline" onClick={onSelect}>
-          Book Service
+          View Details
         </Button>
       </CardFooter>
     </Card>

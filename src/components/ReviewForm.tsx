@@ -1,0 +1,166 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const reviewSchema = z.object({
+  rating: z.number().min(1).max(5),
+  reviewText: z.string().optional(),
+});
+
+type ReviewFormData = z.infer<typeof reviewSchema>;
+
+interface ReviewFormProps {
+  targetType: "vendor" | "service_provider";
+  targetId: string;
+  bookingId?: string;
+  onSuccess?: () => void;
+}
+
+const ReviewForm = ({ targetType, targetId, bookingId, onSuccess }: ReviewFormProps) => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hoveredStar, setHoveredStar] = useState(0);
+
+  const form = useForm<ReviewFormData>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: {
+      rating: 0,
+      reviewText: "",
+    },
+  });
+
+  const rating = form.watch("rating");
+
+  const onSubmit = async (data: ReviewFormData) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to leave a review.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (data.rating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a rating before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const reviewData: any = {
+        reviewer_user_id: user.id,
+        target_type: targetType,
+        target_id: targetId,
+        rating: data.rating,
+        review_text: data.reviewText || null,
+      };
+
+      if (bookingId) {
+        reviewData.booking_id = bookingId;
+      }
+
+      const { error } = await supabase.from("reviews").insert([reviewData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Review Submitted!",
+        description: "Thank you for your feedback.",
+      });
+
+      form.reset();
+      onSuccess?.();
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Error",
+        description: error.message || "There was an error submitting your review. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="rating"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Your Rating</FormLabel>
+              <FormControl>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => field.onChange(star)}
+                      onMouseEnter={() => setHoveredStar(star)}
+                      onMouseLeave={() => setHoveredStar(0)}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star
+                        size={32}
+                        className={
+                          star <= (hoveredStar || rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }
+                      />
+                    </button>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="reviewText"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Your Review (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Share your experience..."
+                  className="min-h-[100px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit Review"}
+        </Button>
+      </form>
+    </Form>
+  );
+};
+
+export default ReviewForm;

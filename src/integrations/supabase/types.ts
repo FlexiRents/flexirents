@@ -14,6 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string
+          id: string
+          notes: string | null
+          service_provider_id: string
+          service_type: string
+          status: string
+          total_hours: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          service_provider_id: string
+          service_type: string
+          status?: string
+          total_hours?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          service_provider_id?: string
+          service_type?: string
+          status?: string
+          total_hours?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_provider_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          rating: number
+          review_text: string | null
+          reviewer_user_id: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          reviewer_user_id: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          reviewer_user_id?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_provider_registrations: {
         Row: {
           availability: string
@@ -124,7 +245,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_average_rating: {
+        Args: { p_target_id: string; p_target_type: string }
+        Returns: number
+      }
+      get_review_count: {
+        Args: { p_target_id: string; p_target_type: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

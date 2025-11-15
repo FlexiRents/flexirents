@@ -36,6 +36,16 @@ const Navbar = () => {
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors">
               List Property
             </Link>
+            {user && (
+              <>
+                <Link to="/my-bookings" className="text-foreground hover:text-accent transition-colors">
+                  My Bookings
+                </Link>
+                <Link to="/profile" className="text-foreground hover:text-accent transition-colors">
+                  Profile
+                </Link>
+              </>
+            )}
             <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
               <SelectTrigger className="w-[110px]">
                 <SelectValue />
@@ -112,6 +122,24 @@ const Navbar = () => {
               >
                 List Property
               </Link>
+              {user && (
+                <>
+                  <Link
+                    to="/my-bookings"
+                    className="text-foreground hover:text-accent transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    My Bookings
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="text-foreground hover:text-accent transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                </>
+              )}
               <div className="py-2">
                 <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
                   <SelectTrigger className="w-full">

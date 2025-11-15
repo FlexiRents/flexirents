@@ -6,6 +6,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NotificationPanel } from "@/components/NotificationPanel";
 import logo from "@/assets/logo-main.png";
 
 const Navbar = () => {
@@ -58,6 +59,7 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            {user && <NotificationPanel />}
             {user ? (
               <div className="flex items-center gap-3">
                 <Link to="/profile">
@@ -156,6 +158,11 @@ const Navbar = () => {
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
                 Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
               </Link>
+              {user && (
+                <div className="py-2">
+                  <NotificationPanel />
+                </div>
+              )}
               {user ? (
                 <>
                   <div className="text-sm text-muted-foreground flex items-center gap-2 py-2">

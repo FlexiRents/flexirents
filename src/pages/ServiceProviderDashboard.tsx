@@ -22,6 +22,7 @@ import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase, MessageSquare, S
 import { MessagingDialog } from "@/components/MessagingDialog";
 import { ReviewForm } from "@/components/ReviewForm";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
+import { PortfolioManagement } from "@/components/PortfolioManagement";
 
 const profileSchema = z.object({
   providerName: z.string().min(2).max(100),
@@ -43,6 +44,7 @@ const ServiceProviderDashboard = () => {
   const { toast } = useToast();
   const [provider, setProvider] = useState<any>(null);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
@@ -66,6 +68,12 @@ const ServiceProviderDashboard = () => {
       fetchBookings();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (provider) {
+      fetchPortfolioImages();
+    }
+  }, [provider]);
 
   const fetchProviderData = async () => {
     try {
@@ -125,6 +133,24 @@ const ServiceProviderDashboard = () => {
       setBookings(data || []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
+    }
+  };
+
+  const fetchPortfolioImages = async () => {
+    if (!provider) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("portfolio_images")
+        .select("*")
+        .eq("provider_id", provider.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setPortfolioImages(data || []);
+    } catch (error) {
+      console.error("Error fetching portfolio images:", error);
     }
   };
 
@@ -254,8 +280,9 @@ const ServiceProviderDashboard = () => {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -383,6 +410,24 @@ const ServiceProviderDashboard = () => {
                     </TableBody>
                   </Table>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="portfolio" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Portfolio Gallery</CardTitle>
+                <CardDescription>
+                  Showcase your work with project photos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PortfolioManagement
+                  providerId={provider.id}
+                  images={portfolioImages}
+                  onUpdate={fetchPortfolioImages}
+                />
               </CardContent>
             </Card>
           </TabsContent>

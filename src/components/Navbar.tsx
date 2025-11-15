@@ -37,11 +37,6 @@ const Navbar = () => {
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors">
               List Property
             </Link>
-            {user && (
-              <Link to="/my-bookings" className="text-foreground hover:text-accent transition-colors">
-                Bookings
-              </Link>
-            )}
             <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
               <SelectTrigger className="w-[110px]">
                 <SelectValue />
@@ -123,13 +118,6 @@ const Navbar = () => {
               </Link>
               {user && (
                 <>
-                  <Link
-                    to="/my-bookings"
-                    className="text-foreground hover:text-accent transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    My Bookings
-                  </Link>
                   <Link
                     to="/profile"
                     className="text-foreground hover:text-accent transition-colors"

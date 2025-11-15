@@ -363,6 +363,60 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          images: string[] | null
+          is_featured: boolean | null
+          name: string
+          price: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          name: string
+          price?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          images?: string[] | null
+          is_featured?: boolean | null
+          name?: string
+          price?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "approved_vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_products_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_registrations: {
         Row: {
           business_category: string

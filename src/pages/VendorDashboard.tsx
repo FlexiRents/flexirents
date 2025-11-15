@@ -16,9 +16,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Store, Mail, Phone, MapPin, Globe, FileText, Star, TrendingUp } from "lucide-react";
+import { Store, Mail, Phone, MapPin, Globe, FileText, Star, TrendingUp, Plus, Edit, Trash2, Package } from "lucide-react";
 import RatingStars from "@/components/RatingStars";
 import { ghanaRegions } from "@/data/ghanaLocations";
+import { ProductGallery } from "@/components/ProductGallery";
+import { ProductForm } from "@/components/ProductForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const profileSchema = z.object({
   businessName: z.string().trim().min(2, "Business name must be at least 2 characters").max(100),
@@ -44,6 +56,9 @@ const VendorDashboard = () => {
   const [updating, setUpdating] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [products, setProducts] = useState<any[]>([]);
+  const [productFormOpen, setProductFormOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const {
     register,
@@ -68,6 +83,7 @@ const VendorDashboard = () => {
     if (user) {
       fetchVendorData();
       fetchReviews();
+      fetchProducts();
     }
   }, [user]);
 
@@ -134,6 +150,24 @@ const VendorDashboard = () => {
     }
   };
 
+  const fetchProducts = async () => {
+    if (!vendor) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('vendor_products')
+        .select('*')
+        .eq('vendor_id', vendor.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
   const fetchReviews = async () => {
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -166,6 +200,30 @@ const VendorDashboard = () => {
       setReviews(data || []);
     } catch (error) {
       console.error("Error fetching reviews:", error);
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('vendor_products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Product deleted successfully!",
+      });
+
+      fetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -308,11 +366,100 @@ const VendorDashboard = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-2 mx-auto">
-              <TabsTrigger value="profile">Profile Management</TabsTrigger>
+          <Tabs defaultValue="products" className="space-y-6">
+            <TabsList className="grid w-full max-w-3xl grid-cols-3 mx-auto">
+              <TabsTrigger value="products">Products ({products.length})</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="products">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Products & Services</CardTitle>
+                      <CardDescription>
+                        Showcase your offerings with detailed descriptions and images
+                      </CardDescription>
+                    </div>
+                    <Button onClick={() => {
+                      setSelectedProduct(null);
+                      setProductFormOpen(true);
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Product
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {products.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">
+                        No products added yet. Start showcasing your offerings!
+                      </p>
+                      <Button onClick={() => setProductFormOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Your First Product
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {products.map((product) => (
+                        <Card key={product.id}>
+                          <CardContent className="pt-6">
+                            <ProductGallery 
+                              images={product.images || []} 
+                              productName={product.name}
+                            />
+                            <div className="mt-4 space-y-2">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                                  <Badge variant="secondary" className="mt-1">
+                                    {product.category}
+                                  </Badge>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setSelectedProduct(product);
+                                      setProductFormOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => handleDeleteProduct(product.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialog>
+                                </div>
+                              </div>
+                              {product.price && (
+                                <p className="text-sm font-medium text-primary">
+                                  {product.price}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground line-clamp-3">
+                                {product.description}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="profile">
               <Card>
@@ -571,6 +718,14 @@ const VendorDashboard = () => {
       </div>
 
       <Footer />
+
+      <ProductForm
+        open={productFormOpen}
+        onOpenChange={setProductFormOpen}
+        vendorId={vendor.id}
+        product={selectedProduct}
+        onSuccess={fetchProducts}
+      />
     </div>
   );
 };

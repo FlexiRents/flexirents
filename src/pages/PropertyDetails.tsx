@@ -1,10 +1,15 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
   Tag, CheckCircle, ArrowLeft, DollarSign 
@@ -47,6 +52,15 @@ const PropertyDetails = () => {
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+    time: "",
+    message: "",
+  });
   
   // Get listing type from URL search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -82,6 +96,23 @@ const PropertyDetails = () => {
           image: property.images[0]
         }
       }
+    });
+  };
+
+  const handleScheduleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Viewing scheduled!",
+      description: `We'll contact you at ${scheduleForm.email} to confirm your viewing for ${property.title}.`,
+    });
+    setShowSchedule(false);
+    setScheduleForm({
+      name: "",
+      email: "",
+      phone: "",
+      date: "",
+      time: "",
+      message: "",
     });
   };
 
@@ -296,12 +327,91 @@ const PropertyDetails = () => {
                     Proceed to Payment
                   </Button>
 
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                  >
-                    Contact Agent
-                  </Button>
+                  <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Schedule Viewing
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Schedule a Viewing for {property.title}</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleScheduleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Full Name</Label>
+                          <Input
+                            id="name"
+                            required
+                            value={scheduleForm.name}
+                            onChange={(e) => setScheduleForm({ ...scheduleForm, name: e.target.value })}
+                            placeholder="John Doe"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            required
+                            value={scheduleForm.email}
+                            onChange={(e) => setScheduleForm({ ...scheduleForm, email: e.target.value })}
+                            placeholder="john@example.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            required
+                            value={scheduleForm.phone}
+                            onChange={(e) => setScheduleForm({ ...scheduleForm, phone: e.target.value })}
+                            placeholder="+233 XX XXX XXXX"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="date">Preferred Date</Label>
+                            <Input
+                              id="date"
+                              type="date"
+                              required
+                              value={scheduleForm.date}
+                              onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="time">Preferred Time</Label>
+                            <Input
+                              id="time"
+                              type="time"
+                              required
+                              value={scheduleForm.time}
+                              onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="message">Additional Message (Optional)</Label>
+                          <Textarea
+                            id="message"
+                            value={scheduleForm.message}
+                            onChange={(e) => setScheduleForm({ ...scheduleForm, message: e.target.value })}
+                            placeholder="Any specific requirements or questions..."
+                            rows={3}
+                          />
+                        </div>
+                        <Button type="submit" className="w-full">
+                          Confirm Schedule
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
 
                   <Separator className="my-4" />
 

@@ -1,13 +1,9 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bed, Bath, Square, Check, Heart, Calendar } from "lucide-react";
+import { Bed, Bath, Square, Heart } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -46,15 +42,6 @@ const PropertyCard = ({
   onSelect,
 }: PropertyCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
-  const [showSchedule, setShowSchedule] = useState(false);
-  const [scheduleForm, setScheduleForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    date: "",
-    time: "",
-    message: "",
-  });
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
@@ -90,23 +77,6 @@ const PropertyCard = ({
         description: `${title} has been added to your wishlist.`,
       });
     }
-  };
-
-  const handleScheduleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Viewing scheduled!",
-      description: `We'll contact you at ${scheduleForm.email} to confirm your viewing for ${title}.`,
-    });
-    setShowSchedule(false);
-    setScheduleForm({
-      name: "",
-      email: "",
-      phone: "",
-      date: "",
-      time: "",
-      message: "",
-    });
   };
 
   const handleNavigateToDetails = () => {
@@ -236,16 +206,16 @@ const PropertyCard = ({
       <CardFooter className="flex gap-2">
         <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="flex-1">
-              <Calendar className="h-4 w-4 mr-2" />
+            <Button className="flex-1" variant="outline">
+              <Calendar className="mr-2 h-4 w-4" />
               Schedule Viewing
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Schedule a Viewing - {title}</DialogTitle>
+              <DialogTitle>Schedule a Viewing for {title}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleScheduleSubmit} className="space-y-4 pt-4">
+            <form onSubmit={handleScheduleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -316,19 +286,6 @@ const PropertyCard = ({
             </form>
           </DialogContent>
         </Dialog>
-        <Button 
-          className="flex-1" 
-          variant="hero" 
-          onClick={() => {
-            if (onSelect) {
-              onSelect();
-            } else {
-              navigate(`/property/${id}?type=${type}`);
-            }
-          }}
-        >
-          View Details
-        </Button>
       </CardFooter>
     </Card>
   );

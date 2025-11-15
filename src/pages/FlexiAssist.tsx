@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, UserPlus, MapPin, Star } from "lucide-react";
+import { Search, UserPlus, MapPin, Star, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RatingStars from "@/components/RatingStars";
@@ -123,9 +123,24 @@ const FlexiAssist = () => {
                   onClick={() => navigate(`/service-provider/${provider.id}`)}
                 >
                   <CardContent className="pt-6">
-                    <div className="mb-4">
-                      <h3 className="font-semibold text-lg mb-1">{provider.provider_name}</h3>
-                      <p className="text-sm text-primary font-medium">{provider.service_category}</p>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="relative flex-shrink-0">
+                        {provider.profile_image_url ? (
+                          <img
+                            src={provider.profile_image_url}
+                            alt={provider.provider_name}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-border flex items-center justify-center">
+                            <User className="h-8 w-8 text-primary/60" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg mb-1">{provider.provider_name}</h3>
+                        <p className="text-sm text-primary font-medium">{provider.service_category}</p>
+                      </div>
                     </div>
                     
                     <div className="flex items-center gap-2 mb-3">

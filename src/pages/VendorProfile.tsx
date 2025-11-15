@@ -12,7 +12,7 @@ import ReviewCard from "@/components/ReviewCard";
 import ReviewForm from "@/components/ReviewForm";
 import { ProductGallery } from "@/components/ProductGallery";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Mail, Phone, Globe, Package, Star } from "lucide-react";
+import { MapPin, Mail, Phone, Globe, Package, Star, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const VendorProfile = () => {
@@ -150,13 +150,19 @@ const VendorProfile = () => {
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
               <div className="flex items-start gap-4 flex-1">
-                {vendor.profile_image_url && (
-                  <img
-                    src={vendor.profile_image_url}
-                    alt={vendor.business_name}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-border"
-                  />
-                )}
+                <div className="relative flex-shrink-0">
+                  {vendor.profile_image_url ? (
+                    <img
+                      src={vendor.profile_image_url}
+                      alt={vendor.business_name}
+                      className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-border flex items-center justify-center">
+                      <Building2 className="h-12 w-12 text-primary/60" />
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <h1 className="text-4xl font-bold">{vendor.business_name}</h1>

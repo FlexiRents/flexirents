@@ -25,7 +25,8 @@ import {
   CheckCircle2,
   ArrowLeft,
   Star,
-  MessageSquare
+  MessageSquare,
+  User
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -193,13 +194,19 @@ const ServiceProviderProfile = () => {
                 <CardHeader>
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div className="flex items-start gap-4 flex-1">
-                      {provider.profile_image_url && (
-                        <img
-                          src={provider.profile_image_url}
-                          alt={provider.provider_name}
-                          className="w-24 h-24 rounded-full object-cover border-2 border-border"
-                        />
-                      )}
+                      <div className="relative flex-shrink-0">
+                        {provider.profile_image_url ? (
+                          <img
+                            src={provider.profile_image_url}
+                            alt={provider.provider_name}
+                            className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-border flex items-center justify-center">
+                            <User className="h-12 w-12 text-primary/60" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1">
                         <CardTitle className="text-3xl mb-2">{provider.provider_name}</CardTitle>
                         <div className="flex items-center gap-2 mb-3">

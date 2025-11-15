@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Filter, MapPin } from "lucide-react";
+import { Search, Package, Filter, MapPin, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RatingStars from "@/components/RatingStars";
@@ -186,8 +186,18 @@ const Marketplace = () => {
                 onClick={() => handleExploreVendor(vendor.id)}
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 text-primary group-hover:from-primary/20 group-hover:to-accent/20 transition-all">
-                    <Package className="h-6 w-6" />
+                  <div className="relative flex-shrink-0">
+                    {vendor.profile_image_url ? (
+                      <img
+                        src={vendor.profile_image_url}
+                        alt={vendor.business_name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-border"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-border flex items-center justify-center group-hover:from-primary/20 group-hover:to-accent/20 transition-all">
+                        <Building2 className="h-8 w-8 text-primary/60" />
+                      </div>
+                    )}
                   </div>
                   <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20">
                     Verified

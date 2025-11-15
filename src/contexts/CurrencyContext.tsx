@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Currency = 'USD' | 'GHS';
+type Currency = 'USD' | 'GHS' | 'EUR' | 'GBP' | 'NGN';
 
 interface CurrencyContextType {
   currency: Currency;
@@ -11,8 +11,14 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-// Exchange rate: 1 USD = 12.5 GHS (approximate)
-const USD_TO_GHS_RATE = 12.5;
+// Exchange rates (approximate)
+const EXCHANGE_RATES = {
+  USD: 1,
+  GHS: 12.5,
+  EUR: 0.92,
+  GBP: 0.79,
+  NGN: 1580,
+};
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currency, setCurrency] = useState<Currency>(() => {
@@ -25,15 +31,19 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [currency]);
 
   const convertPrice = (priceUSD: number): number => {
-    if (currency === 'GHS') {
-      return priceUSD * USD_TO_GHS_RATE;
-    }
-    return priceUSD;
+    return priceUSD * EXCHANGE_RATES[currency];
   };
 
   const formatPrice = (priceUSD: number): string => {
     const convertedPrice = convertPrice(priceUSD);
-    const symbol = currency === 'USD' ? '$' : '₵';
+    const currencySymbols: Record<Currency, string> = {
+      USD: '$',
+      GHS: '₵',
+      EUR: '€',
+      GBP: '£',
+      NGN: '₦',
+    };
+    const symbol = currencySymbols[currency];
     return `${symbol}${convertedPrice.toLocaleString()}`;
   };
 

@@ -59,6 +59,13 @@ export type Database = {
             foreignKeyName: "bookings_service_provider_id_fkey"
             columns: ["service_provider_id"]
             isOneToOne: false
+            referencedRelation: "approved_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_provider_id_fkey"
+            columns: ["service_provider_id"]
+            isOneToOne: false
             referencedRelation: "service_provider_registrations"
             referencedColumns: ["id"]
           },
@@ -242,7 +249,99 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      approved_service_providers: {
+        Row: {
+          availability: string | null
+          created_at: string | null
+          description: string | null
+          hourly_rate: string | null
+          id: string | null
+          location: string | null
+          provider_name: string | null
+          region: string | null
+          service_category: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          availability?: string | null
+          created_at?: string | null
+          description?: string | null
+          hourly_rate?: string | null
+          id?: string | null
+          location?: string | null
+          provider_name?: string | null
+          region?: string | null
+          service_category?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          availability?: string | null
+          created_at?: string | null
+          description?: string | null
+          hourly_rate?: string | null
+          id?: string | null
+          location?: string | null
+          provider_name?: string | null
+          region?: string | null
+          service_category?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      approved_vendors: {
+        Row: {
+          business_category: string | null
+          business_name: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          location: string | null
+          region: string | null
+          website: string | null
+        }
+        Insert: {
+          business_category?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          location?: string | null
+          region?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_category?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          location?: string | null
+          region?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_average_rating: {

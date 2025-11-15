@@ -22,6 +22,7 @@ import ServiceProviderRegistration from "./pages/ServiceProviderRegistration";
 import Auth from "./pages/Auth";
 import ServiceProviderProfile from "./pages/ServiceProviderProfile";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
+import VendorDashboard from "./pages/VendorDashboard";
 import MyBookings from "./pages/MyBookings";
 import ClientProfile from "./pages/ClientProfile";
 import VendorProfile from "./pages/VendorProfile";
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/service-provider/:id" element={<ServiceProviderProfile />} />
                 <Route path="/service-provider-dashboard" element={<ServiceProviderDashboard />} />
+                <Route path="/vendor-dashboard" element={<VendorDashboard />} />
                 <Route path="/my-bookings" element={<MyBookings />} />
                 <Route path="/profile" element={<ClientProfile />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />

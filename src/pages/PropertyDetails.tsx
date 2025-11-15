@@ -15,7 +15,8 @@ import ReviewCard from "@/components/ReviewCard";
 import RatingStars from "@/components/RatingStars";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
-  Tag, CheckCircle, ArrowLeft, Heart, Star
+  Tag, CheckCircle, ArrowLeft, Heart, Star, Ruler, 
+  TreePine, Building2, ParkingCircle
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,6 +87,90 @@ const PropertyDetails = () => {
   
   const property = getPropertyById(id || "1", listingType);
   const isRental = listingType === "rent";
+
+  // Get contextual features based on property type
+  const getKeyFeatures = () => {
+    const propertyType = property.apartmentType?.toLowerCase() || '';
+    
+    // Land/Plot properties
+    if (propertyType.includes('land') || propertyType.includes('plot')) {
+      return [
+        {
+          icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
+          value: property.propertySize,
+          label: "Sq Ft",
+          subLabel: `${(property.propertySize / 43560).toFixed(2)} acres`
+        },
+        {
+          icon: <TreePine className="h-6 w-6 mb-2 text-primary" />,
+          value: "Residential",
+          label: "Zoning"
+        },
+        {
+          icon: <MapPin className="h-6 w-6 mb-2 text-primary" />,
+          value: property.compoundType || "Fenced",
+          label: "Property Status"
+        },
+        {
+          icon: <Ruler className="h-6 w-6 mb-2 text-primary" />,
+          value: "Level Terrain",
+          label: "Land Type"
+        }
+      ];
+    }
+    
+    // Commercial properties
+    if (propertyType.includes('commercial') || propertyType.includes('office') || propertyType.includes('warehouse')) {
+      return [
+        {
+          icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
+          value: property.propertySize,
+          label: "Sq Ft"
+        },
+        {
+          icon: <Building2 className="h-6 w-6 mb-2 text-primary" />,
+          value: property.numberOfRooms || "Multiple",
+          label: "Units/Floors"
+        },
+        {
+          icon: <ParkingCircle className="h-6 w-6 mb-2 text-primary" />,
+          value: property.numberOfWashrooms || "Available",
+          label: "Parking Spaces"
+        },
+        {
+          icon: <Home className="h-6 w-6 mb-2 text-primary" />,
+          value: property.apartmentType,
+          label: "Type"
+        }
+      ];
+    }
+    
+    // Default: Residential (Apartments, Houses, etc.)
+    return [
+      {
+        icon: <Bed className="h-6 w-6 mb-2 text-primary" />,
+        value: property.numberOfRooms,
+        label: "Bedrooms"
+      },
+      {
+        icon: <Bath className="h-6 w-6 mb-2 text-primary" />,
+        value: property.numberOfWashrooms,
+        label: "Bathrooms"
+      },
+      {
+        icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
+        value: property.propertySize,
+        label: "Sq Ft"
+      },
+      {
+        icon: <Home className="h-6 w-6 mb-2 text-primary" />,
+        value: property.apartmentType,
+        label: "Type"
+      }
+    ];
+  };
+
+  const keyFeatures = getKeyFeatures();
 
   // Fetch reviews
   useEffect(() => {
@@ -326,25 +411,16 @@ const PropertyDetails = () => {
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4">Key Features</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex flex-col items-center p-4 bg-muted rounded-lg">
-                    <Bed className="h-6 w-6 mb-2 text-primary" />
-                    <span className="font-semibold">{property.numberOfRooms}</span>
-                    <span className="text-sm text-muted-foreground">Bedrooms</span>
-                  </div>
-                  <div className="flex flex-col items-center p-4 bg-muted rounded-lg">
-                    <Bath className="h-6 w-6 mb-2 text-primary" />
-                    <span className="font-semibold">{property.numberOfWashrooms}</span>
-                    <span className="text-sm text-muted-foreground">Bathrooms</span>
-                  </div>
-                  <div className="flex flex-col items-center p-4 bg-muted rounded-lg">
-                    <Maximize className="h-6 w-6 mb-2 text-primary" />
-                    <span className="font-semibold">{property.propertySize}</span>
-                    <span className="text-sm text-muted-foreground">Sq Ft</span>
-                  </div>
-                  <div className="flex flex-col items-center p-4 bg-muted rounded-lg">
-                    <Home className="h-6 w-6 mb-2 text-primary" />
-                    <span className="font-semibold text-center text-sm">{property.apartmentType}</span>
-                  </div>
+                  {keyFeatures.map((feature, index) => (
+                    <div key={index} className="flex flex-col items-center p-4 bg-muted rounded-lg">
+                      {feature.icon}
+                      <span className="font-semibold text-center">{feature.value}</span>
+                      <span className="text-sm text-muted-foreground text-center">{feature.label}</span>
+                      {feature.subLabel && (
+                        <span className="text-xs text-muted-foreground mt-1">{feature.subLabel}</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

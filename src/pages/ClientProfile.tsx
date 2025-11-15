@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { BookingRequestsList } from "@/components/BookingRequestsList";
+import { RoleSelector } from "@/components/RoleSelector";
+import { useUserRole } from "@/hooks/useUserRole";
 import { toast } from "sonner";
 import { 
   User, 
@@ -23,7 +25,8 @@ import {
   Clock,
   CheckCircle2,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Briefcase
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
 import RatingStars from "@/components/RatingStars";
@@ -89,6 +92,7 @@ const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'
 export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { isServiceProvider, loading: roleLoading } = useUserRole();
   const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
@@ -569,11 +573,12 @@ export default function ClientProfile() {
 
           {/* Recent Activity & Tabs */}
           <Tabs defaultValue="activity" className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-4 mx-auto">
-              <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-              <TabsTrigger value="requests">Booking Requests</TabsTrigger>
-              <TabsTrigger value="reviews">My Reviews</TabsTrigger>
-              <TabsTrigger value="settings">Account Settings</TabsTrigger>
+            <TabsList className="grid w-full max-w-3xl grid-cols-5 mx-auto">
+              <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="requests">Requests</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+              <TabsTrigger value="roles">Account Type</TabsTrigger>
             </TabsList>
 
             {/* Recent Activity Tab */}
@@ -943,6 +948,36 @@ export default function ClientProfile() {
                   </form>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Account Type/Roles Tab */}
+            <TabsContent value="roles" className="space-y-6">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2">Manage Account Types</h3>
+                <p className="text-muted-foreground">
+                  Add additional roles to access more features and capabilities
+                </p>
+              </div>
+              <RoleSelector />
+              
+              {isServiceProvider && (
+                <Card className="border-accent">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-accent" />
+                      <CardTitle className="text-lg">Service Provider Dashboard</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Access your service provider dashboard to manage bookings, availability, and customer requests.
+                    </p>
+                    <Button onClick={() => navigate('/service-provider-dashboard')}>
+                      Go to Provider Dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </div>

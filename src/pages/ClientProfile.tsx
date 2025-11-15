@@ -326,6 +326,17 @@ export default function ClientProfile() {
                       {updating ? "Updating..." : "Update Profile"}
                     </Button>
                   </form>
+
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

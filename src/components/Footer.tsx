@@ -98,7 +98,7 @@ const Footer = () => {
 
           {/* Social Media */}
           <div>
-            <h3 className="font-semibold mb-4">Follow Us</h3>
+            <h3 className="font-semibold mb-4">Connect With Us</h3>
             <div className="flex gap-4">
               <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <MessageCircle className="h-6 w-6" />

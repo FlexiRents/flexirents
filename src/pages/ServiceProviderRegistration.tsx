@@ -25,20 +25,20 @@ const serviceCategories = [
 ];
 
 const formSchema = z.object({
-  providerName: z.string().min(2, "Provider name must be at least 2 characters"),
+  providerName: z.string().min(2, "Provider name must be at least 2 characters").max(100, "Provider name must be less than 100 characters"),
   serviceCategory: z.string().min(1, "Please select a service category"),
-  contactName: z.string().min(2, "Contact name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  contactName: z.string().min(2, "Contact name must be at least 2 characters").max(100, "Contact name must be less than 100 characters"),
+  email: z.string().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").max(20, "Phone number must be less than 20 characters"),
   location: z.string().min(1, "Please select a location"),
   region: z.string().min(1, "Please select a region"),
-  description: z.string().min(20, "Description must be at least 20 characters"),
+  description: z.string().min(20, "Description must be at least 20 characters").max(2000, "Description must be less than 2000 characters"),
   hourlyRate: z.string().min(1, "Please enter your hourly rate"),
   yearsExperience: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
     message: "Years of experience must be a valid number",
   }),
-  certifications: z.string().optional(),
-  availability: z.string().min(1, "Please specify your availability"),
+  certifications: z.string().max(500, "Certifications must be less than 500 characters").optional(),
+  availability: z.string().min(1, "Please specify your availability").max(200, "Availability must be less than 200 characters"),
 });
 
 type FormData = z.infer<typeof formSchema>;

@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
-  reviewText: z.string().optional(),
+  reviewText: z.string().max(2000, "Review must be less than 2000 characters").optional(),
 });
 
 type ReviewFormData = z.infer<typeof reviewSchema>;

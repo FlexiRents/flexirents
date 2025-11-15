@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const bookingSchema = z.object({
   bookingDate: z.string().min(1, "Please select a date"),
@@ -29,6 +30,7 @@ interface BookingModalProps {
   providerId: string;
   serviceType: string;
   providerName: string;
+  hourlyRate: number;
   initialDate?: string;
   initialTime?: string;
 }
@@ -39,12 +41,14 @@ const BookingModal = ({
   providerId, 
   serviceType, 
   providerName,
+  hourlyRate,
   initialDate,
   initialTime 
 }: BookingModalProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<BookingFormData>({
@@ -56,6 +60,9 @@ const BookingModal = ({
       notes: "",
     },
   });
+  
+  const totalHours = form.watch("totalHours");
+  const estimatedCost = parseFloat(totalHours || "0") * hourlyRate;
 
   // Update form when initial values change
   useEffect(() => {
@@ -181,6 +188,21 @@ const BookingModal = ({
                 </FormItem>
               )}
             />
+
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Hourly Rate:</span>
+                <span className="font-medium">{formatPrice(hourlyRate)}/hour</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Total Hours:</span>
+                <span className="font-medium">{totalHours || 0}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="font-semibold">Estimated Cost:</span>
+                <span className="font-bold text-lg">{formatPrice(estimatedCost)}</span>
+              </div>
+            </div>
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" disabled={isSubmitting} className="flex-1">

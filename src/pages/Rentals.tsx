@@ -10,13 +10,14 @@ import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import property3br from "@/assets/property-3br.jpg";
 import { ghanaRegions } from "@/data/ghanaLocations";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const rentals = [
   {
     id: 1,
     image: property1br,
     title: "Modern 1 Bedroom Apartment",
-    price: "$1,200/month",
+    price: 1200,
     beds: 1,
     baths: 1,
     sqft: 650,
@@ -32,7 +33,7 @@ const rentals = [
     id: 2,
     image: propertyApartment,
     title: "Luxury Studio Apartment",
-    price: "$1,500/month",
+    price: 1500,
     beds: 1,
     baths: 1,
     sqft: 800,
@@ -48,7 +49,7 @@ const rentals = [
     id: 3,
     image: property3br,
     title: "Spacious 2 Bedroom House",
-    price: "$2,200/month",
+    price: 2200,
     beds: 2,
     baths: 2,
     sqft: 1400,
@@ -64,7 +65,7 @@ const rentals = [
     id: 4,
     image: property1br,
     title: "Cozy 1 Bedroom Condo",
-    price: "$1,350/month",
+    price: 1350,
     beds: 1,
     baths: 1,
     sqft: 700,
@@ -80,7 +81,7 @@ const rentals = [
     id: 5,
     image: propertyApartment,
     title: "Premium 2 Bedroom Apartment",
-    price: "$2,800/month",
+    price: 2800,
     beds: 2,
     baths: 2,
     sqft: 1200,
@@ -96,7 +97,7 @@ const rentals = [
     id: 6,
     image: property3br,
     title: "Family 3 Bedroom Home",
-    price: "$3,200/month",
+    price: 3200,
     beds: 3,
     baths: 2.5,
     sqft: 1800,
@@ -142,12 +143,12 @@ const Rentals = () => {
       rental.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       rental.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const price = parseInt(rental.price.replace(/[^0-9]/g, ""));
+    const priceNum = typeof rental.price === 'number' ? rental.price : parseInt(String(rental.price).replace(/[^0-9]/g, ""));
     
     // Price range filter
     const min = minPrice ? parseInt(minPrice) : 0;
     const max = maxPrice ? parseInt(maxPrice) : Infinity;
-    if (price < min || price > max) return false;
+    if (priceNum < min || priceNum > max) return false;
     
     // Property type filter (for future use when property types are added)
     // Currently all rentals are apartments, but structure is ready

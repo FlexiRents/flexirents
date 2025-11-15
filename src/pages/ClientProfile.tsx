@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const menuItems = [
 
 export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
   const [loading, setLoading] = useState(true);
@@ -243,7 +245,7 @@ export default function ClientProfile() {
                   <CardTitle>Wallet</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Wallet balance: $0.00</p>
+                  <p className="text-muted-foreground">Wallet balance: {formatPrice(0)}</p>
                 </CardContent>
               </Card>
             )}

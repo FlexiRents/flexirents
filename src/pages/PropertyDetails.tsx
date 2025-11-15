@@ -40,7 +40,7 @@ const getPropertyById = (id: string, type: string) => {
     facilities: ["24/7 Security", "Community Center", "Playground", "Swimming Pool"],
     amenities: ["Air Conditioning", "Parking Space", "Garden/Yard", "Storage Unit"],
     googleLocation: "5.6037° N, 0.1870° W",
-    duration: type === "rent" ? "Minimum 12 months" : "N/A",
+    duration: type === "rent" ? "12 months" : "N/A",
     images: ["/placeholder.svg"],
   };
 };

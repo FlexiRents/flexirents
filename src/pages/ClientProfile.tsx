@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, Calendar, Star } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, Calendar, Star, Activity, CreditCard, Wallet, FileText, MapPin } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,11 +29,15 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "profile" | "reviews" | "settings";
+type ActivePanel = "account" | "activity" | "subscriptions" | "wallet" | "billing" | "address" | "settings";
 
 const menuItems = [
-  { id: "profile" as ActivePanel, title: "Profile", icon: User },
-  { id: "reviews" as ActivePanel, title: "Reviews", icon: Star },
+  { id: "account" as ActivePanel, title: "Account", icon: User },
+  { id: "activity" as ActivePanel, title: "Activity", icon: Activity },
+  { id: "subscriptions" as ActivePanel, title: "Subscriptions", icon: CreditCard },
+  { id: "wallet" as ActivePanel, title: "Wallet", icon: Wallet },
+  { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
+  { id: "address" as ActivePanel, title: "Address", icon: MapPin },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
 ];
 
@@ -45,7 +49,7 @@ export default function ClientProfile() {
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [activePanel, setActivePanel] = useState<ActivePanel>("profile");
+  const [activePanel, setActivePanel] = useState<ActivePanel>("account");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -183,7 +187,7 @@ export default function ClientProfile() {
               </h1>
             </div>
 
-            {activePanel === "profile" && (
+            {activePanel === "account" && (
               <Card className="max-w-2xl">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4 mb-6">
@@ -211,13 +215,57 @@ export default function ClientProfile() {
               </Card>
             )}
 
-            {activePanel === "reviews" && (
+            {activePanel === "activity" && (
               <Card className="max-w-2xl">
                 <CardHeader>
-                  <CardTitle>Reviews</CardTitle>
+                  <CardTitle>Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">No reviews yet.</p>
+                  <p className="text-muted-foreground">No recent activity.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activePanel === "subscriptions" && (
+              <Card className="max-w-2xl">
+                <CardHeader>
+                  <CardTitle>Subscriptions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">No active subscriptions.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activePanel === "wallet" && (
+              <Card className="max-w-2xl">
+                <CardHeader>
+                  <CardTitle>Wallet</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Wallet balance: $0.00</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activePanel === "billing" && (
+              <Card className="max-w-2xl">
+                <CardHeader>
+                  <CardTitle>Billing History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">No billing history.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activePanel === "address" && (
+              <Card className="max-w-2xl">
+                <CardHeader>
+                  <CardTitle>Address</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">No addresses saved.</p>
                 </CardContent>
               </Card>
             )}

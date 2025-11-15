@@ -6,15 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Briefcase } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Users, Briefcase, Store } from "lucide-react";
 
 export const RoleSelector = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isServiceProvider, isVendor } = useUserRole();
   const [loading, setLoading] = useState(false);
 
-  const handleAddRole = async (role: 'service_provider') => {
+  const handleAddRole = async (role: 'service_provider' | 'vendor') => {
     if (!user) return;
 
     setLoading(true);
@@ -33,6 +35,8 @@ export const RoleSelector = () => {
       // Redirect based on role
       if (role === 'service_provider') {
         navigate('/service-provider-registration');
+      } else if (role === 'vendor') {
+        navigate('/vendor-registration');
       }
     } catch (error: any) {
       toast({
@@ -46,7 +50,7 @@ export const RoleSelector = () => {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-3">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
@@ -71,11 +75,13 @@ export const RoleSelector = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={isServiceProvider ? "border-accent" : ""}>
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
             <Briefcase className="h-8 w-8 text-accent" />
-            <Badge variant="outline">Available</Badge>
+            <Badge variant={isServiceProvider ? "secondary" : "outline"}>
+              {isServiceProvider ? "Active" : "Available"}
+            </Badge>
           </div>
           <CardTitle>Service Provider</CardTitle>
           <CardDescription>
@@ -91,10 +97,40 @@ export const RoleSelector = () => {
           </ul>
           <Button 
             onClick={() => handleAddRole('service_provider')}
-            disabled={loading}
+            disabled={loading || isServiceProvider}
             className="w-full"
           >
-            {loading ? "Adding..." : "Become a Service Provider"}
+            {isServiceProvider ? "Already Registered" : loading ? "Adding..." : "Become a Service Provider"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className={isVendor ? "border-accent" : ""}>
+        <CardHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <Store className="h-8 w-8 text-accent" />
+            <Badge variant={isVendor ? "secondary" : "outline"}>
+              {isVendor ? "Active" : "Available"}
+            </Badge>
+          </div>
+          <CardTitle>Marketplace Vendor</CardTitle>
+          <CardDescription>
+            List your business in the marketplace
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+            <li>✓ Register your business</li>
+            <li>✓ Manage vendor profile</li>
+            <li>✓ Reach new customers</li>
+            <li>✓ Build credibility</li>
+          </ul>
+          <Button 
+            onClick={() => handleAddRole('vendor')}
+            disabled={loading || isVendor}
+            className="w-full"
+          >
+            {isVendor ? "Already Registered" : loading ? "Adding..." : "Become a Vendor"}
           </Button>
         </CardContent>
       </Card>

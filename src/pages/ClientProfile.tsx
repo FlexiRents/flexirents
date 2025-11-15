@@ -26,7 +26,8 @@ import {
   CheckCircle2,
   TrendingUp,
   ArrowRight,
-  Briefcase
+  Briefcase,
+  Store
 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
 import RatingStars from "@/components/RatingStars";
@@ -92,7 +93,7 @@ const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'
 export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { isServiceProvider, loading: roleLoading } = useUserRole();
+  const { isServiceProvider, isVendor, loading: roleLoading } = useUserRole();
   const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
@@ -960,24 +961,45 @@ export default function ClientProfile() {
               </div>
               <RoleSelector />
               
-              {isServiceProvider && (
-                <Card className="border-accent">
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-5 w-5 text-accent" />
-                      <CardTitle className="text-lg">Service Provider Dashboard</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Access your service provider dashboard to manage bookings, availability, and customer requests.
-                    </p>
-                    <Button onClick={() => navigate('/service-provider-dashboard')}>
-                      Go to Provider Dashboard
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <div className="grid gap-6 md:grid-cols-2">
+                {isServiceProvider && (
+                  <Card className="border-accent">
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-accent" />
+                        <CardTitle className="text-lg">Service Provider Dashboard</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Access your service provider dashboard to manage bookings, availability, and customer requests.
+                      </p>
+                      <Button onClick={() => navigate('/service-provider-dashboard')}>
+                        Go to Provider Dashboard
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {isVendor && (
+                  <Card className="border-accent">
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <Store className="h-5 w-5 text-accent" />
+                        <CardTitle className="text-lg">Vendor Dashboard</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Access your vendor dashboard to manage your business profile and view customer reviews.
+                      </p>
+                      <Button onClick={() => navigate('/vendor-dashboard')}>
+                        Go to Vendor Dashboard
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </div>

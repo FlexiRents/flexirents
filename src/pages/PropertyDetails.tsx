@@ -12,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
-  Tag, CheckCircle, ArrowLeft, DollarSign 
+  Tag, CheckCircle, ArrowLeft, Heart 
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 // This would normally come from a database or API
 const getPropertyById = (id: string, type: string) => {
@@ -52,7 +53,10 @@ const PropertyDetails = () => {
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [showSchedule, setShowSchedule] = useState(false);
+  
+  const inWishlist = isInWishlist(id || "1");
   const [scheduleForm, setScheduleForm] = useState({
     name: "",
     email: "",
@@ -99,6 +103,29 @@ const PropertyDetails = () => {
     });
   };
 
+  const handleWishlistToggle = async () => {
+    if (inWishlist) {
+      await removeFromWishlist(id || "1");
+      toast({
+        title: "Removed from wishlist",
+        description: `${property.title} has been removed from your wishlist.`,
+      });
+    } else {
+      await addToWishlist({
+        id: id || "1",
+        type: isRental ? "rental" : "sale",
+        title: property.title,
+        price: `$${property.price}`,
+        location: `${property.city}, ${property.region}`,
+        image: property.images[0],
+      });
+      toast({
+        title: "Added to wishlist",
+        description: `${property.title} has been added to your wishlist.`,
+      });
+    }
+  };
+
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
@@ -141,6 +168,17 @@ const PropertyDetails = () => {
           <Badge className="absolute top-4 right-4 text-lg px-4 py-2">
             {property.listingType}
           </Badge>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute top-4 left-4 z-10"
+            onClick={handleWishlistToggle}
+          >
+            <Heart
+              className="h-5 w-5"
+              fill={inWishlist ? "currentColor" : "none"}
+            />
+          </Button>
         </div>
 
         {/* Main Content Grid */}

@@ -29,11 +29,10 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "profile" | "bookings" | "reviews" | "settings";
+type ActivePanel = "profile" | "reviews" | "settings";
 
 const menuItems = [
   { id: "profile" as ActivePanel, title: "Profile", icon: User },
-  { id: "bookings" as ActivePanel, title: "Bookings", icon: Calendar },
   { id: "reviews" as ActivePanel, title: "Reviews", icon: Star },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
 ];
@@ -208,17 +207,6 @@ export default function ClientProfile() {
                       Sign Out
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activePanel === "bookings" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>My Bookings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">No bookings yet.</p>
                 </CardContent>
               </Card>
             )}

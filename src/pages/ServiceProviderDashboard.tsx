@@ -21,6 +21,7 @@ import * as z from "zod";
 import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase, MessageSquare, Star } from "lucide-react";
 import { MessagingDialog } from "@/components/MessagingDialog";
 import { ReviewForm } from "@/components/ReviewForm";
+import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 
 const profileSchema = z.object({
   providerName: z.string().min(2).max(100),
@@ -397,6 +398,19 @@ const ServiceProviderDashboard = () => {
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmitProfile)} className="space-y-6">
+                    {/* Profile Picture Section */}
+                    <div className="flex justify-center pb-6 border-b">
+                      <ProfilePictureUpload
+                        currentImageUrl={provider?.profile_image_url}
+                        onImageUpdate={(url) => {
+                          setProvider({ ...provider, profile_image_url: url });
+                        }}
+                        bucketName="service-provider-profiles"
+                        userType="service_provider"
+                        userId={provider.id}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Heart, LogOut, User } from "lucide-react";
+import { Menu, Heart, User } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -56,18 +56,12 @@ const Navbar = () => {
             </Link>
             {user && <NotificationPanel />}
             {user ? (
-              <div className="flex items-center gap-3">
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Profile
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={() => signOut()}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Profile
                 </Button>
-              </div>
+              </Link>
             ) : (
               <Button variant="hero" asChild>
                 <Link to="/auth">Login</Link>
@@ -116,17 +110,6 @@ const Navbar = () => {
               >
                 List Property
               </Link>
-              {user && (
-                <>
-                  <Link
-                    to="/profile"
-                    className="text-foreground hover:text-accent transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                </>
-              )}
               <div className="py-2">
                 <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
                   <SelectTrigger className="w-full">
@@ -152,16 +135,12 @@ const Navbar = () => {
                 </div>
               )}
               {user ? (
-                <>
-                  <div className="text-sm text-muted-foreground flex items-center gap-2 py-2">
-                    <User className="h-4 w-4" />
-                    {user.email}
-                  </div>
-                  <Button variant="outline" onClick={() => { signOut(); setIsOpen(false); }}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
+                <Link to="/profile" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
                   </Button>
-                </>
+                </Link>
               ) : (
                 <Button variant="hero" asChild onClick={() => setIsOpen(false)}>
                   <Link to="/auth">Login</Link>

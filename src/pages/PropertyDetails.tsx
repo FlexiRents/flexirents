@@ -595,6 +595,20 @@ const PropertyDetails = () => {
                       <Button 
                         variant="outline" 
                         className="w-full"
+                        onClick={(e) => {
+                          if (!user) {
+                            e.preventDefault();
+                            toast({
+                              title: "Login Required",
+                              description: "Please log in to schedule a viewing.",
+                            });
+                            navigate('/auth', { 
+                              state: { 
+                                returnUrl: location.pathname + location.search 
+                              } 
+                            });
+                          }
+                        }}
                       >
                         <Calendar className="mr-2 h-4 w-4" />
                         Schedule Viewing

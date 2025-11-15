@@ -9,10 +9,12 @@ import { Search, UserPlus, MapPin, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RatingStars from "@/components/RatingStars";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const FlexiAssist = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { formatPrice } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,7 +145,7 @@ const FlexiAssist = () => {
                     </div>
 
                     <div className="text-primary font-semibold">
-                      {provider.hourly_rate}/hr
+                      {formatPrice(parseFloat((provider.hourly_rate || "").replace(/[^0-9.-]+/g, "")))}/hour
                     </div>
                   </CardContent>
                   <CardFooter>

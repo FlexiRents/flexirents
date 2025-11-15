@@ -6,6 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PropertyFeatures {
   descriptions?: string[];
@@ -42,7 +48,7 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, getAllCurrencyPrices } = useCurrency();
   const navigate = useNavigate();
   const inWishlist = isInWishlist(id);
   
@@ -106,14 +112,31 @@ const PropertyCard = ({
         </Button>
         
         {/* Price overlay at bottom-left */}
-        <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
-          <span className="text-2xl font-bold text-primary">
-            {formatPrice(priceValue)}
-          </span>
-          {type === "rent" && (
-            <span className="text-muted-foreground text-sm ml-1">/month</span>
-          )}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg cursor-help">
+                <span className="text-2xl font-bold text-primary">
+                  {formatPrice(priceValue)}
+                </span>
+                {type === "rent" && (
+                  <span className="text-muted-foreground text-sm ml-1">/month</span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-background border-border">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Price in all currencies:</p>
+                {getAllCurrencyPrices(priceValue).map(({ currency, formatted }) => (
+                  <p key={currency} className="text-sm">
+                    <span className="font-medium">{currency}:</span> {formatted}
+                    {type === "rent" && <span className="text-muted-foreground text-xs ml-1">/month</span>}
+                  </p>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <CardContent className="pt-4">
         <h3 

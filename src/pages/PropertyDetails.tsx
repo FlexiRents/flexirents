@@ -256,7 +256,18 @@ const PropertyDetails = () => {
                   <Button 
                     className="w-full" 
                     size="lg"
-                    onClick={() => navigate(`/checkout?property=${id}&type=${listingType}`)}
+                    onClick={() => navigate('/checkout', {
+                      state: {
+                        type: isRental ? 'rental' : 'sale',
+                        property: {
+                          id: property.id,
+                          title: property.title,
+                          price: `$${property.price}`,
+                          location: `${property.city}, ${property.region}`,
+                          image: property.images[0]
+                        }
+                      }
+                    })}
                   >
                     Proceed to Payment
                   </Button>

@@ -12,6 +12,7 @@ import ReviewCard from "@/components/ReviewCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import BookingModal from "@/components/BookingModal";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
+import { CustomTimeRequestModal } from "@/components/CustomTimeRequestModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -23,7 +24,8 @@ import {
   DollarSign,
   CheckCircle2,
   ArrowLeft,
-  Star
+  Star,
+  MessageSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -41,6 +43,7 @@ const ServiceProviderProfile = () => {
   const [loading, setLoading] = useState(true);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [customRequestModalOpen, setCustomRequestModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
 
@@ -308,15 +311,41 @@ const ServiceProviderProfile = () => {
 
                     <TabsContent value="book" className="space-y-4">
                       <div className="bg-accent/10 p-4 rounded-lg mb-4">
-                        <p className="text-sm text-muted-foreground">
-                          Select a date from the calendar below to see available time slots. 
-                          Click on any available slot to proceed with booking.
-                        </p>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Select a date from the calendar below to see available time slots. 
+                              Click on any available slot to proceed with booking.
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCustomRequestModalOpen(true)}
+                            className="flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            Request Custom Time
+                          </Button>
+                        </div>
                       </div>
                       <ProviderAvailabilityCalendar
                         providerId={provider.id}
                         onSelectSlot={handleSlotSelect}
                       />
+                      <div className="text-center pt-4">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Don't see a suitable time?
+                        </p>
+                        <Button
+                          variant="secondary"
+                          onClick={() => setCustomRequestModalOpen(true)}
+                          className="w-full"
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Request a Custom Time Slot
+                        </Button>
+                      </div>
                     </TabsContent>
                   </Tabs>
                 </CardContent>
@@ -377,6 +406,14 @@ const ServiceProviderProfile = () => {
         targetId={provider.id}
         targetName={provider.provider_name}
         onSuccess={fetchReviews}
+      />
+
+      <CustomTimeRequestModal
+        open={customRequestModalOpen}
+        onOpenChange={setCustomRequestModalOpen}
+        providerId={provider.id}
+        serviceType={provider.service_category}
+        providerName={provider.provider_name}
       />
     </div>
   );

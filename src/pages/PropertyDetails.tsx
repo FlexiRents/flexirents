@@ -204,27 +204,23 @@ const PropertyDetails = () => {
             <Card>
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4">Property Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex justify-between py-2">
-                    <span className="text-muted-foreground">Furnishing Type</span>
-                    <span className="font-medium">{property.furnishingType}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                    <span>{property.furnishingType}</span>
                   </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-muted-foreground">Compound Type</span>
-                    <span className="font-medium">{property.compoundType}</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                    <span>{property.compoundType}</span>
                   </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-muted-foreground">Region</span>
-                    <span className="font-medium">{property.region}</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-muted-foreground">City</span>
-                    <span className="font-medium">{property.city}</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                    <span>{property.region}, {property.city}</span>
                   </div>
                   {isRental && (
-                    <div className="flex justify-between py-2 col-span-full">
-                      <span className="text-muted-foreground">Minimum Duration</span>
-                      <span className="font-medium">{property.duration}</span>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      <span>Duration: {property.duration}</span>
                     </div>
                   )}
                 </div>

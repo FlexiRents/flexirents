@@ -406,6 +406,7 @@ const ServiceProviderProfile = () => {
         providerId={provider.id}
         serviceType={provider.service_category}
         providerName={provider.provider_name}
+        hourlyRate={parseFloat(provider.hourly_rate.replace(/[^0-9.-]+/g, ""))}
         initialDate={selectedDate}
         initialTime={selectedTime}
       />

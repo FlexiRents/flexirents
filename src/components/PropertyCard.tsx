@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bed, Bath, Square, Check, Heart, Calendar } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +58,7 @@ const PropertyCard = ({
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
+  const navigate = useNavigate();
   const inWishlist = isInWishlist(id);
   
   const priceValue = parseFloat(price.replace(/[^0-9.-]+/g, ""));
@@ -299,8 +301,18 @@ const PropertyCard = ({
             </form>
           </DialogContent>
         </Dialog>
-        <Button className="flex-1" variant="hero" onClick={onSelect}>
-          Select Property
+        <Button 
+          className="flex-1" 
+          variant="hero" 
+          onClick={() => {
+            if (onSelect) {
+              onSelect();
+            } else {
+              navigate(`/property/${id}?type=${type}`);
+            }
+          }}
+        >
+          View Details
         </Button>
       </CardFooter>
     </Card>

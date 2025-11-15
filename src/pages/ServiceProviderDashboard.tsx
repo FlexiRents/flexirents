@@ -18,7 +18,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase, MessageSquare } from "lucide-react";
+import { MessagingDialog } from "@/components/MessagingDialog";
 
 const profileSchema = z.object({
   providerName: z.string().min(2).max(100),
@@ -42,6 +43,8 @@ const ServiceProviderDashboard = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [messagingOpen, setMessagingOpen] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -274,7 +277,8 @@ const ServiceProviderDashboard = () => {
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Hours</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>Update Status</TableHead>
+                        <TableHead>Message</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -330,6 +334,24 @@ const ServiceProviderDashboard = () => {
                                 <SelectItem value="cancelled">Cancelled</SelectItem>
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedBooking(booking);
+                                setMessagingOpen(true);
+                              }}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Chat
+                              {booking.unread_count > 0 && (
+                                <Badge variant="destructive" className="ml-2">
+                                  {booking.unread_count}
+                                </Badge>
+                              )}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -499,6 +521,15 @@ const ServiceProviderDashboard = () => {
         </Tabs>
       </div>
       <Footer />
+
+      {selectedBooking && (
+        <MessagingDialog
+          open={messagingOpen}
+          onOpenChange={setMessagingOpen}
+          bookingId={selectedBooking.id}
+          otherPartyName={selectedBooking.profiles?.full_name || "Client"}
+        />
+      )}
     </div>
   );
 };

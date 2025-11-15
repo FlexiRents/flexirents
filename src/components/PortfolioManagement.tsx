@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Upload, X } from "lucide-react";
+import { Plus, Trash2, Upload, X, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -27,6 +27,7 @@ interface PortfolioImage {
   title?: string;
   description?: string;
   category?: string;
+  is_featured?: boolean;
 }
 
 interface PortfolioManagementProps {
@@ -148,6 +149,31 @@ export const PortfolioManagement = ({ providerId, images, onUpdate }: PortfolioM
     }
   };
 
+  const handleToggleFeatured = async (imageId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("portfolio_images")
+        .update({ is_featured: !currentStatus })
+        .eq("id", imageId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Image ${!currentStatus ? "marked as featured" : "removed from featured"}`,
+      });
+
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error updating featured status:", error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Could not update featured status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDelete = async () => {
     if (!imageToDelete) return;
 
@@ -228,17 +254,32 @@ export const PortfolioManagement = ({ providerId, images, onUpdate }: PortfolioM
                       alt={image.title || "Portfolio"}
                       className="w-full h-full object-cover"
                     />
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => {
-                        setImageToDelete(image.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant={image.is_featured ? "default" : "secondary"}
+                        onClick={() => handleToggleFeatured(image.id, image.is_featured || false)}
+                        title={image.is_featured ? "Remove from featured" : "Mark as featured"}
+                      >
+                        <Star className={`h-4 w-4 ${image.is_featured ? "fill-current" : ""}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        onClick={() => {
+                          setImageToDelete(image.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {image.is_featured && (
+                      <Badge className="absolute top-2 left-2 bg-primary">
+                        <Star className="h-3 w-3 mr-1 fill-current" />
+                        Featured
+                      </Badge>
+                    )}
                   </div>
                   {(image.title || image.category) && (
                     <div className="p-3 space-y-1">

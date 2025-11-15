@@ -412,6 +412,19 @@ const PropertyDetails = () => {
                       </form>
                     </DialogContent>
                   </Dialog>
+
+                  <Separator className="my-4" />
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Available Now</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Home className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">{property.apartmentType}</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

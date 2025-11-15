@@ -1,7 +1,8 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bed, Bath, Square, Heart } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Bed, Bath, Square, Heart, Check } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -201,91 +202,18 @@ const PropertyCard = ({
           </div>
         )}
         
-        <div className="text-2xl font-bold text-primary">{formatPrice(priceValue)}</div>
+        <div className="flex items-baseline justify-between">
+          <div>
+            <span className="text-2xl font-bold text-primary">
+              {formatPrice(priceValue)}
+            </span>
+            {type === "rent" && (
+              <span className="text-muted-foreground text-sm ml-1">/month</span>
+            )}
+          </div>
+        </div>
       </CardContent>
-      <CardFooter className="flex gap-2">
-        <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
-          <DialogTrigger asChild>
-            <Button className="flex-1" variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
-              Schedule Viewing
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Schedule a Viewing for {title}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleScheduleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  required
-                  value={scheduleForm.name}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, name: e.target.value })}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={scheduleForm.email}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, email: e.target.value })}
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  required
-                  value={scheduleForm.phone}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, phone: e.target.value })}
-                  placeholder="+233 XX XXX XXXX"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Preferred Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    required
-                    value={scheduleForm.date}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="time">Preferred Time</Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    required
-                    value={scheduleForm.time}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, time: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="message">Additional Message (Optional)</Label>
-                <Textarea
-                  id="message"
-                  value={scheduleForm.message}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, message: e.target.value })}
-                  placeholder="Any specific requirements or questions..."
-                  rows={3}
-                />
-              </div>
-              <Button type="submit" className="w-full" variant="hero">
-                Confirm Schedule
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <CardFooter>
       </CardFooter>
     </Card>
   );

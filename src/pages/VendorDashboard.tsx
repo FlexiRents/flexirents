@@ -21,6 +21,7 @@ import RatingStars from "@/components/RatingStars";
 import { ghanaRegions } from "@/data/ghanaLocations";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductForm } from "@/components/ProductForm";
+import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -471,6 +472,19 @@ const VendorDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Profile Picture Section */}
+                    <div className="flex justify-center pb-6 border-b">
+                      <ProfilePictureUpload
+                        currentImageUrl={vendor?.profile_image_url}
+                        onImageUpdate={(url) => {
+                          setVendor({ ...vendor, profile_image_url: url });
+                        }}
+                        bucketName="vendor-profiles"
+                        userType="vendor"
+                        userId={vendor.id}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="businessName">

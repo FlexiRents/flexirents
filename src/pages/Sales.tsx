@@ -10,13 +10,14 @@ import property3br from "@/assets/property-3br.jpg";
 import propertyCommercial from "@/assets/property-commercial.jpg";
 import propertyLand from "@/assets/property-land.jpg";
 import { ghanaRegions } from "@/data/ghanaLocations";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const properties = [
   {
     id: 1,
     image: property3br,
     title: "Luxury Family Home",
-    price: "$450,000",
+    price: 450000,
     propertyCategory: "residential",
     beds: 4,
     baths: 3,
@@ -33,7 +34,7 @@ const properties = [
     id: 2,
     image: property3br,
     title: "Modern Townhouse",
-    price: "$320,000",
+    price: 320000,
     propertyCategory: "residential",
     beds: 3,
     baths: 2.5,
@@ -50,7 +51,7 @@ const properties = [
     id: 3,
     image: propertyCommercial,
     title: "Commercial Office Space",
-    price: "$850,000",
+    price: 850000,
     propertyCategory: "commercial",
     sqft: 5000,
     location: "Business District",
@@ -65,7 +66,7 @@ const properties = [
     id: 4,
     image: propertyCommercial,
     title: "Retail Building",
-    price: "$1,200,000",
+    price: 1200000,
     propertyCategory: "commercial",
     sqft: 8000,
     location: "Main Street",
@@ -80,7 +81,7 @@ const properties = [
     id: 5,
     image: propertyLand,
     title: "Residential Development Land",
-    price: "$280,000",
+    price: 280000,
     propertyCategory: "land",
     sqft: 12000,
     location: "City Outskirts",
@@ -95,7 +96,7 @@ const properties = [
     id: 6,
     image: propertyLand,
     title: "Commercial Plot",
-    price: "$550,000",
+    price: 550000,
     propertyCategory: "land",
     sqft: 20000,
     location: "Highway Access",
@@ -140,12 +141,12 @@ const Sales = () => {
       property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const price = parseInt(property.price.replace(/[^0-9]/g, ""));
+    const priceNum = typeof property.price === 'number' ? property.price : parseInt(String(property.price).replace(/[^0-9]/g, ""));
     
     // Price range filter
     const min = minPrice ? parseInt(minPrice) : 0;
     const max = maxPrice ? parseInt(maxPrice) : Infinity;
-    if (price < min || price > max) return false;
+    if (priceNum < min || priceNum > max) return false;
     
     // Property type filter
     if (propertyType !== "all" && property.propertyCategory !== propertyType) return false;

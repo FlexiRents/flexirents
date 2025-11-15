@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, ShoppingCart } from "lucide-react";
@@ -8,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist } = useWishlist();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const handleCheckout = (item: any) => {
@@ -82,7 +84,12 @@ const Wishlist = () => {
                     )}
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-accent font-bold text-xl">
-                        {item.price || item.rate}
+                        {item.price && typeof item.price === 'string' && item.price.match(/^\d+$/) 
+                          ? formatPrice(parseInt(item.price))
+                          : item.price || (item.rate && typeof item.rate === 'string' && item.rate.match(/^\d+$/) 
+                            ? formatPrice(parseInt(item.rate)) 
+                            : item.rate)
+                        }
                       </span>
                       <span className="text-xs bg-secondary px-2 py-1 rounded">
                         {item.type}

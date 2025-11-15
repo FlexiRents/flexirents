@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import ServiceCard from "@/components/ServiceCard";
 import VendorCard from "@/components/VendorCard";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import heroImage from "@/assets/hero-property.jpg";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
@@ -20,7 +21,7 @@ const featuredRentals = [
     id: 1,
     image: property1br,
     title: "Modern 1 Bedroom Apartment",
-    price: "$1,200/month",
+    price: 1200,
     beds: 1,
     baths: 1,
     sqft: 650,
@@ -36,7 +37,7 @@ const featuredRentals = [
     id: 2,
     image: propertyApartment,
     title: "Luxury Studio Apartment",
-    price: "$1,500/month",
+    price: 1500,
     beds: 1,
     baths: 1,
     sqft: 800,
@@ -52,7 +53,7 @@ const featuredRentals = [
     id: 3,
     image: property3br,
     title: "Spacious 2 Bedroom House",
-    price: "$2,200/month",
+    price: 2200,
     beds: 2,
     baths: 2,
     sqft: 1400,
@@ -71,7 +72,7 @@ const featuredSales = [
     id: 1,
     image: property3br,
     title: "Luxury Family Home",
-    price: "$450,000",
+    price: 450000,
     beds: 4,
     baths: 3,
     sqft: 2800,
@@ -87,7 +88,7 @@ const featuredSales = [
     id: 2,
     image: property3br,
     title: "Modern Townhouse",
-    price: "$320,000",
+    price: 320000,
     beds: 3,
     baths: 2.5,
     sqft: 1900,
@@ -103,7 +104,7 @@ const featuredSales = [
     id: 3,
     image: propertyCommercial,
     title: "Commercial Office Space",
-    price: "$850,000",
+    price: 850000,
     sqft: 5000,
     location: "Business District",
     type: "sale" as const,
@@ -172,6 +173,7 @@ const vendorCategories = [
 
 const Index = () => {
   const navigate = useNavigate();
+  const { formatPrice } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPropertyIndex, setCurrentPropertyIndex] = useState(0);
 
@@ -292,7 +294,9 @@ const Index = () => {
                           <h4 className="font-semibold text-foreground mb-1">{property.title}</h4>
                           <p className="text-sm text-muted-foreground mb-2">{property.location}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-accent">{property.price}</span>
+                            <span className="text-lg font-bold text-accent">
+                              {formatPrice(property.price)}{property.type === "rent" ? "/month" : ""}
+                            </span>
                             <Button 
                               size="sm" 
                               variant="secondary"

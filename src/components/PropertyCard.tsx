@@ -17,7 +17,7 @@ interface PropertyCardProps {
   id: number;
   image: string;
   title: string;
-  price: string;
+  price: string | number;
   beds?: number;
   baths?: number;
   sqft?: number;
@@ -46,7 +46,8 @@ const PropertyCard = ({
   const navigate = useNavigate();
   const inWishlist = isInWishlist(id);
   
-  const priceValue = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+  const priceValue = typeof price === 'number' ? price : parseFloat(price.replace(/[^0-9.-]+/g, ""));
+  const priceString = typeof price === 'string' ? price : formatPrice(price);
 
   const handleWishlistToggle = async () => {
     if (inWishlist) {
@@ -60,7 +61,7 @@ const PropertyCard = ({
         id,
         type: type === "rent" ? "rental" : "sale",
         title,
-        price,
+        price: priceString,
         location,
         image,
       });

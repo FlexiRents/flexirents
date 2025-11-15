@@ -26,6 +26,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import MyBookings from "./pages/MyBookings";
 import ClientProfile from "./pages/ClientProfile";
 import VendorProfile from "./pages/VendorProfile";
+import PropertyDetails from "./pages/PropertyDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="/my-bookings" element={<MyBookings />} />
                 <Route path="/profile" element={<ClientProfile />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
+                <Route path="/property/:id" element={<PropertyDetails />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

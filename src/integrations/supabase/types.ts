@@ -770,6 +770,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_email: { Args: { _email: string }; Returns: boolean }
       update_expired_leases: { Args: never; Returns: undefined }
     }
     Enums: {

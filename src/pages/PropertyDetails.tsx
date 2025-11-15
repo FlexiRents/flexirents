@@ -60,6 +60,11 @@ const PropertyDetails = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [showSchedule, setShowSchedule] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<{
+    id: string;
+    rating: number;
+    text?: string;
+  } | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
@@ -121,6 +126,7 @@ const PropertyDetails = () => {
   }, [id]);
 
   const handleReviewSuccess = () => {
+    setEditingReview(null);
     // Reload reviews after successful submission
     const fetchReviews = async () => {
       if (!id) return;
@@ -153,6 +159,39 @@ const PropertyDetails = () => {
     };
 
     fetchReviews();
+  };
+
+  const handleEditReview = (reviewId: string, rating: number, reviewText?: string) => {
+    setEditingReview({ id: reviewId, rating, text: reviewText });
+    setShowReviewForm(true);
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .eq('id', reviewId)
+        .eq('reviewer_user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Review Deleted",
+        description: "Your review has been deleted successfully.",
+      });
+
+      handleReviewSuccess();
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete review. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleProceedToPayment = () => {
@@ -448,10 +487,15 @@ const PropertyDetails = () => {
                     {reviews.map((review) => (
                       <ReviewCard
                         key={review.id}
+                        reviewId={review.id}
                         reviewerName={review.profiles?.full_name || 'Anonymous'}
+                        reviewerUserId={review.reviewer_user_id}
                         rating={review.rating}
                         reviewText={review.review_text}
                         createdAt={review.created_at}
+                        currentUserId={user?.id}
+                        onEdit={handleEditReview}
+                        onDelete={handleDeleteReview}
                       />
                     ))}
                   </div>
@@ -588,8 +632,15 @@ const PropertyDetails = () => {
         targetId={id || "1"}
         onSuccess={handleReviewSuccess}
         open={showReviewForm}
-        onOpenChange={setShowReviewForm}
+        onOpenChange={(open) => {
+          setShowReviewForm(open);
+          if (!open) setEditingReview(null);
+        }}
         targetName={property.title}
+        editMode={!!editingReview}
+        existingReviewId={editingReview?.id}
+        existingRating={editingReview?.rating}
+        existingReviewText={editingReview?.text}
       />
 
       <Footer />

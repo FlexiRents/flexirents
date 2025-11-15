@@ -316,9 +316,11 @@ const VendorProfile = () => {
                       {reviews.map((review) => (
                         <ReviewCard
                           key={review.id}
+                          reviewId={review.id}
                           rating={review.rating}
                           reviewText={review.review_text || ""}
                           reviewerName={review.profiles?.full_name || "Anonymous"}
+                          reviewerUserId={review.reviewer_user_id}
                           createdAt={review.created_at}
                         />
                       ))}

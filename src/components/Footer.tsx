@@ -1,8 +1,71 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Facebook, Instagram, Youtube, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 import logo from "@/assets/logo-footer.png";
 
+const newsletterSchema = z.object({
+  email: z.string().trim().email({ message: "Please enter a valid email address" }).max(255, { message: "Email must be less than 255 characters" }),
+});
+
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Validate email
+      newsletterSchema.parse({ email });
+      
+      setIsSubmitting(true);
+      
+      const { error } = await supabase
+        .from("newsletter_subscriptions")
+        .insert([{ email: email.toLowerCase().trim() }]);
+      
+      if (error) {
+        if (error.code === "23505") { // Unique constraint violation
+          toast({
+            title: "Already Subscribed",
+            description: "This email is already subscribed to our newsletter.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Successfully Subscribed!",
+          description: "Thank you for subscribing to our newsletter.",
+        });
+        setEmail("");
+      }
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Invalid Email",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to subscribe. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="bg-primary text-primary-foreground mt-0">
       <div className="container mx-auto px-4 pt-5 pb-6">
@@ -96,10 +159,10 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Social Media */}
+          {/* Social Media & Newsletter */}
           <div>
             <h3 className="font-semibold mb-4">Connect With Us</h3>
-            <div className="flex gap-4">
+            <div className="flex gap-4 mb-6">
               <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <MessageCircle className="h-6 w-6" />
               </a>
@@ -117,6 +180,31 @@ const Footer = () => {
               <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <Youtube className="h-6 w-6" />
               </a>
+            </div>
+            
+            <div className="mt-6">
+              <h4 className="font-semibold mb-3">Newsletter</h4>
+              <p className="text-sm opacity-80 mb-3">Stay updated with our latest properties and offers</p>
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                  maxLength={255}
+                  required
+                />
+                <Button 
+                  type="submit" 
+                  variant="secondary"
+                  disabled={isSubmitting}
+                  className="whitespace-nowrap"
+                >
+                  {isSubmitting ? "..." : "Subscribe"}
+                </Button>
+              </form>
             </div>
           </div>
         </div>

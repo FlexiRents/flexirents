@@ -319,14 +319,6 @@ const PropertyDetails = () => {
                     )}
                   </div>
 
-                  <Button 
-                    className="w-full" 
-                    size="lg"
-                    onClick={handleProceedToPayment}
-                  >
-                    Proceed to Payment
-                  </Button>
-
                   <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
                     <DialogTrigger asChild>
                       <Button 
@@ -337,6 +329,14 @@ const PropertyDetails = () => {
                         Schedule Viewing
                       </Button>
                     </DialogTrigger>
+
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleProceedToPayment}
+                  >
+                    Proceed to Payment
+                  </Button>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Schedule a Viewing for {property.title}</DialogTitle>

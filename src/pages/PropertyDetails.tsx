@@ -308,17 +308,6 @@ const PropertyDetails = () => {
                 <Separator className="my-4" />
                 
                 <div className="space-y-4">
-                  <div className="text-center py-4">
-                    <p className="text-2xl font-bold text-primary mb-2">
-                      {isRental ? `${formatPrice(property.price)}/month` : formatPrice(property.price)}
-                    </p>
-                    {isRental && (
-                      <p className="text-sm text-muted-foreground">
-                        Minimum {property.duration}
-                      </p>
-                    )}
-                  </div>
-
                   <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
                     <DialogTrigger asChild>
                       <Button 

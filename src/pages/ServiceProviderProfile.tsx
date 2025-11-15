@@ -13,6 +13,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import BookingModal from "@/components/BookingModal";
 import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { CustomTimeRequestModal } from "@/components/CustomTimeRequestModal";
+import { PortfolioGallery } from "@/components/PortfolioGallery";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -39,6 +40,7 @@ const ServiceProviderProfile = () => {
   const { formatPrice } = useCurrency();
   const [provider, setProvider] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,7 @@ const ServiceProviderProfile = () => {
     if (id) {
       fetchProviderData();
       fetchReviews();
+      fetchPortfolioImages();
     }
   }, [id]);
 
@@ -114,6 +117,22 @@ const ServiceProviderProfile = () => {
       setReviews(data || []);
     } catch (error) {
       console.error("Error fetching reviews:", error);
+    }
+  };
+
+  const fetchPortfolioImages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("portfolio_images")
+        .select("*")
+        .eq("provider_id", id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setPortfolioImages(data || []);
+    } catch (error) {
+      console.error("Error fetching portfolio images:", error);
     }
   };
 
@@ -228,8 +247,9 @@ const ServiceProviderProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="about" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-5">
                       <TabsTrigger value="about">About</TabsTrigger>
+                      <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
                       <TabsTrigger value="reviews">Reviews</TabsTrigger>
                       <TabsTrigger value="availability">Availability</TabsTrigger>
                       <TabsTrigger value="book">Book Appointment</TabsTrigger>
@@ -273,6 +293,13 @@ const ServiceProviderProfile = () => {
                             </div>
                           </div>
                         )}
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="portfolio" className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-lg mb-4">Work Portfolio</h3>
+                        <PortfolioGallery images={portfolioImages} />
                       </div>
                     </TabsContent>
                     

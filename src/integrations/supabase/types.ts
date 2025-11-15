@@ -166,6 +166,54 @@ export type Database = {
           },
         ]
       }
+      portfolio_images: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          provider_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          provider_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          provider_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_provider"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "approved_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_provider"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_provider_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

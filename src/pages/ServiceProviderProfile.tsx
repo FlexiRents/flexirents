@@ -6,13 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RatingStars from "@/components/RatingStars";
 import ReviewCard from "@/components/ReviewCard";
-import ReviewForm from "@/components/ReviewForm";
+import { ReviewForm } from "@/components/ReviewForm";
 import BookingModal from "@/components/BookingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { MapPin, Mail, Phone, Calendar, Award, Clock, Briefcase } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { 
+  MapPin, 
+  Award, 
+  Clock, 
+  Calendar,
+  DollarSign,
+  CheckCircle2,
+  ArrowLeft,
+  Star
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ServiceProviderProfile = () => {
@@ -20,13 +31,14 @@ const ServiceProviderProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const [provider, setProvider] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -81,7 +93,8 @@ const ServiceProviderProfile = () => {
         .select(`
           *,
           profiles:reviewer_user_id (
-            full_name
+            full_name,
+            avatar_url
           )
         `)
         .eq("target_type", "service_provider")
@@ -94,6 +107,19 @@ const ServiceProviderProfile = () => {
     } catch (error) {
       console.error("Error fetching reviews:", error);
     }
+  };
+
+  const handleBookNow = () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to book this service.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    setBookingModalOpen(true);
   };
 
   if (loading) {
@@ -128,164 +154,196 @@ const ServiceProviderProfile = () => {
       <Navbar />
       
       <div className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-5xl">
-          {/* Provider Header */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <h1 className="text-4xl font-bold">{provider.provider_name}</h1>
-                  {provider.status === "approved" && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                <Badge variant="outline" className="text-lg mb-4">
-                  {provider.service_category}
-                </Badge>
-                <div className="flex items-center gap-2 mb-4">
-                  <RatingStars rating={averageRating} />
-                  <span className="text-sm text-muted-foreground">
-                    ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button size="lg" onClick={() => setShowBookingModal(true)}>
-                  Book Now
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => setShowReviewForm(!showReviewForm)}>
-                  Leave Review
-                </Button>
-              </div>
-            </div>
-          </div>
+        <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/flexi-assist")}
+            className="mb-6"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Services
+          </Button>
 
-          <Separator className="my-8" />
-
-          {/* Provider Details */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.phone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.location}, {provider.region}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.hourly_rate}/hour</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Briefcase className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.years_experience} years experience</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <span>{provider.availability}</span>
-                </div>
-                {provider.certifications && (
-                  <div className="flex items-start gap-3">
-                    <Award className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <span>{provider.certifications}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* About Section */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {provider.description}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Review Form */}
-          {showReviewForm && (
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Leave a Review</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReviewForm
-                  targetType="service_provider"
-                  targetId={id!}
-                  open={showReviewForm}
-                  onOpenChange={setShowReviewForm}
-                  onSuccess={() => {
-                    setShowReviewForm(false);
-                    fetchReviews();
-                    fetchProviderData();
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Reviews Section */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6">
-              Reviews ({reviewCount})
-            </h2>
-            {reviews.length > 0 ? (
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    reviewerName={review.profiles?.full_name || "Anonymous"}
-                    rating={review.rating}
-                    reviewText={review.review_text}
-                    createdAt={review.created_at}
-                  />
-                ))}
-              </div>
-            ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
               <Card>
-                <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">
-                    No reviews yet. Be the first to review!
-                  </p>
+                <CardHeader>
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-3xl mb-2">{provider.provider_name}</CardTitle>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="secondary">{provider.service_category}</Badge>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4" />
+                          {provider.location}, {provider.region}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <RatingStars rating={averageRating || 0} />
+                        <span className="text-sm text-muted-foreground">
+                          ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="about" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="about">About</TabsTrigger>
+                      <TabsTrigger value="reviews">Reviews</TabsTrigger>
+                      <TabsTrigger value="availability">Availability</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="about" className="space-y-6">
+                      <div>
+                        <h3 className="font-semibold text-lg mb-3">Description</h3>
+                        <p className="text-muted-foreground">{provider.description}</p>
+                      </div>
+
+                      <Separator />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-start gap-3">
+                          <Award className="h-5 w-5 text-accent mt-1" />
+                          <div>
+                            <p className="font-medium">Experience</p>
+                            <p className="text-sm text-muted-foreground">
+                              {provider.years_experience} {provider.years_experience === 1 ? 'year' : 'years'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <DollarSign className="h-5 w-5 text-accent mt-1" />
+                          <div>
+                            <p className="font-medium">Hourly Rate</p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatPrice(parseFloat(provider.hourly_rate.replace(/[^0-9.-]+/g, "")))}/hour
+                            </p>
+                          </div>
+                        </div>
+
+                        {provider.certifications && (
+                          <div className="flex items-start gap-3 md:col-span-2">
+                            <CheckCircle2 className="h-5 w-5 text-accent mt-1" />
+                            <div>
+                              <p className="font-medium">Certifications</p>
+                              <p className="text-sm text-muted-foreground">{provider.certifications}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="reviews" className="space-y-4">
+                      {user && (
+                        <div className="mb-4">
+                          <Button onClick={() => setReviewModalOpen(true)}>
+                            Leave a Review
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {reviews.length > 0 ? (
+                        <div className="space-y-4">
+                          {reviews.map((review) => (
+                            <ReviewCard
+                              key={review.id}
+                              rating={review.rating}
+                              reviewText={review.review_text || ""}
+                              reviewerName={review.profiles?.full_name || "Anonymous"}
+                              createdAt={review.created_at}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Star className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No reviews yet. Be the first to review!</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="availability">
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <Clock className="h-5 w-5 text-accent mt-1" />
+                          <div>
+                            <p className="font-medium mb-2">Available Hours</p>
+                            <p className="text-muted-foreground">{provider.availability}</p>
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="bg-accent/10 p-4 rounded-lg">
+                          <p className="text-sm text-muted-foreground">
+                            Book this service provider for your preferred date and time. 
+                            You can specify the duration and any special requirements in the booking form.
+                          </p>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
-            )}
+            </div>
+
+            {/* Booking Sidebar */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-24">
+                <CardHeader>
+                  <CardTitle>Book This Service</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
+                    <span className="text-muted-foreground">Hourly Rate</span>
+                    <span className="text-2xl font-bold">
+                      {formatPrice(parseFloat(provider.hourly_rate.replace(/[^0-9.-]+/g, "")))}
+                    </span>
+                  </div>
+
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleBookNow}
+                  >
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Book Now
+                  </Button>
+
+                  <div className="text-sm text-muted-foreground text-center space-y-1">
+                    <p>✓ Verified Professional</p>
+                    <p>✓ Secure Booking</p>
+                    <p>✓ Flexible Scheduling</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
 
+      <Footer />
+
       <BookingModal
-        open={showBookingModal}
-        onOpenChange={setShowBookingModal}
-        providerId={id!}
+        open={bookingModalOpen}
+        onOpenChange={setBookingModalOpen}
+        providerId={provider.id}
         serviceType={provider.service_category}
         providerName={provider.provider_name}
       />
 
-      <Footer />
+      <ReviewForm
+        open={reviewModalOpen}
+        onOpenChange={setReviewModalOpen}
+        targetType="service_provider"
+        targetId={provider.id}
+        targetName={provider.provider_name}
+        onSuccess={fetchReviews}
+      />
     </div>
   );
 };

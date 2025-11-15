@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import {
   Tag, CheckCircle, ArrowLeft, DollarSign 
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 // This would normally come from a database or API
 const getPropertyById = (id: string, type: string) => {
@@ -41,7 +43,10 @@ const getPropertyById = (id: string, type: string) => {
 const PropertyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   // Get listing type from URL search params
   const searchParams = new URLSearchParams(window.location.search);
@@ -49,6 +54,36 @@ const PropertyDetails = () => {
   
   const property = getPropertyById(id || "1", listingType);
   const isRental = listingType === "rent";
+
+  const handleProceedToPayment = () => {
+    if (!user) {
+      // Store the current page as the return URL
+      toast({
+        title: "Login Required",
+        description: "Please log in to proceed with payment.",
+      });
+      navigate('/auth', { 
+        state: { 
+          returnUrl: location.pathname + location.search 
+        } 
+      });
+      return;
+    }
+
+    // User is authenticated, proceed to checkout
+    navigate('/checkout', {
+      state: {
+        type: isRental ? 'rental' : 'sale',
+        property: {
+          id: property.id,
+          title: property.title,
+          price: `$${property.price}`,
+          location: `${property.city}, ${property.region}`,
+          image: property.images[0]
+        }
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -256,18 +291,7 @@ const PropertyDetails = () => {
                   <Button 
                     className="w-full" 
                     size="lg"
-                    onClick={() => navigate('/checkout', {
-                      state: {
-                        type: isRental ? 'rental' : 'sale',
-                        property: {
-                          id: property.id,
-                          title: property.title,
-                          price: `$${property.price}`,
-                          location: `${property.city}, ${property.region}`,
-                          image: property.images[0]
-                        }
-                      }
-                    })}
+                    onClick={handleProceedToPayment}
                   >
                     Proceed to Payment
                   </Button>

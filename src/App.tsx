@@ -28,6 +28,15 @@ import ClientProfile from "./pages/ClientProfile";
 import VendorProfile from "./pages/VendorProfile";
 import PropertyDetails from "./pages/PropertyDetails";
 import NotFound from "./pages/NotFound";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UsersManagement from "./pages/admin/UsersManagement";
+import PropertiesManagement from "./pages/admin/PropertiesManagement";
+import ServiceProvidersManagement from "./pages/admin/ServiceProvidersManagement";
+import VendorsManagement from "./pages/admin/VendorsManagement";
+import BookingsManagement from "./pages/admin/BookingsManagement";
+import ReviewsManagement from "./pages/admin/ReviewsManagement";
+import AnalyticsPage from "./pages/admin/AnalyticsPage";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +71,19 @@ const App = () => (
                 <Route path="/profile" element={<ClientProfile />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<UsersManagement />} />
+                  <Route path="properties" element={<PropertiesManagement />} />
+                  <Route path="service-providers" element={<ServiceProvidersManagement />} />
+                  <Route path="vendors" element={<VendorsManagement />} />
+                  <Route path="bookings" element={<BookingsManagement />} />
+                  <Route path="reviews" element={<ReviewsManagement />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+                </Route>
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

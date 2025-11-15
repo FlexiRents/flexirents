@@ -24,6 +24,7 @@ import ServiceProviderProfile from "./pages/ServiceProviderProfile";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import MyBookings from "./pages/MyBookings";
 import ClientProfile from "./pages/ClientProfile";
+import Dashboard from "./pages/Dashboard";
 import VendorProfile from "./pages/VendorProfile";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="/service-provider-dashboard" element={<ServiceProviderDashboard />} />
                 <Route path="/my-bookings" element={<MyBookings />} />
                 <Route path="/profile" element={<ClientProfile />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

@@ -38,11 +38,11 @@ const Navbar = () => {
             </Link>
             {user && (
               <>
-                <Link to="/my-bookings" className="text-foreground hover:text-accent transition-colors">
-                  My Bookings
+                <Link to="/dashboard" className="text-foreground hover:text-accent transition-colors font-semibold">
+                  Dashboard
                 </Link>
-                <Link to="/profile" className="text-foreground hover:text-accent transition-colors">
-                  Profile
+                <Link to="/my-bookings" className="text-foreground hover:text-accent transition-colors">
+                  Bookings
                 </Link>
               </>
             )}
@@ -65,10 +65,12 @@ const Navbar = () => {
             </Link>
             {user ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {user.email}
-                </span>
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
                 <Button variant="outline" size="sm" onClick={() => signOut()}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -124,6 +126,13 @@ const Navbar = () => {
               </Link>
               {user && (
                 <>
+                  <Link
+                    to="/dashboard"
+                    className="text-foreground hover:text-accent transition-colors font-semibold"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
                   <Link
                     to="/my-bookings"
                     className="text-foreground hover:text-accent transition-colors"

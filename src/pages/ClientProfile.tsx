@@ -24,8 +24,23 @@ import {
   TrendingUp,
   ArrowRight
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
 import RatingStars from "@/components/RatingStars";
+import { 
+  AreaChart, 
+  Area, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend
+} from "recharts";
 
 interface Review {
   id: string;
@@ -57,8 +72,18 @@ interface RecentBooking {
   service_type: string;
   booking_date: string;
   status: string;
-  provider_name: string;
+  provider_name?: string;
+  total_hours?: number;
+  created_at?: string;
 }
+
+interface ChartData {
+  bookingTrends: Array<{ month: string; bookings: number }>;
+  serviceBreakdown: Array<{ name: string; value: number; percentage: number }>;
+  statusDistribution: Array<{ name: string; value: number }>;
+}
+
+const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
 
 export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -78,6 +103,12 @@ export default function ClientProfile() {
     averageRating: 0,
     unreadMessages: 0,
   });
+  const [chartData, setChartData] = useState<ChartData>({
+    bookingTrends: [],
+    serviceBreakdown: [],
+    statusDistribution: [],
+  });
+  const [allBookings, setAllBookings] = useState<RecentBooking[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -98,6 +129,7 @@ export default function ClientProfile() {
         fetchReviews(),
         fetchStats(),
         fetchRecentBookings(),
+        fetchAllBookingsForCharts(),
       ]);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -220,6 +252,74 @@ export default function ClientProfile() {
 
       setRecentBookings(enriched);
     }
+  };
+
+  const fetchAllBookingsForCharts = async () => {
+    const { data } = await supabase
+      .from("bookings")
+      .select("id, service_type, booking_date, status, total_hours, created_at")
+      .eq("user_id", user?.id)
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      setAllBookings(data);
+      processChartData(data);
+    }
+  };
+
+  const processChartData = (bookings: RecentBooking[]) => {
+    // Booking trends over last 6 months
+    const last6Months = eachMonthOfInterval({
+      start: subMonths(new Date(), 5),
+      end: new Date()
+    });
+
+    const bookingTrends = last6Months.map(month => {
+      const monthStart = startOfMonth(month);
+      const monthEnd = endOfMonth(month);
+      const count = bookings.filter(b => {
+        const bookingDate = new Date(b.created_at || b.booking_date);
+        return bookingDate >= monthStart && bookingDate <= monthEnd;
+      }).length;
+
+      return {
+        month: format(month, "MMM yyyy"),
+        bookings: count
+      };
+    });
+
+    // Service category breakdown
+    const serviceCount: Record<string, number> = {};
+    bookings.forEach(b => {
+      serviceCount[b.service_type] = (serviceCount[b.service_type] || 0) + 1;
+    });
+
+    const totalServices = bookings.length;
+    const serviceBreakdown = Object.entries(serviceCount)
+      .map(([name, value]) => ({
+        name,
+        value,
+        percentage: totalServices > 0 ? Math.round((value / totalServices) * 100) : 0
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+
+    // Status distribution
+    const statusCount: Record<string, number> = {};
+    bookings.forEach(b => {
+      statusCount[b.status] = (statusCount[b.status] || 0) + 1;
+    });
+
+    const statusDistribution = Object.entries(statusCount).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value
+    }));
+
+    setChartData({
+      bookingTrends,
+      serviceBreakdown,
+      statusDistribution
+    });
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -561,6 +661,149 @@ export default function ClientProfile() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Analytics Charts */}
+              {allBookings.length > 0 && (
+                <div className="space-y-8 mt-8">
+                  {/* Booking Trends Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Booking Trends</CardTitle>
+                      <CardDescription>Number of bookings over the last 6 months</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chartData.bookingTrends}>
+                            <defs>
+                              <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              dataKey="month" 
+                              className="text-xs"
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                            />
+                            <YAxis 
+                              className="text-xs"
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              allowDecimals={false}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="bookings" 
+                              stroke="#8b5cf6" 
+                              strokeWidth={2}
+                              fillOpacity={1} 
+                              fill="url(#colorBookings)" 
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Service Category Breakdown */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Service Category Breakdown</CardTitle>
+                        <CardDescription>Distribution of bookings by service type</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={chartData.serviceBreakdown}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({name, percentage}) => `${name}: ${percentage}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {chartData.serviceBreakdown.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px'
+                                }}
+                              />
+                              <Legend 
+                                wrapperStyle={{ fontSize: '12px' }}
+                                iconType="circle"
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Booking Status Distribution */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Booking Status</CardTitle>
+                        <CardDescription>Current status of all your bookings</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-[300px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData.statusDistribution}>
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis 
+                                dataKey="name" 
+                                className="text-xs"
+                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              />
+                              <YAxis 
+                                className="text-xs"
+                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                                allowDecimals={false}
+                              />
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px'
+                                }}
+                              />
+                              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                                {chartData.statusDistribution.map((entry, index) => (
+                                  <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={
+                                      entry.name === 'Confirmed' ? '#10b981' :
+                                      entry.name === 'Completed' ? '#3b82f6' :
+                                      entry.name === 'Cancelled' ? '#ef4444' :
+                                      '#f59e0b'
+                                    }
+                                  />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             {/* Reviews Tab */}

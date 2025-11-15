@@ -448,6 +448,7 @@ export type Database = {
           id: string
           location: string
           phone: string
+          profile_image_url: string | null
           provider_name: string
           region: string
           service_category: string
@@ -466,6 +467,7 @@ export type Database = {
           id?: string
           location: string
           phone: string
+          profile_image_url?: string | null
           provider_name: string
           region: string
           service_category: string
@@ -484,6 +486,7 @@ export type Database = {
           id?: string
           location?: string
           phone?: string
+          profile_image_url?: string | null
           provider_name?: string
           region?: string
           service_category?: string
@@ -579,6 +582,7 @@ export type Database = {
           id: string
           location: string
           phone: string
+          profile_image_url: string | null
           region: string
           status: string
           updated_at: string
@@ -594,6 +598,7 @@ export type Database = {
           id?: string
           location: string
           phone: string
+          profile_image_url?: string | null
           region: string
           status?: string
           updated_at?: string
@@ -609,6 +614,7 @@ export type Database = {
           id?: string
           location?: string
           phone?: string
+          profile_image_url?: string | null
           region?: string
           status?: string
           updated_at?: string

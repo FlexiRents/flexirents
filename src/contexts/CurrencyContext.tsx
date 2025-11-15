@@ -7,6 +7,7 @@ interface CurrencyContextType {
   setCurrency: (currency: Currency) => void;
   convertPrice: (priceUSD: number) => number;
   formatPrice: (priceUSD: number) => string;
+  getAllCurrencyPrices: (priceUSD: number) => Array<{ currency: Currency; formatted: string }>;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -34,21 +35,33 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return priceUSD * EXCHANGE_RATES[currency];
   };
 
+  const currencySymbols: Record<Currency, string> = {
+    USD: '$',
+    GHS: '₵',
+    EUR: '€',
+    GBP: '£',
+    NGN: '₦',
+  };
+
   const formatPrice = (priceUSD: number): string => {
     const convertedPrice = convertPrice(priceUSD);
-    const currencySymbols: Record<Currency, string> = {
-      USD: '$',
-      GHS: '₵',
-      EUR: '€',
-      GBP: '£',
-      NGN: '₦',
-    };
     const symbol = currencySymbols[currency];
     return `${symbol}${convertedPrice.toLocaleString()}`;
   };
 
+  const getAllCurrencyPrices = (priceUSD: number) => {
+    return Object.keys(EXCHANGE_RATES).map((curr) => {
+      const currencyKey = curr as Currency;
+      const converted = priceUSD * EXCHANGE_RATES[currencyKey];
+      return {
+        currency: currencyKey,
+        formatted: `${currencySymbols[currencyKey]}${converted.toLocaleString()}`,
+      };
+    });
+  };
+
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, convertPrice, formatPrice }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, convertPrice, formatPrice, getAllCurrencyPrices }}>
       {children}
     </CurrencyContext.Provider>
   );

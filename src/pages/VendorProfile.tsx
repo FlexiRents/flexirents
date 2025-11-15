@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RatingStars from "@/components/RatingStars";
 import ReviewCard from "@/components/ReviewCard";
 import ReviewForm from "@/components/ReviewForm";
+import { ProductGallery } from "@/components/ProductGallery";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Mail, Phone, Globe } from "lucide-react";
+import { MapPin, Mail, Phone, Globe, Package, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const VendorProfile = () => {
@@ -19,6 +21,7 @@ const VendorProfile = () => {
   const { toast } = useToast();
   const [vendor, setVendor] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,7 @@ const VendorProfile = () => {
     if (id) {
       fetchVendorData();
       fetchReviews();
+      fetchProducts();
     }
   }, [id]);
 
@@ -67,6 +71,23 @@ const VendorProfile = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vendor_products')
+        .select('*')
+        .eq('vendor_id', id)
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
     }
   };
 
@@ -209,17 +230,104 @@ const VendorProfile = () => {
             </Card>
           </div>
 
-          {/* About Section */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {vendor.description}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Tabbed Content Section */}
+          <Tabs defaultValue="products" className="mb-8">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3 mx-auto mb-6">
+              <TabsTrigger value="products">Products & Services</TabsTrigger>
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="products">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Our Offerings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {products.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground">
+                        No products or services listed yet
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {products.map((product) => (
+                        <Card key={product.id} className="overflow-hidden">
+                          <CardContent className="p-0">
+                            <ProductGallery 
+                              images={product.images || []} 
+                              productName={product.name}
+                            />
+                            <div className="p-4 space-y-2">
+                              <div className="flex items-start justify-between">
+                                <h3 className="font-semibold text-lg">{product.name}</h3>
+                                <Badge variant="secondary">
+                                  {product.category}
+                                </Badge>
+                              </div>
+                              {product.price && (
+                                <p className="text-lg font-medium text-primary">
+                                  {product.price}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground">
+                                {product.description}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="about">
+              <Card>
+                <CardHeader>
+                  <CardTitle>About {vendor.business_name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {vendor.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="reviews">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Customer Reviews</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {reviews.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Star className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground">
+                        No reviews yet. Be the first to review!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviews.map((review) => (
+                        <ReviewCard
+                          key={review.id}
+                          rating={review.rating}
+                          reviewText={review.review_text || ""}
+                          reviewerName={review.profiles?.full_name || "Anonymous"}
+                          createdAt={review.created_at}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Review Form */}
           {showReviewForm && (
@@ -242,34 +350,6 @@ const VendorProfile = () => {
               </CardContent>
             </Card>
           )}
-
-          {/* Reviews Section */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6">
-              Reviews ({reviewCount})
-            </h2>
-            {reviews.length > 0 ? (
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    reviewerName={review.profiles?.full_name || "Anonymous"}
-                    rating={review.rating}
-                    reviewText={review.review_text}
-                    createdAt={review.created_at}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">
-                    No reviews yet. Be the first to review!
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
         </div>
       </div>
 

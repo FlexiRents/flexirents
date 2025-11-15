@@ -21,6 +21,7 @@ import VendorRegistration from "./pages/VendorRegistration";
 import ServiceProviderRegistration from "./pages/ServiceProviderRegistration";
 import Auth from "./pages/Auth";
 import ServiceProviderProfile from "./pages/ServiceProviderProfile";
+import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/service-provider-registration" element={<ServiceProviderRegistration />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/service-provider/:id" element={<ServiceProviderProfile />} />
+                <Route path="/service-provider-dashboard" element={<ServiceProviderDashboard />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

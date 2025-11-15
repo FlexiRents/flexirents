@@ -193,6 +193,66 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          images: string[] | null
+          listing_type: string
+          location: string
+          owner_id: string
+          price: number
+          property_type: string
+          region: string
+          sqft: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          images?: string[] | null
+          listing_type: string
+          location: string
+          owner_id: string
+          price: number
+          property_type: string
+          region: string
+          sqft?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          images?: string[] | null
+          listing_type?: string
+          location?: string
+          owner_id?: string
+          price?: number
+          property_type?: string
+          region?: string
+          sqft?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       provider_availability: {
         Row: {
           created_at: string
@@ -237,6 +297,62 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "service_provider_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_leases: {
+        Row: {
+          created_at: string
+          first_payment_date: string
+          id: string
+          landlord_id: string
+          lease_duration_months: number
+          lease_start_date: string
+          monthly_rent: number
+          notes: string | null
+          property_id: string
+          rent_expiration_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_payment_date: string
+          id?: string
+          landlord_id: string
+          lease_duration_months: number
+          lease_start_date: string
+          monthly_rent: number
+          notes?: string | null
+          property_id: string
+          rent_expiration_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_payment_date?: string
+          id?: string
+          landlord_id?: string
+          lease_duration_months?: number
+          lease_start_date?: string
+          monthly_rent?: number
+          notes?: string | null
+          property_id?: string
+          rent_expiration_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_leases_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -577,6 +693,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_expired_leases: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "user" | "service_provider" | "vendor"

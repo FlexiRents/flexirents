@@ -5,7 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
 import { format } from "date-fns";
+
+type AppRole = "admin" | "moderator" | "service_provider" | "user" | "vendor";
 
 interface UserData {
   id: string;
@@ -18,6 +24,7 @@ interface UserData {
 export default function UsersManagement() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -59,6 +66,72 @@ export default function UsersManagement() {
     fetchUsers();
   }, []);
 
+  const handleAddRole = async (userId: string, role: string) => {
+    if (!role) {
+      toast.error("Please select a role");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: role as AppRole });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("User already has this role");
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast.success("Role added successfully");
+      setSelectedRole(prev => ({ ...prev, [userId]: "" }));
+      
+      // Refresh users
+      const updatedUsers = users.map(user => 
+        user.id === userId 
+          ? { ...user, roles: [...user.roles, role] }
+          : user
+      );
+      setUsers(updatedUsers);
+    } catch (error) {
+      console.error("Error adding role:", error);
+      toast.error("Failed to add role");
+    }
+  };
+
+  const handleRemoveRole = async (userId: string, role: string) => {
+    if (role === "user") {
+      toast.error("Cannot remove default 'user' role");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", role as AppRole);
+
+      if (error) throw error;
+
+      toast.success("Role removed successfully");
+      
+      // Refresh users
+      const updatedUsers = users.map(user => 
+        user.id === userId 
+          ? { ...user, roles: user.roles.filter(r => r !== role) }
+          : user
+      );
+      setUsers(updatedUsers);
+    } catch (error) {
+      console.error("Error removing role:", error);
+      toast.error("Failed to remove role");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -83,6 +156,7 @@ export default function UsersManagement() {
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Roles</TableHead>
+                  <TableHead>Manage Roles</TableHead>
                   <TableHead>Joined</TableHead>
                 </TableRow>
               </TableHeader>
@@ -101,12 +175,44 @@ export default function UsersManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         {user.roles.map((role) => (
-                          <Badge key={role} variant="secondary">
+                          <Badge key={role} variant="secondary" className="flex items-center gap-1">
                             {role}
+                            {role !== "user" && (
+                              <X
+                                className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                onClick={() => handleRemoveRole(user.id, role)}
+                              />
+                            )}
                           </Badge>
                         ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={selectedRole[user.id] || ""}
+                          onValueChange={(value) => setSelectedRole(prev => ({ ...prev, [user.id]: value }))}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="moderator">Moderator</SelectItem>
+                            <SelectItem value="service_provider">Service Provider</SelectItem>
+                            <SelectItem value="vendor">Vendor</SelectItem>
+                            <SelectItem value="user">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddRole(user.id, selectedRole[user.id])}
+                          disabled={!selectedRole[user.id]}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

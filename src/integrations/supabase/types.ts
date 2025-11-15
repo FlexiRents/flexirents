@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          provider_id: string
+          provider_response: string | null
+          requested_date: string
+          requested_hours: number
+          requested_time: string
+          service_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_id: string
+          provider_response?: string | null
+          requested_date: string
+          requested_hours?: number
+          requested_time: string
+          service_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_id?: string
+          provider_response?: string | null
+          requested_date?: string
+          requested_hours?: number
+          requested_time?: string
+          service_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "approved_service_providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_provider_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_date: string

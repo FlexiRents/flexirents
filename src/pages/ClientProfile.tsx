@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { BookingRequestsList } from "@/components/BookingRequestsList";
 import { toast } from "sonner";
 import { 
   User, 
@@ -568,8 +569,9 @@ export default function ClientProfile() {
 
           {/* Recent Activity & Tabs */}
           <Tabs defaultValue="activity" className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-3 mx-auto">
+            <TabsList className="grid w-full max-w-3xl grid-cols-4 mx-auto">
               <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+              <TabsTrigger value="requests">Booking Requests</TabsTrigger>
               <TabsTrigger value="reviews">My Reviews</TabsTrigger>
               <TabsTrigger value="settings">Account Settings</TabsTrigger>
             </TabsList>
@@ -804,6 +806,11 @@ export default function ClientProfile() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Booking Requests Tab */}
+            <TabsContent value="requests" className="space-y-4">
+              <BookingRequestsList />
             </TabsContent>
 
             {/* Reviews Tab */}

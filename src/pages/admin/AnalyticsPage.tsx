@@ -1,9 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, Users, Home, Calendar, DollarSign } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Home, Calendar, DollarSign, Download, FileText } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   LineChart,
   Line,
@@ -22,6 +31,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
+import { useToast } from "@/hooks/use-toast";
 
 interface MonthlyData {
   month: string;
@@ -48,6 +61,13 @@ export default function AnalyticsPage() {
   const [serviceCategories, setServiceCategories] = useState<CategoryData[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
+
+  const revenueChartRef = useRef<HTMLDivElement>(null);
+  const bookingsChartRef = useRef<HTMLDivElement>(null);
+  const growthChartRef = useRef<HTMLDivElement>(null);
+  const distributionChartRef = useRef<HTMLDivElement>(null);
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -140,6 +160,230 @@ export default function AnalyticsPage() {
     fetchAnalytics();
   }, []);
 
+  const exportToCSV = () => {
+    try {
+      // Create CSV content
+      let csvContent = "Analytics Report\n\n";
+      
+      // Summary stats
+      csvContent += "Summary Statistics\n";
+      csvContent += "Metric,Value\n";
+      csvContent += `Total Revenue,$${analytics.totalRevenue.toLocaleString()}\n`;
+      csvContent += `Active Properties,${analytics.activeProperties}\n`;
+      csvContent += `Completed Bookings,${analytics.completedBookings}\n`;
+      csvContent += `Active Users,${analytics.activeUsers}\n`;
+      csvContent += `Growth Rate,${analytics.growthRate}%\n\n`;
+
+      // Monthly data
+      csvContent += "Monthly Trends\n";
+      csvContent += "Month,Revenue ($),Bookings,New Users,New Properties\n";
+      monthlyData.forEach(row => {
+        csvContent += `${row.month},${row.revenue},${row.bookings},${row.users},${row.properties}\n`;
+      });
+      csvContent += "\n";
+
+      // Service categories
+      csvContent += "Service Categories Distribution\n";
+      csvContent += "Category,Count\n";
+      serviceCategories.forEach(cat => {
+        csvContent += `${cat.name},${cat.value}\n`;
+      });
+      csvContent += "\n";
+
+      // Property types
+      csvContent += "Property Types Distribution\n";
+      csvContent += "Type,Count\n";
+      propertyTypes.forEach(type => {
+        csvContent += `${type.name},${type.value}\n`;
+      });
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `analytics-report-${format(new Date(), "yyyy-MM-dd")}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export Successful",
+        description: "CSV report has been downloaded",
+      });
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export CSV report",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportToPDF = async () => {
+    setExporting(true);
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let yPosition = 20;
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.setTextColor(33, 37, 41);
+      pdf.text("Analytics Report", pageWidth / 2, yPosition, { align: "center" });
+      
+      yPosition += 10;
+      pdf.setFontSize(10);
+      pdf.setTextColor(108, 117, 125);
+      pdf.text(`Generated on ${format(new Date(), "MMMM dd, yyyy")}`, pageWidth / 2, yPosition, { align: "center" });
+      
+      yPosition += 15;
+
+      // Summary stats table
+      pdf.setFontSize(14);
+      pdf.setTextColor(33, 37, 41);
+      pdf.text("Summary Statistics", 14, yPosition);
+      yPosition += 5;
+
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Metric", "Value"]],
+        body: [
+          ["Total Revenue", `$${analytics.totalRevenue.toLocaleString()}`],
+          ["Active Properties", analytics.activeProperties.toString()],
+          ["Completed Bookings", analytics.completedBookings.toString()],
+          ["Active Users", analytics.activeUsers.toString()],
+          ["Growth Rate", `${analytics.growthRate}%`],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [99, 102, 241] },
+      });
+
+      yPosition = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Monthly trends table
+      if (yPosition > 250) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      pdf.setFontSize(14);
+      pdf.text("Monthly Trends", 14, yPosition);
+      yPosition += 5;
+
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Month", "Revenue ($)", "Bookings", "New Users", "New Properties"]],
+        body: monthlyData.map(row => [
+          row.month,
+          row.revenue.toString(),
+          row.bookings.toString(),
+          row.users.toString(),
+          row.properties.toString(),
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [99, 102, 241] },
+      });
+
+      yPosition = (pdf as any).lastAutoTable.finalY + 15;
+
+      // Capture and add charts
+      const captureChart = async (ref: React.RefObject<HTMLDivElement>, title: string) => {
+        if (!ref.current) return;
+        
+        const canvas = await html2canvas(ref.current, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+        });
+        
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = pageWidth - 28;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (yPosition + imgHeight + 10 > 280) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(14);
+        pdf.text(title, 14, yPosition);
+        yPosition += 5;
+        
+        pdf.addImage(imgData, "PNG", 14, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 15;
+      };
+
+      // Add charts to PDF
+      if (revenueChartRef.current) {
+        await captureChart(revenueChartRef, "Revenue Trends");
+      }
+      
+      if (bookingsChartRef.current) {
+        if (yPosition > 250) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        await captureChart(bookingsChartRef, "Booking Patterns");
+      }
+
+      if (growthChartRef.current) {
+        if (yPosition > 250) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        await captureChart(growthChartRef, "User & Property Growth");
+      }
+
+      // Distribution data
+      pdf.addPage();
+      yPosition = 20;
+
+      pdf.setFontSize(14);
+      pdf.text("Service Categories Distribution", 14, yPosition);
+      yPosition += 5;
+
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Category", "Count"]],
+        body: serviceCategories.map(cat => [cat.name, cat.value.toString()]),
+        theme: "grid",
+        headStyles: { fillColor: [99, 102, 241] },
+      });
+
+      yPosition = (pdf as any).lastAutoTable.finalY + 15;
+
+      pdf.text("Property Types Distribution", 14, yPosition);
+      yPosition += 5;
+
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [["Type", "Count"]],
+        body: propertyTypes.map(type => [type.name, type.value.toString()]),
+        theme: "grid",
+        headStyles: { fillColor: [99, 102, 241] },
+      });
+
+      // Save PDF
+      pdf.save(`analytics-report-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+
+      toast({
+        title: "Export Successful",
+        description: "PDF report has been downloaded",
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export PDF report",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const statCards = [
     {
       title: "Total Revenue",
@@ -180,9 +424,31 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">Analytics Dashboard</h2>
-        <p className="text-muted-foreground mt-2">Track platform performance and insights</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Analytics Dashboard</h2>
+          <p className="text-muted-foreground mt-2">Track platform performance and insights</p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={loading || exporting} className="gap-2">
+              <Download className="h-4 w-4" />
+              {exporting ? "Exporting..." : "Export Report"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={exportToCSV} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Export as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToPDF} className="gap-2">
+              <FileText className="h-4 w-4" />
+              Export as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Summary Stats */}
@@ -226,7 +492,7 @@ export default function AnalyticsPage() {
                 Revenue Over Time
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent ref={revenueChartRef}>
               {loading ? (
                 <Skeleton className="h-80 w-full" />
               ) : (
@@ -273,7 +539,7 @@ export default function AnalyticsPage() {
                 Booking Patterns
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent ref={bookingsChartRef}>
               {loading ? (
                 <Skeleton className="h-80 w-full" />
               ) : (
@@ -307,7 +573,7 @@ export default function AnalyticsPage() {
                 User & Property Growth
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent ref={growthChartRef}>
               {loading ? (
                 <Skeleton className="h-80 w-full" />
               ) : (
@@ -349,7 +615,7 @@ export default function AnalyticsPage() {
 
         {/* Distribution */}
         <TabsContent value="distribution" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" ref={distributionChartRef}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

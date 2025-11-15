@@ -258,7 +258,7 @@ const PropertyDetails = () => {
                     size="lg"
                     onClick={() => navigate(`/checkout?property=${id}&type=${listingType}`)}
                   >
-                    {isRental ? "Schedule Viewing" : "Make an Offer"}
+                    Proceed to Payment
                   </Button>
 
                   <Button 

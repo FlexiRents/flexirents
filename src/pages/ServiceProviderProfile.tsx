@@ -11,6 +11,7 @@ import RatingStars from "@/components/RatingStars";
 import ReviewCard from "@/components/ReviewCard";
 import { ReviewForm } from "@/components/ReviewForm";
 import BookingModal from "@/components/BookingModal";
+import { ProviderAvailabilityCalendar } from "@/components/ProviderAvailabilityCalendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -25,6 +26,7 @@ import {
   Star
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 const ServiceProviderProfile = () => {
   const { id } = useParams();
@@ -39,6 +41,8 @@ const ServiceProviderProfile = () => {
   const [loading, setLoading] = useState(true);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedTime, setSelectedTime] = useState<string>("");
 
   useEffect(() => {
     if (id) {
@@ -122,6 +126,21 @@ const ServiceProviderProfile = () => {
     setBookingModalOpen(true);
   };
 
+  const handleSlotSelect = (date: Date, time: string) => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to book this service.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+    setSelectedDate(format(date, "yyyy-MM-dd"));
+    setSelectedTime(time);
+    setBookingModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -190,10 +209,11 @@ const ServiceProviderProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="about" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="about">About</TabsTrigger>
                       <TabsTrigger value="reviews">Reviews</TabsTrigger>
                       <TabsTrigger value="availability">Availability</TabsTrigger>
+                      <TabsTrigger value="book">Book Appointment</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="about" className="space-y-6">
@@ -271,7 +291,7 @@ const ServiceProviderProfile = () => {
                         <div className="flex items-start gap-3">
                           <Clock className="h-5 w-5 text-accent mt-1" />
                           <div>
-                            <p className="font-medium mb-2">Available Hours</p>
+                            <p className="font-medium mb-2">General Availability</p>
                             <p className="text-muted-foreground">{provider.availability}</p>
                           </div>
                         </div>
@@ -280,11 +300,23 @@ const ServiceProviderProfile = () => {
                         
                         <div className="bg-accent/10 p-4 rounded-lg">
                           <p className="text-sm text-muted-foreground">
-                            Book this service provider for your preferred date and time. 
-                            You can specify the duration and any special requirements in the booking form.
+                            Check the "Book Appointment" tab to see specific available time slots and book instantly.
                           </p>
                         </div>
                       </div>
+                    </TabsContent>
+
+                    <TabsContent value="book" className="space-y-4">
+                      <div className="bg-accent/10 p-4 rounded-lg mb-4">
+                        <p className="text-sm text-muted-foreground">
+                          Select a date from the calendar below to see available time slots. 
+                          Click on any available slot to proceed with booking.
+                        </p>
+                      </div>
+                      <ProviderAvailabilityCalendar
+                        providerId={provider.id}
+                        onSelectSlot={handleSlotSelect}
+                      />
                     </TabsContent>
                   </Tabs>
                 </CardContent>
@@ -334,6 +366,8 @@ const ServiceProviderProfile = () => {
         providerId={provider.id}
         serviceType={provider.service_category}
         providerName={provider.provider_name}
+        initialDate={selectedDate}
+        initialTime={selectedTime}
       />
 
       <ReviewForm

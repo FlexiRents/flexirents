@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,9 +29,19 @@ interface BookingModalProps {
   providerId: string;
   serviceType: string;
   providerName: string;
+  initialDate?: string;
+  initialTime?: string;
 }
 
-const BookingModal = ({ open, onOpenChange, providerId, serviceType, providerName }: BookingModalProps) => {
+const BookingModal = ({ 
+  open, 
+  onOpenChange, 
+  providerId, 
+  serviceType, 
+  providerName,
+  initialDate,
+  initialTime 
+}: BookingModalProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -40,12 +50,22 @@ const BookingModal = ({ open, onOpenChange, providerId, serviceType, providerNam
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      bookingDate: "",
-      bookingTime: "",
+      bookingDate: initialDate || "",
+      bookingTime: initialTime || "",
       totalHours: "1",
       notes: "",
     },
   });
+
+  // Update form when initial values change
+  useEffect(() => {
+    if (initialDate) {
+      form.setValue("bookingDate", initialDate);
+    }
+    if (initialTime) {
+      form.setValue("bookingTime", initialTime);
+    }
+  }, [initialDate, initialTime, form]);
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user) {

@@ -10,7 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNavigate } from "react-router-dom";
 
 const bookingSchema = z.object({
@@ -30,7 +29,6 @@ interface BookingModalProps {
   providerId: string;
   serviceType: string;
   providerName: string;
-  hourlyRate: number;
   initialDate?: string;
   initialTime?: string;
 }
@@ -41,16 +39,13 @@ const BookingModal = ({
   providerId, 
   serviceType, 
   providerName,
-  hourlyRate,
   initialDate,
   initialTime 
 }: BookingModalProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { formatPrice } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [totalCost, setTotalCost] = useState(hourlyRate);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -71,15 +66,6 @@ const BookingModal = ({
       form.setValue("bookingTime", initialTime);
     }
   }, [initialDate, initialTime, form]);
-
-  // Watch hours to calculate total cost
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      const hours = parseFloat(value.totalHours || "1");
-      setTotalCost(hourlyRate * hours);
-    });
-    return () => subscription.unsubscribe();
-  }, [form, hourlyRate]);
 
   const onSubmit = async (data: BookingFormData) => {
     if (!user) {
@@ -195,22 +181,6 @@ const BookingModal = ({
                 </FormItem>
               )}
             />
-
-            {/* Cost Summary */}
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Hourly Rate:</span>
-                <span className="font-medium">{formatPrice(hourlyRate)}/hour</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Hours:</span>
-                <span className="font-medium">{form.watch("totalHours") || 1}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold border-t pt-2">
-                <span>Total Cost:</span>
-                <span>{formatPrice(totalCost)}</span>
-              </div>
-            </div>
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" disabled={isSubmitting} className="flex-1">

@@ -173,6 +173,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string
+          is_featured: boolean
           provider_id: string
           title: string | null
           updated_at: string
@@ -183,6 +184,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url: string
+          is_featured?: boolean
           provider_id: string
           title?: string | null
           updated_at?: string
@@ -193,6 +195,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string
+          is_featured?: boolean
           provider_id?: string
           title?: string | null
           updated_at?: string

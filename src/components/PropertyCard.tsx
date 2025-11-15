@@ -1,9 +1,7 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bed, Bath, Square, Heart, Check } from "lucide-react";
-import { useState } from "react";
+import { Bed, Bath, Square, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +40,6 @@ const PropertyCard = ({
   features,
   onSelect,
 }: PropertyCardProps) => {
-  const [showDetails, setShowDetails] = useState(false);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
@@ -50,12 +47,6 @@ const PropertyCard = ({
   const inWishlist = isInWishlist(id);
   
   const priceValue = parseFloat(price.replace(/[^0-9.-]+/g, ""));
-  
-  const hasFeatures = features && (
-    features.descriptions?.length || 
-    features.amenities?.length || 
-    features.facilities?.length
-  );
 
   const handleWishlistToggle = async () => {
     if (inWishlist) {
@@ -112,6 +103,16 @@ const PropertyCard = ({
             fill={inWishlist ? "currentColor" : "none"}
           />
         </Button>
+        
+        {/* Price overlay at bottom-left */}
+        <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
+          <span className="text-2xl font-bold text-primary">
+            {formatPrice(priceValue)}
+          </span>
+          {type === "rent" && (
+            <span className="text-muted-foreground text-sm ml-1">/month</span>
+          )}
+        </div>
       </div>
       <CardContent className="pt-4">
         <h3 
@@ -121,7 +122,7 @@ const PropertyCard = ({
           {title}
         </h3>
         <p className="text-muted-foreground text-sm mb-3">{location}</p>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           {beds && (
             <div className="flex items-center gap-1">
               <Bed className="h-4 w-4" />
@@ -140,77 +141,6 @@ const PropertyCard = ({
               <span>{sqft} sqft</span>
             </div>
           )}
-        </div>
-        
-        {hasFeatures && (
-          <div className="mb-4">
-            <Dialog open={showDetails} onOpenChange={setShowDetails}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full">
-                  View Features
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{title} - Features</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6 pt-4">
-                  {features.descriptions && features.descriptions.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-lg mb-3">Property Descriptions</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {features.descriptions.map((desc) => (
-                          <Badge key={desc} variant="secondary" className="flex items-center gap-1">
-                            <Check className="h-3 w-3" />
-                            {desc}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {features.amenities && features.amenities.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-lg mb-3">Amenities</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {features.amenities.map((amenity) => (
-                          <div key={amenity} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-accent" />
-                            <span>{amenity}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {features.facilities && features.facilities.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-lg mb-3">Facilities</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {features.facilities.map((facility) => (
-                          <div key={facility} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-accent" />
-                            <span>{facility}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
-        
-        <div className="flex items-baseline justify-between">
-          <div>
-            <span className="text-2xl font-bold text-primary">
-              {formatPrice(priceValue)}
-            </span>
-            {type === "rent" && (
-              <span className="text-muted-foreground text-sm ml-1">/month</span>
-            )}
-          </div>
         </div>
       </CardContent>
       <CardFooter>

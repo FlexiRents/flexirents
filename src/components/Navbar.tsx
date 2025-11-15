@@ -37,13 +37,16 @@ const Navbar = () => {
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors">
               List Property
             </Link>
-            <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
+            <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
               <SelectTrigger className="w-[110px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="USD">USD ($)</SelectItem>
                 <SelectItem value="GHS">GHS (₵)</SelectItem>
+                <SelectItem value="EUR">EUR (€)</SelectItem>
+                <SelectItem value="GBP">GBP (£)</SelectItem>
+                <SelectItem value="NGN">NGN (₦)</SelectItem>
               </SelectContent>
             </Select>
             <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors">
@@ -111,13 +114,16 @@ const Navbar = () => {
                 List Property
               </Link>
               <div className="py-2">
-                <Select value={currency} onValueChange={(value: 'USD' | 'GHS') => setCurrency(value)}>
+                <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="USD">USD ($)</SelectItem>
                     <SelectItem value="GHS">GHS (₵)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="GBP">GBP (£)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

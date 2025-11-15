@@ -109,9 +109,16 @@ const PropertyCard = ({
     });
   };
 
+  const handleNavigateToDetails = () => {
+    navigate(`/property/${id}?type=${type}`);
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-all duration-300">
-      <div className="relative h-48 overflow-hidden">
+      <div 
+        className="relative h-48 overflow-hidden cursor-pointer"
+        onClick={handleNavigateToDetails}
+      >
         <img
           src={image}
           alt={title}
@@ -123,8 +130,11 @@ const PropertyCard = ({
         <Button
           variant="secondary"
           size="icon"
-          className="absolute top-4 left-4"
-          onClick={handleWishlistToggle}
+          className="absolute top-4 left-4 z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleWishlistToggle();
+          }}
         >
           <Heart
             className="h-4 w-4"
@@ -133,7 +143,12 @@ const PropertyCard = ({
         </Button>
       </div>
       <CardContent className="pt-4">
-        <h3 className="font-semibold text-lg mb-2">{title}</h3>
+        <h3 
+          className="font-semibold text-lg mb-2 cursor-pointer hover:text-primary transition-colors"
+          onClick={handleNavigateToDetails}
+        >
+          {title}
+        </h3>
         <p className="text-muted-foreground text-sm mb-3">{location}</p>
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
           {beds && (

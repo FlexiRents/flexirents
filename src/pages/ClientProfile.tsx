@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,10 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, Star, Calendar } from "lucide-react";
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Star, 
+  Calendar,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  ArrowRight
+} from "lucide-react";
 import { format } from "date-fns";
 import RatingStars from "@/components/RatingStars";
 
@@ -30,22 +43,68 @@ interface Profile {
   phone: string | null;
 }
 
+interface DashboardStats {
+  totalBookings: number;
+  pendingBookings: number;
+  completedBookings: number;
+  totalReviews: number;
+  averageRating: number;
+  unreadMessages: number;
+}
+
+interface RecentBooking {
+  id: string;
+  service_type: string;
+  booking_date: string;
+  status: string;
+  provider_name: string;
+}
+
 export default function ClientProfile() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [averageRating, setAverageRating] = useState(0);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBookings: 0,
+    pendingBookings: 0,
+    completedBookings: 0,
+    totalReviews: 0,
+    averageRating: 0,
+    unreadMessages: 0,
+  });
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
-      fetchProfile();
-      fetchReviews();
+      fetchAllData();
     }
   }, [user]);
+
+  const fetchAllData = async () => {
+    try {
+      await Promise.all([
+        fetchProfile(),
+        fetchReviews(),
+        fetchStats(),
+        fetchRecentBookings(),
+      ]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -64,14 +123,11 @@ export default function ClientProfile() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchReviews = async () => {
     try {
-      // Fetch reviews where the current user is the target (client being reviewed)
       const { data: reviewsData, error } = await supabase
         .from("reviews")
         .select("*")
@@ -81,7 +137,6 @@ export default function ClientProfile() {
 
       if (error) throw error;
 
-      // Fetch reviewer profiles separately
       const enrichedReviews = await Promise.all(
         (reviewsData || []).map(async (review) => {
           const { data: profileData } = await supabase
@@ -98,14 +153,72 @@ export default function ClientProfile() {
       );
 
       setReviews(enrichedReviews);
-
-      // Calculate average rating
-      if (enrichedReviews && enrichedReviews.length > 0) {
-        const avg = enrichedReviews.reduce((sum, review) => sum + review.rating, 0) / enrichedReviews.length;
-        setAverageRating(avg);
-      }
     } catch (error) {
       console.error("Error fetching reviews:", error);
+    }
+  };
+
+  const fetchStats = async () => {
+    const { data: bookingsData } = await supabase
+      .from("bookings")
+      .select("status")
+      .eq("user_id", user?.id);
+
+    const { data: reviewsData } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("target_type", "client")
+      .eq("target_id", user?.id);
+
+    const { count: unreadCount } = await supabase
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .neq("sender_id", user?.id || "")
+      .eq("read", false);
+
+    const totalBookings = bookingsData?.length || 0;
+    const pendingBookings = bookingsData?.filter(b => b.status === "pending").length || 0;
+    const completedBookings = bookingsData?.filter(b => b.status === "completed").length || 0;
+    const totalReviews = reviewsData?.length || 0;
+    const averageRating = totalReviews > 0
+      ? reviewsData!.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+
+    setStats({
+      totalBookings,
+      pendingBookings,
+      completedBookings,
+      totalReviews,
+      averageRating,
+      unreadMessages: unreadCount || 0,
+    });
+  };
+
+  const fetchRecentBookings = async () => {
+    const { data } = await supabase
+      .from("bookings")
+      .select("id, service_type, booking_date, status, service_provider_id")
+      .eq("user_id", user?.id)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (data) {
+      const enriched = await Promise.all(
+        data.map(async (booking) => {
+          const { data: provider } = await supabase
+            .from("service_provider_registrations")
+            .select("provider_name")
+            .eq("id", booking.service_provider_id)
+            .maybeSingle();
+
+          return {
+            ...booking,
+            provider_name: provider?.provider_name || "Unknown Provider",
+          };
+        })
+      );
+
+      setRecentBookings(enriched);
     }
   };
 
@@ -144,8 +257,21 @@ export default function ClientProfile() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-500/10 text-green-700 border-green-500/20";
+      case "completed":
+        return "bg-blue-500/10 text-blue-700 border-blue-500/20";
+      case "cancelled":
+        return "bg-red-500/10 text-red-700 border-red-500/20";
+      default:
+        return "bg-yellow-500/10 text-yellow-700 border-yellow-500/20";
+    }
+  };
+
   const getInitials = (name: string | null) => {
-    if (!name) return "U";
+    if (!name) return user?.email?.[0].toUpperCase() || "U";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -154,7 +280,7 @@ export default function ClientProfile() {
       .slice(0, 2);
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -170,7 +296,7 @@ export default function ClientProfile() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Profile Header */}
           <Card className="mb-8">
             <CardContent className="pt-6">
@@ -199,11 +325,11 @@ export default function ClientProfile() {
                       </>
                     )}
                   </div>
-                  {reviews.length > 0 && (
+                  {stats.totalReviews > 0 && (
                     <div className="flex items-center gap-2 mt-3 justify-center sm:justify-start">
-                      <RatingStars rating={averageRating} />
+                      <RatingStars rating={stats.averageRating} />
                       <span className="text-sm text-muted-foreground">
-                        ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                        ({stats.totalReviews} {stats.totalReviews === 1 ? "review" : "reviews"})
                       </span>
                     </div>
                   )}
@@ -215,18 +341,233 @@ export default function ClientProfile() {
             </CardContent>
           </Card>
 
-          {/* Tabs for Profile Settings and Reviews */}
-          <Tabs defaultValue="reviews" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Bookings</p>
+                    <p className="text-3xl font-bold">{stats.totalBookings}</p>
+                  </div>
+                  <Calendar className="h-10 w-10 text-primary opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Pending</p>
+                    <p className="text-3xl font-bold">{stats.pendingBookings}</p>
+                  </div>
+                  <Clock className="h-10 w-10 text-yellow-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Reviews</p>
+                    <p className="text-3xl font-bold">{stats.totalReviews}</p>
+                  </div>
+                  <Star className="h-10 w-10 text-yellow-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Unread Messages</p>
+                    <p className="text-3xl font-bold">{stats.unreadMessages}</p>
+                  </div>
+                  <MessageSquare className="h-10 w-10 text-primary opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Rating Overview */}
+          {stats.totalReviews > 0 && (
+            <Card className="mb-8">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">Your Client Rating</p>
+                    <div className="flex items-center gap-3">
+                      <RatingStars rating={stats.averageRating} size={24} />
+                      <span className="text-2xl font-bold">
+                        {stats.averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        ({stats.totalReviews} {stats.totalReviews === 1 ? "review" : "reviews"})
+                      </span>
+                    </div>
+                  </div>
+                  <TrendingUp className="h-12 w-12 text-green-500 opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Button
+              variant="outline"
+              className="h-auto py-6 justify-start"
+              onClick={() => navigate("/flexi-assist")}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">Book a Service</p>
+                  <p className="text-sm text-muted-foreground">Find service providers</p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto py-6 justify-start"
+              onClick={() => navigate("/my-bookings")}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">View All Bookings</p>
+                  <p className="text-sm text-muted-foreground">Manage your bookings</p>
+                </div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="h-auto py-6 justify-start"
+              onClick={() => navigate("/wishlist")}
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <Star className="h-6 w-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">Wishlist</p>
+                  <p className="text-sm text-muted-foreground">View saved properties</p>
+                </div>
+              </div>
+            </Button>
+          </div>
+
+          {/* Recent Activity & Tabs */}
+          <Tabs defaultValue="activity" className="space-y-6">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3 mx-auto">
+              <TabsTrigger value="activity">Recent Activity</TabsTrigger>
               <TabsTrigger value="reviews">My Reviews</TabsTrigger>
               <TabsTrigger value="settings">Account Settings</TabsTrigger>
             </TabsList>
+
+            {/* Recent Activity Tab */}
+            <TabsContent value="activity" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Recent Bookings */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Recent Bookings</CardTitle>
+                      <Button variant="ghost" size="sm" onClick={() => navigate("/my-bookings")}>
+                        View All <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                    <CardDescription>Your latest service bookings</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {recentBookings.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p>No bookings yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {recentBookings.map((booking) => (
+                          <div
+                            key={booking.id}
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                            onClick={() => navigate("/my-bookings")}
+                          >
+                            <div className="flex-1">
+                              <p className="font-medium">{booking.service_type}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {booking.provider_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {format(new Date(booking.booking_date), "MMM d, yyyy")}
+                              </p>
+                            </div>
+                            <Badge className={getStatusColor(booking.status)}>
+                              {booking.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Recent Reviews */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Latest Reviews</CardTitle>
+                    <CardDescription>Recent feedback from service providers</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {reviews.slice(0, 3).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Star className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p>No reviews yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {reviews.slice(0, 3).map((review) => (
+                          <div
+                            key={review.id}
+                            className="p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-medium text-sm">
+                                {review.profiles?.full_name || "Service Provider"}
+                              </p>
+                              <RatingStars rating={review.rating} size={14} />
+                            </div>
+                            {review.review_text && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {review.review_text}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {format(new Date(review.created_at), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
             {/* Reviews Tab */}
             <TabsContent value="reviews" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Reviews from Service Providers</CardTitle>
+                  <CardTitle>All Reviews from Service Providers</CardTitle>
                   <CardDescription>
                     See what service providers have said about working with you
                   </CardDescription>

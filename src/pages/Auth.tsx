@@ -55,7 +55,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      navigate("/profile");
     }
   }, [user, navigate]);
 
@@ -75,7 +75,7 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
-        navigate("/dashboard");
+        navigate("/profile");
       }
     } catch (error: any) {
       toast({
@@ -104,7 +104,7 @@ const Auth = () => {
           title: "Account Created!",
           description: "Welcome to FlexiRents! You can now start using our services.",
         });
-        navigate("/dashboard");
+        navigate("/profile");
       }
     } catch (error: any) {
       toast({

@@ -151,8 +151,7 @@ const PropertyDetails = () => {
             <Card>
               <CardContent className="pt-6">
                 <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
-                <div className="flex items-center gap-2 text-3xl font-bold text-primary mb-4">
-                  <DollarSign className="h-8 w-8" />
+                <div className="text-3xl font-bold text-primary mb-4">
                   {isRental ? `${formatPrice(property.price)}/month` : formatPrice(property.price)}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">

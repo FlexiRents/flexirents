@@ -57,15 +57,15 @@ const PropertyCard = ({
     features.facilities?.length
   );
 
-  const handleWishlistToggle = () => {
+  const handleWishlistToggle = async () => {
     if (inWishlist) {
-      removeFromWishlist(id);
+      await removeFromWishlist(id);
       toast({
         title: "Removed from wishlist",
         description: `${title} has been removed from your wishlist.`,
       });
     } else {
-      addToWishlist({
+      await addToWishlist({
         id,
         type: type === "rent" ? "rental" : "sale",
         title,

@@ -581,6 +581,42 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          property_image: string | null
+          property_location: string | null
+          property_price: string | null
+          property_title: string
+          property_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          property_image?: string | null
+          property_location?: string | null
+          property_price?: string | null
+          property_title: string
+          property_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          property_image?: string | null
+          property_location?: string | null
+          property_price?: string | null
+          property_title?: string
+          property_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       approved_service_providers: {

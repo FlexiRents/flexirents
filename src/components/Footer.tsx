@@ -137,23 +137,32 @@ const Footer = () => {
             <ul className="space-y-2 text-sm opacity-80">
               <li>
                 <Link to="/rentals" className="hover:text-accent transition-colors">
-                  Properties for Rentals
+                  Property Rentals
                 </Link>
               </li>
               <li>
                 <Link to="/sales" className="hover:text-accent transition-colors">
-                  Properties for Sale
+                  Property Sales
                 </Link>
               </li>
-              <li>Property Management</li>
               <li>
                 <Link to="/flexi-assist" className="hover:text-accent transition-colors">
                   Flexi-Assist Services
                 </Link>
               </li>
               <li>
+                <Link to="/project-management" className="hover:text-accent transition-colors">
+                  Project Management
+                </Link>
+              </li>
+              <li>
                 <Link to="/marketplace" className="hover:text-accent transition-colors">
                   Market Place
+                </Link>
+              </li>
+              <li>
+                <Link to="/projects" className="hover:text-accent transition-colors">
+                  Projects
                 </Link>
               </li>
             </ul>

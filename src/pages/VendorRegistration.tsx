@@ -27,7 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ghanaRegions } from "@/data/ghanaLocations";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Upload } from "lucide-react";
 
 const categories = [
   "Electronics & Appliances",
@@ -59,6 +59,8 @@ const VendorRegistration = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<VendorRegistrationForm>({
     resolver: zodResolver(vendorRegistrationSchema),
@@ -82,6 +84,27 @@ const VendorRegistration = () => {
     setIsSubmitting(true);
 
     try {
+      let profileImageUrl = null;
+
+      // Upload profile image if provided
+      if (profileImage) {
+        const fileExt = profileImage.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('vendor-profiles')
+          .upload(filePath, profileImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('vendor-profiles')
+          .getPublicUrl(filePath);
+
+        profileImageUrl = publicUrl;
+      }
+
       const vendorData = {
         business_name: data.business_name,
         business_category: data.business_category,
@@ -92,6 +115,7 @@ const VendorRegistration = () => {
         location: data.location,
         description: data.description,
         website: data.website || null,
+        profile_image_url: profileImageUrl,
       };
 
       const { error } = await supabase
@@ -198,6 +222,41 @@ const VendorRegistration = () => {
                 {/* Business Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-foreground">Business Information</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Business Profile Image</label>
+                    <div className="flex items-center gap-4">
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                        />
+                      )}
+                      <label className="cursor-pointer">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">
+                          <Upload className="h-4 w-4" />
+                          <span>Upload Image</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setProfileImage(file);
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setImagePreview(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
                   
                   <FormField
                     control={form.control}

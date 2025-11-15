@@ -149,23 +149,32 @@ const VendorProfile = () => {
           {/* Vendor Header */}
           <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <h1 className="text-4xl font-bold">{vendor.business_name}</h1>
-                  {vendor.status === "approved" && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-                <Badge variant="outline" className="text-lg mb-4">
-                  {vendor.business_category}
-                </Badge>
-                <div className="flex items-center gap-2 mb-4">
-                  <RatingStars rating={averageRating} />
-                  <span className="text-sm text-muted-foreground">
-                    ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
-                  </span>
+              <div className="flex items-start gap-4 flex-1">
+                {vendor.profile_image_url && (
+                  <img
+                    src={vendor.profile_image_url}
+                    alt={vendor.business_name}
+                    className="w-24 h-24 rounded-full object-cover border-2 border-border"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h1 className="text-4xl font-bold">{vendor.business_name}</h1>
+                    {vendor.status === "approved" && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Verified
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="text-lg mb-4">
+                    {vendor.business_category}
+                  </Badge>
+                  <div className="flex items-center gap-2 mb-4">
+                    <RatingStars rating={averageRating} />
+                    <span className="text-sm text-muted-foreground">
+                      ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-3">

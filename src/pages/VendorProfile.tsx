@@ -246,12 +246,25 @@ const VendorProfile = () => {
           </div>
 
           {/* Tabbed Content Section */}
-          <Tabs defaultValue="products" className="mb-8">
+          <Tabs defaultValue="about" className="mb-8">
             <TabsList className="grid w-full max-w-2xl grid-cols-3 mx-auto mb-6">
-              <TabsTrigger value="products">Products & Services</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="products">Products & Services</TabsTrigger>
               <TabsTrigger value="reviews">Reviews ({reviewCount})</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="about">
+              <Card>
+                <CardHeader>
+                  <CardTitle>About {vendor.business_name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {vendor.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             <TabsContent value="products">
               <Card>
@@ -296,19 +309,6 @@ const VendorProfile = () => {
                       ))}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="about">
-              <Card>
-                <CardHeader>
-                  <CardTitle>About {vendor.business_name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {vendor.description}
-                  </p>
                 </CardContent>
               </Card>
             </TabsContent>

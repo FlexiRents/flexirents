@@ -8,8 +8,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { MessageSquare, Calendar, Clock, User } from "lucide-react";
+import { MessageSquare, Calendar, Clock, User, Star } from "lucide-react";
 import { MessagingDialog } from "@/components/MessagingDialog";
+import { ReviewForm } from "@/components/ReviewForm";
 
 interface Booking {
   id: string;
@@ -23,6 +24,7 @@ interface Booking {
   service_provider_id: string;
   provider_name?: string;
   unread_count?: number;
+  has_reviewed?: boolean;
 }
 
 export default function MyBookings() {
@@ -31,6 +33,8 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [messagingOpen, setMessagingOpen] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -54,7 +58,7 @@ export default function MyBookings() {
       return;
     }
 
-    // Fetch provider names and unread message counts
+    // Fetch provider names, unread message counts, and review status
     const enrichedBookings = await Promise.all(
       (bookingsData || []).map(async (booking) => {
         const { data: providerData } = await supabase
@@ -70,10 +74,19 @@ export default function MyBookings() {
           .eq("read", false)
           .neq("sender_id", user?.id || "");
 
+        // Check if user has already reviewed this booking
+        const { data: existingReview } = await supabase
+          .from("reviews")
+          .select("id")
+          .eq("booking_id", booking.id)
+          .eq("reviewer_user_id", user?.id || "")
+          .maybeSingle();
+
         return {
           ...booking,
           provider_name: providerData?.provider_name || "Unknown Provider",
           unread_count: count || 0,
+          has_reviewed: !!existingReview,
         };
       })
     );
@@ -98,6 +111,17 @@ export default function MyBookings() {
   const handleOpenMessaging = (booking: Booking) => {
     setSelectedBooking(booking);
     setMessagingOpen(true);
+  };
+
+  const handleOpenReview = (booking: Booking) => {
+    setReviewBooking(booking);
+    setReviewDialogOpen(true);
+  };
+
+  const handleReviewSuccess = () => {
+    setReviewDialogOpen(false);
+    fetchBookings(); // Refresh to update review status
+    toast.success("Thank you for your review!");
   };
 
   if (loading) {
@@ -158,11 +182,11 @@ export default function MyBookings() {
                           <strong>Notes:</strong> {booking.notes}
                         </div>
                       )}
-                      <div className="pt-4">
+                      <div className="pt-4 flex flex-wrap gap-2">
                         <Button
                           onClick={() => handleOpenMessaging(booking)}
                           variant="outline"
-                          className="w-full sm:w-auto"
+                          className="flex-1 sm:flex-none"
                         >
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Message Provider
@@ -172,6 +196,22 @@ export default function MyBookings() {
                             </Badge>
                           )}
                         </Button>
+                        {booking.status === "completed" && !booking.has_reviewed && (
+                          <Button
+                            onClick={() => handleOpenReview(booking)}
+                            variant="default"
+                            className="flex-1 sm:flex-none"
+                          >
+                            <Star className="h-4 w-4 mr-2" />
+                            Leave Review
+                          </Button>
+                        )}
+                        {booking.has_reviewed && (
+                          <Badge variant="secondary" className="px-3 py-2">
+                            <Star className="h-3 w-3 mr-1 fill-current" />
+                            Reviewed
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -189,6 +229,17 @@ export default function MyBookings() {
           onOpenChange={setMessagingOpen}
           bookingId={selectedBooking.id}
           otherPartyName={selectedBooking.provider_name || "Service Provider"}
+        />
+      )}
+
+      {reviewBooking && (
+        <ReviewForm
+          targetType="service_provider"
+          targetId={reviewBooking.service_provider_id}
+          bookingId={reviewBooking.id}
+          onSuccess={handleReviewSuccess}
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
         />
       )}
     </div>

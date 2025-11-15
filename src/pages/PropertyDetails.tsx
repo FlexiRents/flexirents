@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ReviewForm } from "@/components/ReviewForm";
+import ReviewCard from "@/components/ReviewCard";
+import RatingStars from "@/components/RatingStars";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
-  Tag, CheckCircle, ArrowLeft, Heart 
+  Tag, CheckCircle, ArrowLeft, Heart, Star
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // This would normally come from a database or API
 const getPropertyById = (id: string, type: string) => {
@@ -55,6 +59,11 @@ const PropertyDetails = () => {
   const { toast } = useToast();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [showSchedule, setShowSchedule] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   
   const inWishlist = isInWishlist(id || "1");
   const [scheduleForm, setScheduleForm] = useState({
@@ -72,6 +81,79 @@ const PropertyDetails = () => {
   
   const property = getPropertyById(id || "1", listingType);
   const isRental = listingType === "rent";
+
+  // Fetch reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+      
+      setIsLoadingReviews(true);
+      try {
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select(`
+            *,
+            profiles:reviewer_user_id (
+              full_name
+            )
+          `)
+          .eq('target_type', 'property')
+          .eq('target_id', id)
+          .order('created_at', { ascending: false });
+
+        if (reviewsError) throw reviewsError;
+
+        setReviews(reviewsData || []);
+        setReviewCount(reviewsData?.length || 0);
+        
+        if (reviewsData && reviewsData.length > 0) {
+          const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
+          setAverageRating(Math.round(avg * 10) / 10);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setIsLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
+
+  const handleReviewSuccess = () => {
+    // Reload reviews after successful submission
+    const fetchReviews = async () => {
+      if (!id) return;
+      
+      try {
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('reviews')
+          .select(`
+            *,
+            profiles:reviewer_user_id (
+              full_name
+            )
+          `)
+          .eq('target_type', 'property')
+          .eq('target_id', id)
+          .order('created_at', { ascending: false });
+
+        if (reviewsError) throw reviewsError;
+
+        setReviews(reviewsData || []);
+        setReviewCount(reviewsData?.length || 0);
+        
+        if (reviewsData && reviewsData.length > 0) {
+          const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
+          setAverageRating(Math.round(avg * 10) / 10);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
+    fetchReviews();
+  };
 
   const handleProceedToPayment = () => {
     if (!user) {
@@ -329,6 +411,53 @@ const PropertyDetails = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reviews Section */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                      <Star className="h-5 w-5" />
+                      Reviews
+                    </h2>
+                    {reviewCount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <RatingStars rating={averageRating} />
+                        <span className="text-sm text-muted-foreground">
+                          {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <Button onClick={() => setShowReviewForm(true)}>
+                    Post a Review
+                  </Button>
+                </div>
+
+                {isLoadingReviews ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading reviews...</p>
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No reviews yet. Be the first to review this property!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <ReviewCard
+                        key={review.id}
+                        reviewerName={review.profiles?.full_name || 'Anonymous'}
+                        rating={review.rating}
+                        reviewText={review.review_text}
+                        createdAt={review.created_at}
+                      />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Contact Card */}
@@ -453,6 +582,15 @@ const PropertyDetails = () => {
           </div>
         </div>
       </main>
+
+      <ReviewForm
+        targetType="property"
+        targetId={id || "1"}
+        onSuccess={handleReviewSuccess}
+        open={showReviewForm}
+        onOpenChange={setShowReviewForm}
+        targetName={property.title}
+      />
 
       <Footer />
     </div>

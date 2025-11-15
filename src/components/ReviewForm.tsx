@@ -20,7 +20,7 @@ const reviewSchema = z.object({
 type ReviewFormData = z.infer<typeof reviewSchema>;
 
 interface ReviewFormProps {
-  targetType: "vendor" | "service_provider" | "client";
+  targetType: "vendor" | "service_provider" | "client" | "property";
   targetId: string;
   bookingId?: string;
   onSuccess?: () => void;
@@ -122,6 +122,8 @@ export const ReviewForm = ({
         return "Review Client";
       case "vendor":
         return "Review Vendor";
+      case "property":
+        return "Review Property";
       default:
         return "Leave a Review";
     }

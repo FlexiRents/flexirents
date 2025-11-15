@@ -220,7 +220,7 @@ const PropertyDetails = () => {
                   {isRental && (
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-primary" />
-                      <span>Duration: {property.duration}</span>
+                      <span>Rent duration: {property.duration}</span>
                     </div>
                   )}
                 </div>

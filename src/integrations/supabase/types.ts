@@ -849,7 +849,7 @@ export type Database = {
       update_expired_leases: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "user" | "service_provider" | "vendor" | "admin"
+      app_role: "user" | "service_provider" | "vendor" | "admin" | "moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -977,7 +977,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "service_provider", "vendor", "admin"],
+      app_role: ["user", "service_provider", "vendor", "admin", "moderator"],
     },
   },
 } as const

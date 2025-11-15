@@ -18,8 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase, MessageSquare } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, MapPin, Briefcase, MessageSquare, Star } from "lucide-react";
 import { MessagingDialog } from "@/components/MessagingDialog";
+import { ReviewForm } from "@/components/ReviewForm";
 
 const profileSchema = z.object({
   providerName: z.string().min(2).max(100),
@@ -45,6 +46,8 @@ const ServiceProviderDashboard = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [messagingOpen, setMessagingOpen] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<any>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -278,7 +281,7 @@ const ServiceProviderDashboard = () => {
                         <TableHead>Hours</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Update Status</TableHead>
-                        <TableHead>Message</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -336,22 +339,43 @@ const ServiceProviderDashboard = () => {
                             </Select>
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedBooking(booking);
-                                setMessagingOpen(true);
-                              }}
-                            >
-                              <MessageSquare className="h-4 w-4 mr-2" />
-                              Chat
-                              {booking.unread_count > 0 && (
-                                <Badge variant="destructive" className="ml-2">
-                                  {booking.unread_count}
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedBooking(booking);
+                                  setMessagingOpen(true);
+                                }}
+                              >
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Chat
+                                {booking.unread_count > 0 && (
+                                  <Badge variant="destructive" className="ml-2">
+                                    {booking.unread_count}
+                                  </Badge>
+                                )}
+                              </Button>
+                              {booking.status === "completed" && !booking.has_reviewed_client && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    setReviewBooking(booking);
+                                    setReviewDialogOpen(true);
+                                  }}
+                                >
+                                  <Star className="h-4 w-4 mr-2" />
+                                  Review Client
+                                </Button>
+                              )}
+                              {booking.has_reviewed_client && (
+                                <Badge variant="secondary" className="px-3 py-2">
+                                  <Star className="h-3 w-3 mr-1 fill-current" />
+                                  Reviewed
                                 </Badge>
                               )}
-                            </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -528,6 +552,25 @@ const ServiceProviderDashboard = () => {
           onOpenChange={setMessagingOpen}
           bookingId={selectedBooking.id}
           otherPartyName={selectedBooking.profiles?.full_name || "Client"}
+        />
+      )}
+
+      {reviewBooking && (
+        <ReviewForm
+          targetType="client"
+          targetId={reviewBooking.user_id}
+          bookingId={reviewBooking.id}
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          targetName={reviewBooking.profiles?.full_name}
+          onSuccess={() => {
+            setReviewDialogOpen(false);
+            fetchBookings();
+            toast({
+              title: "Review Submitted",
+              description: "Thank you for reviewing your client!",
+            });
+          }}
         />
       )}
     </div>

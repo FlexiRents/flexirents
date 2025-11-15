@@ -231,6 +231,8 @@ const VendorProfile = () => {
                 <ReviewForm
                   targetType="vendor"
                   targetId={id!}
+                  open={showReviewForm}
+                  onOpenChange={setShowReviewForm}
                   onSuccess={() => {
                     setShowReviewForm(false);
                     fetchReviews();

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,13 +20,24 @@ const reviewSchema = z.object({
 type ReviewFormData = z.infer<typeof reviewSchema>;
 
 interface ReviewFormProps {
-  targetType: "vendor" | "service_provider";
+  targetType: "vendor" | "service_provider" | "client";
   targetId: string;
   bookingId?: string;
   onSuccess?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  targetName?: string;
 }
 
-const ReviewForm = ({ targetType, targetId, bookingId, onSuccess }: ReviewFormProps) => {
+export const ReviewForm = ({ 
+  targetType, 
+  targetId, 
+  bookingId, 
+  onSuccess, 
+  open, 
+  onOpenChange,
+  targetName 
+}: ReviewFormProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -87,6 +99,7 @@ const ReviewForm = ({ targetType, targetId, bookingId, onSuccess }: ReviewFormPr
       });
 
       form.reset();
+      onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
       console.error("Error submitting review:", error);
@@ -100,66 +113,97 @@ const ReviewForm = ({ targetType, targetId, bookingId, onSuccess }: ReviewFormPr
     }
   };
 
+  const getDialogTitle = () => {
+    if (targetName) return `Review ${targetName}`;
+    switch (targetType) {
+      case "service_provider":
+        return "Review Service Provider";
+      case "client":
+        return "Review Client";
+      case "vendor":
+        return "Review Vendor";
+      default:
+        return "Leave a Review";
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="rating"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Your Rating</FormLabel>
-              <FormControl>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => field.onChange(star)}
-                      onMouseEnter={() => setHoveredStar(star)}
-                      onMouseLeave={() => setHoveredStar(0)}
-                      className="transition-transform hover:scale-110"
-                    >
-                      <Star
-                        size={32}
-                        className={
-                          star <= (hoveredStar || rating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }
-                      />
-                    </button>
-                  ))}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Rating</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => field.onChange(star)}
+                          onMouseEnter={() => setHoveredStar(star)}
+                          onMouseLeave={() => setHoveredStar(0)}
+                          className="transition-transform hover:scale-110"
+                        >
+                          <Star
+                            size={32}
+                            className={
+                              star <= (hoveredStar || rating)
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="reviewText"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Your Review (Optional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Share your experience..."
-                  className="min-h-[100px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="reviewText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Review (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share your experience..."
+                      className="min-h-[120px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit Review"}
-        </Button>
-      </form>
-    </Form>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit Review"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

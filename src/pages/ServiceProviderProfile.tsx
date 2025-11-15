@@ -235,6 +235,8 @@ const ServiceProviderProfile = () => {
                 <ReviewForm
                   targetType="service_provider"
                   targetId={id!}
+                  open={showReviewForm}
+                  onOpenChange={setShowReviewForm}
                   onSuccess={() => {
                     setShowReviewForm(false);
                     fetchReviews();

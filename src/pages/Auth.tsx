@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,9 +31,13 @@ type SignupFormData = z.infer<typeof signupSchema>;
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { signIn, signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Get the return URL from state, default to profile
+  const returnUrl = (location.state as any)?.returnUrl || "/profile";
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -55,9 +59,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate("/profile");
+      navigate(returnUrl);
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnUrl]);
 
   const onLogin = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -75,7 +79,7 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
-        navigate("/profile");
+        navigate(returnUrl);
       }
     } catch (error: any) {
       toast({
@@ -104,7 +108,7 @@ const Auth = () => {
           title: "Account Created!",
           description: "Welcome to FlexiRents! You can now start using our services.",
         });
-        navigate("/profile");
+        navigate(returnUrl);
       }
     } catch (error: any) {
       toast({

@@ -222,36 +222,6 @@ export default function ClientDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* User Profile Header */}
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
-              <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
-                {getInitials(stats?.userProfile?.full_name || null)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-foreground">
-                {stats?.userProfile?.full_name || "Welcome"}
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                Member {getMembershipDuration(stats?.userProfile?.created_at || new Date().toISOString())}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Award className={`h-4 w-4 ${activityLevel.color}`} />
-                <span className={`text-sm font-medium ${activityLevel.color}`}>
-                  {activityLevel.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  • {stats?.activityScore || 0} points
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (

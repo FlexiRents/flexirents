@@ -17,6 +17,7 @@ import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
 import { usePropertyNotifications } from "@/hooks/usePropertyNotifications";
 import { Separator } from "@/components/ui/separator";
+import RentalBillingHistory from "@/components/RentalBillingHistory";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -309,14 +310,7 @@ export default function ClientProfile() {
             )}
 
             {activePanel === "billing" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>Billing History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">No billing history.</p>
-                </CardContent>
-              </Card>
+              <RentalBillingHistory />
             )}
 
             {activePanel === "verification" && (

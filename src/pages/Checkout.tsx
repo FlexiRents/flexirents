@@ -11,18 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Plus, Minus, CreditCard, Smartphone } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 const Checkout = () => {
   const location = useLocation();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
-  const { type, property, service } = location.state || {};
+  const { type, property, service, paymentId } = location.state || {};
 
   const [duration, setDuration] = useState(12);
   const [hours, setHours] = useState(8);
   const [paymentPlan, setPaymentPlan] = useState<"full" | "flexible">("flexible");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [mobileProvider, setMobileProvider] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState<any>(null);
+  const [loadingPayment, setLoadingPayment] = useState(false);
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -31,7 +35,9 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    if (type === "rental" && property) {
+    if (paymentId) {
+      fetchPaymentDetails();
+    } else if (type === "rental" && property) {
       const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
       const baseRent = monthlyPrice * duration;
       const securityDeposit = monthlyPrice * 1; // 1 month refundable security deposit
@@ -84,7 +90,30 @@ const Checkout = () => {
         securityDeposit: 0,
       });
     }
-  }, [type, property, service, duration, hours, paymentPlan]);
+  }, [type, property, service, duration, hours, paymentPlan, paymentId]);
+
+  const fetchPaymentDetails = async () => {
+    setLoadingPayment(true);
+    try {
+      const { data, error } = await supabase
+        .from("rental_payments")
+        .select("*")
+        .eq("id", paymentId)
+        .single();
+
+      if (error) throw error;
+      setPaymentDetails(data);
+    } catch (error) {
+      console.error("Error fetching payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load payment details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
 
   const handleDurationChange = (increment: boolean) => {
     setDuration((prev) => {
@@ -107,12 +136,24 @@ const Checkout = () => {
     });
   };
 
-  if (!type) {
+  if (!type && !paymentId) {
     return (
       <div className="min-h-screen">
         <Navbar />
         <div className="pt-24 pb-16 container mx-auto px-4">
           <h1 className="text-3xl font-bold">Please select a property or service first</h1>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (loadingPayment) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="pt-24 pb-16 container mx-auto px-4">
+          <h1 className="text-3xl font-bold">Loading payment details...</h1>
         </div>
         <Footer />
       </div>
@@ -128,7 +169,9 @@ const Checkout = () => {
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Checkout</h1>
             <p className="text-muted-foreground text-lg">
-              {type === "rental" 
+              {paymentId
+                ? "Complete your rental payment"
+                : type === "rental" 
                 ? "Complete your payment and secure your rent"
                 : type === "sale"
                 ? "Complete your payment and secure your sale"
@@ -141,12 +184,38 @@ const Checkout = () => {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {type === "rental" ? "Rent Summary" : type === "sale" ? "Sale Summary" : "Service Summary"}
+                  {paymentId 
+                    ? "Payment Summary"
+                    : type === "rental" ? "Rent Summary" : type === "sale" ? "Sale Summary" : "Service Summary"}
                 </CardTitle>
                 <CardDescription>Review your selection</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {type === "rental" && property && (
+                {paymentId && paymentDetails ? (
+                  <>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {paymentDetails.is_first_payment 
+                          ? "First Payment (6-12 months)" 
+                          : `Installment #${paymentDetails.installment_number}`}
+                      </h3>
+                      <p className="text-muted-foreground text-sm">
+                        Due: {format(new Date(paymentDetails.due_date), "MMM dd, yyyy")}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t">
+                      <div className="flex justify-between text-sm">
+                        <span>Amount Due:</span>
+                        <span className="font-semibold">{formatPrice(paymentDetails.amount)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                        <span>Total:</span>
+                        <span>{formatPrice(paymentDetails.amount)}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : type === "rental" && property && (
                   <>
                     <div>
                       <h3 className="font-semibold text-lg">{property.title}</h3>

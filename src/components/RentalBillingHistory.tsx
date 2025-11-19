@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Download, AlertCircle, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -38,6 +39,7 @@ interface RentalPayment {
 export default function RentalBillingHistory() {
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<RentalPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [upcomingPayments, setUpcomingPayments] = useState<RentalPayment[]>([]);
@@ -77,12 +79,8 @@ export default function RentalBillingHistory() {
     }
   };
 
-  const handlePayment = (paymentId: string, paymentLink: string | null) => {
-    if (!paymentLink) {
-      toast.error("Payment link not yet available");
-      return;
-    }
-    window.open(paymentLink, "_blank");
+  const handlePayment = (paymentId: string) => {
+    navigate('/checkout', { state: { paymentId } });
   };
 
   const getStatusBadge = (status: string) => {
@@ -370,16 +368,14 @@ export default function RentalBillingHistory() {
                           ) : payment.status === 'pending' ? (
                             <Button
                               size="sm"
-                              disabled={!canPay}
-                              onClick={() => handlePayment(payment.id, payment.payment_link)}
-                              className={canPay ? "bg-blue-600 hover:bg-blue-700 h-8" : "h-8"}
+                              disabled={!isNextPending}
+                              onClick={() => handlePayment(payment.id)}
+                              className={isNextPending ? "bg-blue-600 hover:bg-blue-700 h-8" : "h-8"}
                             >
                               {isLocked ? (
                                 <>🔒 Locked</>
-                              ) : canPay ? (
-                                "Pay Now"
                               ) : (
-                                "Unavailable"
+                                "Pay Now"
                               )}
                             </Button>
                           ) : (

@@ -39,6 +39,7 @@ import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollProgressIndicator />
               <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />

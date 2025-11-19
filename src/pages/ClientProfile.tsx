@@ -732,7 +732,7 @@ export default function ClientProfile() {
             </SidebarContent>
           </Sidebar>
 
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6 pt-2">
             <div className="mb-4 flex items-center gap-2">
               <SidebarTrigger />
               <h1 className="text-2xl font-bold">

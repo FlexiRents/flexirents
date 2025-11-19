@@ -63,9 +63,12 @@ export default function RentalBillingHistory() {
       const allPayments = data || [];
       setPayments(allPayments);
 
-      // Filter upcoming payments (pending status only)
-      const upcoming = allPayments.filter((payment) => payment.status === "pending");
-      setUpcomingPayments(upcoming);
+      // Filter only the next pending payment
+      const pending = allPayments
+        .filter((payment) => payment.status === "pending")
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      
+      setUpcomingPayments(pending.length > 0 ? [pending[0]] : []);
     } catch (error: any) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to load payment history");
@@ -210,6 +213,25 @@ export default function RentalBillingHistory() {
     );
   }
 
+  // Calculate lease details
+  const leaseDurationMonths = payments.length <= 7 ? 12 : 24;
+  const firstPaymentMonths = leaseDurationMonths === 12 ? 6 : 12;
+  
+  const monthsPaidVerified = payments
+    .filter((p) => p.status === "paid" && p.verification_status === "verified")
+    .reduce((total, p) => {
+      return total + (p.is_first_payment ? firstPaymentMonths : 1);
+    }, 0);
+
+  // Filter payments to display - show all non-pending + only next pending
+  const pendingPayments = payments
+    .filter(p => p.status === 'pending')
+    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  const nextPendingPayment = pendingPayments[0];
+  const displayedPayments = payments.filter(p => 
+    p.status !== 'pending' || (nextPendingPayment && p.id === nextPendingPayment.id)
+  );
+
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Payment Summary */}
@@ -264,9 +286,9 @@ export default function RentalBillingHistory() {
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-1">Verified</p>
               <p className="text-2xl font-bold">
-                {payments.filter((p) => p.verification_status === "verified").length}
+                {monthsPaidVerified}
                 <span className="text-sm text-muted-foreground">
-                  /{payments.length}
+                  /{leaseDurationMonths}
                 </span>
               </p>
             </div>
@@ -283,7 +305,7 @@ export default function RentalBillingHistory() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {payments.length === 0 ? (
+          {displayedPayments.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No payment history available.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -300,7 +322,7 @@ export default function RentalBillingHistory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment, index) => {
+                  {displayedPayments.map((payment, index) => {
                     const pendingPayments = payments.filter(p => p.status === 'pending');
                     const isNextPending = payment.status === 'pending' && 
                       pendingPayments.findIndex(p => p.id === payment.id) === 0;

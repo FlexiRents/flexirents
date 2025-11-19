@@ -146,6 +146,68 @@ export default function RentalBillingHistory() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Payment Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-1">Total Paid</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatPrice(
+                  payments
+                    .filter((p) => p.status === "paid")
+                    .reduce((sum, p) => sum + p.amount, 0)
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-1">Pending</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {formatPrice(
+                  payments
+                    .filter((p) => p.status === "pending")
+                    .reduce((sum, p) => sum + p.amount, 0)
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-1">Overdue</p>
+              <p className="text-2xl font-bold text-red-600">
+                {formatPrice(
+                  payments
+                    .filter((p) => p.status === "overdue")
+                    .reduce((sum, p) => sum + p.amount, 0)
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-1">Verified</p>
+              <p className="text-2xl font-bold">
+                {payments.filter((p) => p.verification_status === "verified").length}
+                <span className="text-sm text-muted-foreground">
+                  /{payments.length}
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Payment History Table with Integrated Reminders */}
       <Card>
         <CardHeader>

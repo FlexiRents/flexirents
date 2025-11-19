@@ -40,6 +40,7 @@ import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
+import { BackToTop } from "./components/BackToTop";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
             <BrowserRouter>
               <ScrollProgressIndicator />
               <ScrollToTop />
+              <BackToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/rentals" element={<Rentals />} />

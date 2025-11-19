@@ -339,13 +339,10 @@ export default function RentalBillingHistory() {
                             <span className="font-medium">
                               {payment.is_first_payment 
                                 ? "First (6-12mo)" 
-                                : `#${payment.installment_number}`}
+                                : payment.status === 'pending' && isNextPending
+                                  ? "Next Due"
+                                  : `#${payment.installment_number}`}
                             </span>
-                            {isNextPending && (
-                              <Badge variant="default" className="bg-blue-600 text-xs">
-                                Next Due
-                              </Badge>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">

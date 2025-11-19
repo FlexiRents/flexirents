@@ -422,29 +422,28 @@ export default function ClientProfile() {
                       </p>
                     )}
                     
-                    <div className="flex items-center justify-center gap-2">
-                      {/* Badge Tier */}
-                      {(() => {
-                        const badge = getBadgeTier(calculateProfileCompletion());
-                        const BadgeIcon = badge.icon;
-                        return (
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor}`}>
-                            <BadgeIcon className={`h-3.5 w-3.5 ${badge.color}`} />
-                            <span className={`text-xs font-semibold ${badge.color}`}>
-                              {badge.name}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    
                     {/* Profile Completion Progress */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{calculateProfileCompletion()} pts</span>
                         <span className="text-xs text-muted-foreground">{calculateProfileCompletion()}%</span>
                       </div>
-                      <Progress value={calculateProfileCompletion()} className="h-1.5" />
+                      <div className="flex items-center gap-2">
+                        <Progress value={calculateProfileCompletion()} className="h-1.5 flex-1" />
+                        {/* Badge Tier */}
+                        {(() => {
+                          const badge = getBadgeTier(calculateProfileCompletion());
+                          const BadgeIcon = badge.icon;
+                          return (
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor} flex-shrink-0`}>
+                              <BadgeIcon className={`h-3.5 w-3.5 ${badge.color}`} />
+                              <span className={`text-xs font-semibold ${badge.color}`}>
+                                {badge.name}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>

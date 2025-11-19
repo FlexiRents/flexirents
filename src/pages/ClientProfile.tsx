@@ -263,7 +263,7 @@ export default function ClientProfile() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-[calc(100vh-140px)] w-full">
+        <div className="flex min-h-[calc(100vh-140px)] w-full pt-4">
           <Sidebar className="border-r">
             <SidebarContent>
               {/* User Profile Header */}

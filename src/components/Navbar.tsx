@@ -49,27 +49,29 @@ const Navbar = () => {
                 <SelectItem value="NGN">NGN (₦)</SelectItem>
               </SelectContent>
             </Select>
-            <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors">
-              <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {wishlist.length}
-                </span>
-              )}
-            </Link>
-            {user && <NotificationPanel />}
-            {user ? (
-              <Link to="/profile" state={{ activePanel: "dashboard" }}>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Profile
-                </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors">
+                <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {wishlist.length}
+                  </span>
+                )}
               </Link>
-            ) : (
-              <Button variant="hero" asChild>
-                <Link to="/auth">Login</Link>
-              </Button>
-            )}
+              {user && <NotificationPanel />}
+              {user ? (
+                <Link to="/profile" state={{ activePanel: "dashboard" }}>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="hero" asChild>
+                  <Link to="/auth">Login</Link>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}

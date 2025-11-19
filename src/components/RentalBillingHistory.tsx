@@ -56,7 +56,7 @@ export default function RentalBillingHistory() {
         .from("rental_payments")
         .select("*")
         .eq("tenant_id", user.id)
-        .order("installment_number", { ascending: true });
+        .order("installment_number", { ascending: false });
 
       if (error) throw error;
 

@@ -119,15 +119,81 @@ export default function RentalBillingHistory() {
   };
 
   const handleDownloadReceipt = async (payment: RentalPayment) => {
-    if (!payment.receipt_url) {
+    if (!payment.receipt_url && payment.status !== 'paid') {
       toast.error("No receipt available for this payment");
       return;
     }
 
     try {
-      // For now, just open the receipt URL
-      window.open(payment.receipt_url, "_blank");
-      toast.success("Receipt downloaded");
+      // If receipt URL exists, open it
+      if (payment.receipt_url) {
+        window.open(payment.receipt_url, "_blank");
+        toast.success("Receipt downloaded");
+        return;
+      }
+
+      // Otherwise, generate a PDF receipt
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(20);
+      doc.setTextColor(37, 99, 235); // Blue
+      doc.text("Payment Receipt", 105, 20, { align: 'center' });
+      
+      // Add company/property info
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("FlexiLiving - Rental Payment System", 105, 30, { align: 'center' });
+      
+      // Add divider
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 35, 190, 35);
+      
+      // Payment details
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      let yPos = 50;
+      doc.text("Payment Details:", 20, yPos);
+      
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.text(`Receipt ID: ${payment.id.substring(0, 8).toUpperCase()}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Installment: ${payment.is_first_payment ? 'First Payment (6-12 months)' : `#${payment.installment_number}`}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Amount Paid: ${formatPrice(payment.amount)}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Payment Date: ${payment.payment_date ? format(new Date(payment.payment_date), "MMMM dd, yyyy") : 'N/A'}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Due Date: ${format(new Date(payment.due_date), "MMMM dd, yyyy")}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Payment Method: ${payment.payment_method || 'Not specified'}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Transaction Reference: ${payment.transaction_reference || 'N/A'}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Status: ${payment.status.toUpperCase()}`, 20, yPos);
+      
+      yPos += 8;
+      doc.text(`Verification Status: ${payment.verification_status.toUpperCase()}`, 20, yPos);
+      
+      // Add footer
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text("This is an automatically generated receipt.", 105, 280, { align: 'center' });
+      doc.text(`Generated on ${format(new Date(), "MMMM dd, yyyy 'at' HH:mm")}`, 105, 285, { align: 'center' });
+      
+      // Save the PDF
+      doc.save(`receipt-${payment.is_first_payment ? 'first-payment' : `installment-${payment.installment_number}`}.pdf`);
+      toast.success("Receipt downloaded successfully");
     } catch (error) {
       console.error("Error downloading receipt:", error);
       toast.error("Failed to download receipt");
@@ -274,7 +340,7 @@ export default function RentalBillingHistory() {
                             : <span className="text-muted-foreground">Pending</span>}
                         </TableCell>
                         <TableCell>
-                          {payment.status === 'paid' && payment.receipt_url ? (
+                          {payment.status === 'paid' ? (
                             <Button
                               variant="ghost"
                               size="sm"

@@ -265,7 +265,7 @@ export default function ClientProfile() {
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-[calc(100vh-140px)] w-full pt-4">
           <Sidebar className="border-r">
-            <SidebarContent>
+            <SidebarContent className="pt-6">
               {/* User Profile Header */}
               <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
                 <div className="flex flex-col items-center gap-3">

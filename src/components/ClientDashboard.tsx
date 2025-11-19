@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar, Award } from "lucide-react";
+import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar, Award, Heart, FileText, DollarSign, Star, Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
@@ -19,6 +19,14 @@ interface DashboardStats {
     created_at: string;
   } | null;
   activityScore: number;
+  wishlistCount: number;
+  activeLeases: number;
+  pendingPayments: number;
+  reviewsReceived: number;
+  averageRating: number;
+  bookingRequests: number;
+  productsListed: number;
+  userRole: string | null;
 }
 
 export default function ClientDashboard() {
@@ -42,7 +50,10 @@ export default function ClientDashboard() {
         bookingsData,
         propertiesData,
         profileData,
-        reviewsData,
+        wishlistData,
+        leasesData,
+        paymentsData,
+        userRoleData,
       ] = await Promise.all([
         supabase
           .from("user_verification")
@@ -68,17 +79,97 @@ export default function ClientDashboard() {
           .eq("id", user.id)
           .single(),
         supabase
-          .from("reviews")
+          .from("wishlist")
           .select("id", { count: "exact", head: true })
-          .eq("reviewer_user_id", user.id),
+          .eq("user_id", user.id),
+        supabase
+          .from("rental_leases")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", user.id)
+          .eq("status", "active"),
+        supabase
+          .from("rental_payments")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", user.id)
+          .eq("status", "pending"),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle(),
       ]);
 
-      // Calculate activity score based on user engagement
-      const verificationScore = verificationData.data?.status === "verified" ? 30 : 0;
+      const userRole = userRoleData.data?.role || null;
+      
+      // Fetch role-specific data
+      let reviewsReceived = 0;
+      let averageRating = 0;
+      let bookingRequests = 0;
+      let productsListed = 0;
+
+      if (userRole === 'service_provider') {
+        const { data: providerData } = await supabase
+          .from("service_provider_registrations")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (providerData) {
+          const [reviewsData, requestsData] = await Promise.all([
+            supabase
+              .from("reviews")
+              .select("rating")
+              .eq("target_id", providerData.id)
+              .eq("target_type", "service_provider"),
+            supabase
+              .from("booking_requests")
+              .select("id", { count: "exact", head: true })
+              .eq("provider_id", providerData.id)
+              .eq("status", "pending"),
+          ]);
+
+          reviewsReceived = reviewsData.data?.length || 0;
+          if (reviewsReceived > 0) {
+            const totalRating = reviewsData.data?.reduce((sum, r) => sum + r.rating, 0) || 0;
+            averageRating = totalRating / reviewsReceived;
+          }
+          bookingRequests = requestsData.count || 0;
+        }
+      } else if (userRole === 'vendor') {
+        const { data: vendorData } = await supabase
+          .from("vendor_registrations")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (vendorData) {
+          const [reviewsData, productsData] = await Promise.all([
+            supabase
+              .from("reviews")
+              .select("rating")
+              .eq("target_id", vendorData.id)
+              .eq("target_type", "vendor"),
+            supabase
+              .from("vendor_products")
+              .select("id", { count: "exact", head: true })
+              .eq("vendor_id", vendorData.id),
+          ]);
+
+          reviewsReceived = reviewsData.data?.length || 0;
+          if (reviewsReceived > 0) {
+            const totalRating = reviewsData.data?.reduce((sum, r) => sum + r.rating, 0) || 0;
+            averageRating = totalRating / reviewsReceived;
+          }
+          productsListed = productsData.count || 0;
+        }
+      }
+
+      // Calculate activity score
+      const wishlistScore = Math.min((wishlistData.count || 0) * 5, 20);
+      const leaseScore = Math.min((leasesData.count || 0) * 10, 25);
+      const profileScore = profileData.data?.full_name ? 25 : 0;
       const bookingScore = Math.min((bookingsData.count || 0) * 10, 30);
-      const propertyScore = Math.min((propertiesData.count || 0) * 15, 25);
-      const reviewScore = Math.min((reviewsData.count || 0) * 5, 15);
-      const activityScore = verificationScore + bookingScore + propertyScore + reviewScore;
+      const activityScore = wishlistScore + leaseScore + profileScore + bookingScore;
 
       setStats({
         verificationStatus: verificationData.data?.status || "not_verified",
@@ -88,6 +179,14 @@ export default function ClientDashboard() {
         activeListings: propertiesData.count || 0,
         userProfile: profileData.data || null,
         activityScore: activityScore,
+        wishlistCount: wishlistData.count || 0,
+        activeLeases: leasesData.count || 0,
+        pendingPayments: paymentsData.count || 0,
+        reviewsReceived,
+        averageRating,
+        bookingRequests,
+        productsListed,
+        userRole,
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -182,43 +281,141 @@ export default function ClientDashboard() {
 
   const activityLevel = getActivityLevel(stats?.activityScore || 0);
 
-  const statCards = [
-    {
-      title: "Verification Status",
-      value: getVerificationStatusText(stats?.verificationStatus || "not_verified"),
-      icon: ShieldCheck,
-      color: getVerificationStatusColor(stats?.verificationStatus || "not_verified"),
-      description: "Account verification",
-    },
-    {
-      title: "Property Alerts",
-      value: stats?.propertyAlertsEnabled ? "Active" : "Paused",
-      icon: Bell,
-      color: stats?.propertyAlertsEnabled ? "text-green-500" : "text-muted-foreground",
-      description: "Notification preferences",
-    },
-    {
-      title: "Total Bookings",
-      value: stats?.totalBookings || 0,
-      icon: Calendar,
-      color: "text-blue-500",
-      description: "All-time bookings",
-    },
-    {
-      title: "Active Listings",
-      value: stats?.activeListings || 0,
-      icon: Home,
-      color: "text-purple-500",
-      description: "Your properties",
-    },
-    {
-      title: "Activity Score",
-      value: `${stats?.activityScore || 0}/100`,
-      icon: Award,
-      color: activityLevel.color,
-      description: activityLevel.label,
-    },
-  ];
+  // Build role-specific stat cards
+  const getStatCards = () => {
+    const baseCards = [
+      {
+        title: "Verification Status",
+        value: getVerificationStatusText(stats?.verificationStatus || "not_verified"),
+        icon: ShieldCheck,
+        color: getVerificationStatusColor(stats?.verificationStatus || "not_verified"),
+        description: "Account verification",
+      },
+      {
+        title: "Property Alerts",
+        value: stats?.propertyAlertsEnabled ? "Active" : "Paused",
+        icon: Bell,
+        color: stats?.propertyAlertsEnabled ? "text-green-500" : "text-muted-foreground",
+        description: "Notification preferences",
+      },
+    ];
+
+    const roleSpecificCards = [];
+
+    if (stats?.userRole === 'service_provider') {
+      roleSpecificCards.push(
+        {
+          title: "Avg. Rating",
+          value: stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "N/A",
+          icon: Star,
+          color: "text-yellow-500",
+          description: `${stats.reviewsReceived} reviews`,
+        },
+        {
+          title: "Total Bookings",
+          value: stats.totalBookings || 0,
+          icon: Calendar,
+          color: "text-blue-500",
+          description: "Completed services",
+        },
+        {
+          title: "Pending Requests",
+          value: stats.bookingRequests || 0,
+          icon: FileText,
+          color: "text-orange-500",
+          description: "Awaiting response",
+        },
+        {
+          title: "Activity Score",
+          value: `${stats.activityScore || 0}/100`,
+          icon: Award,
+          color: activityLevel.color,
+          description: activityLevel.label,
+        }
+      );
+    } else if (stats?.userRole === 'vendor') {
+      roleSpecificCards.push(
+        {
+          title: "Avg. Rating",
+          value: stats.averageRating > 0 ? stats.averageRating.toFixed(1) : "N/A",
+          icon: Star,
+          color: "text-yellow-500",
+          description: `${stats.reviewsReceived} reviews`,
+        },
+        {
+          title: "Products Listed",
+          value: stats.productsListed || 0,
+          icon: Package,
+          color: "text-purple-500",
+          description: "Active products",
+        },
+        {
+          title: "Total Bookings",
+          value: stats.totalBookings || 0,
+          icon: Calendar,
+          color: "text-blue-500",
+          description: "Customer orders",
+        },
+        {
+          title: "Activity Score",
+          value: `${stats.activityScore || 0}/100`,
+          icon: Award,
+          color: activityLevel.color,
+          description: activityLevel.label,
+        }
+      );
+    } else {
+      // Regular user cards
+      roleSpecificCards.push(
+        {
+          title: "Wishlist Items",
+          value: stats?.wishlistCount || 0,
+          icon: Heart,
+          color: "text-pink-500",
+          description: "Saved properties",
+        },
+        {
+          title: "Active Leases",
+          value: stats?.activeLeases || 0,
+          icon: FileText,
+          color: "text-green-500",
+          description: "Current rentals",
+        },
+        {
+          title: "Pending Payments",
+          value: stats?.pendingPayments || 0,
+          icon: DollarSign,
+          color: stats?.pendingPayments > 0 ? "text-red-500" : "text-muted-foreground",
+          description: "Due payments",
+        },
+        {
+          title: "Total Bookings",
+          value: stats?.totalBookings || 0,
+          icon: Calendar,
+          color: "text-blue-500",
+          description: "Service bookings",
+        },
+        {
+          title: "Properties Listed",
+          value: stats?.activeListings || 0,
+          icon: Home,
+          color: "text-purple-500",
+          description: "Your listings",
+        },
+        {
+          title: "Activity Score",
+          value: `${stats?.activityScore || 0}/100`,
+          icon: Award,
+          color: activityLevel.color,
+          description: activityLevel.label,
+        }
+      );
+    }
+
+    return [...baseCards, ...roleSpecificCards];
+  };
+
+  const statCards = getStatCards();
 
   return (
     <div className="space-y-6">

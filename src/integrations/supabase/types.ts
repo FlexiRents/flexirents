@@ -592,6 +592,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_verification: {
+        Row: {
+          birth_city: string | null
+          birth_region: string | null
+          birth_street: string | null
+          created_at: string
+          employer_name: string | null
+          employment_status: string | null
+          id: string
+          id_back_url: string | null
+          id_front_url: string | null
+          id_number: string | null
+          id_type: string | null
+          personal_picture_url: string | null
+          proof_of_work_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_city?: string | null
+          birth_region?: string | null
+          birth_street?: string | null
+          created_at?: string
+          employer_name?: string | null
+          employment_status?: string | null
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          personal_picture_url?: string | null
+          proof_of_work_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_city?: string | null
+          birth_region?: string | null
+          birth_street?: string | null
+          created_at?: string
+          employer_name?: string | null
+          employment_status?: string | null
+          id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          personal_picture_url?: string | null
+          proof_of_work_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vendor_products: {
         Row: {
           category: string

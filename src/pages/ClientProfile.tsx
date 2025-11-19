@@ -498,7 +498,7 @@ export default function ClientProfile() {
                     <h3 className="font-semibold text-foreground break-words">
                       {profile.full_name || "Welcome"}
                     </h3>
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <p className="text-xs text-muted-foreground">
                         {getMembershipDuration(profile.created_at)}
                       </p>

@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, Calendar, Star, LayoutDashboard, CreditCard, Wallet, FileText, MapPin, ShieldCheck, Bell } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -34,13 +34,11 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "account" | "dashboard" | "subscriptions" | "wallet" | "billing" | "address" | "verification" | "preferences" | "settings";
+type ActivePanel = "account" | "dashboard" | "billing" | "address" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "account" as ActivePanel, title: "Account", icon: User },
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
-  { id: "subscriptions" as ActivePanel, title: "Subscriptions", icon: CreditCard },
-  { id: "wallet" as ActivePanel, title: "Wallet", icon: Wallet },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "address" as ActivePanel, title: "Address", icon: MapPin },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
@@ -228,28 +226,6 @@ export default function ClientProfile() {
 
             {activePanel === "dashboard" && (
               <ClientDashboard />
-            )}
-
-            {activePanel === "subscriptions" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>Subscriptions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">No active subscriptions.</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {activePanel === "wallet" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>Wallet</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Wallet balance: {formatPrice(0)}</p>
-                </CardContent>
-              </Card>
             )}
 
             {activePanel === "billing" && (

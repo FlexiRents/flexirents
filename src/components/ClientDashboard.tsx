@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Bell, ShieldCheck, Wallet, CreditCard, Home, TrendingUp } from "lucide-react";
+import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardStats {
@@ -131,7 +131,7 @@ export default function ClientDashboard() {
     {
       title: "Total Bookings",
       value: stats?.totalBookings || 0,
-      icon: CreditCard,
+      icon: Calendar,
       color: "text-blue-500",
       description: "All-time bookings",
     },
@@ -141,13 +141,6 @@ export default function ClientDashboard() {
       icon: Home,
       color: "text-purple-500",
       description: "Your properties",
-    },
-    {
-      title: "Wallet Balance",
-      value: "GHS 0.00",
-      icon: Wallet,
-      color: "text-orange-500",
-      description: "Available funds",
     },
     {
       title: "Activity Score",

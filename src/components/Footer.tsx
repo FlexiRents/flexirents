@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { scrollToTop } from "@/components/ScrollToTop";
 import logo from "@/assets/logo-footer.png";
 
 const newsletterSchema = z.object({
@@ -94,37 +95,37 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm opacity-80">
               <li>
-                <Link to="/about" className="hover:text-accent transition-colors">
+                <Link to="/about" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="hover:text-accent transition-colors">
+                <Link to="/terms" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="hover:text-accent transition-colors">
+                <Link to="/privacy" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/faqs" className="hover:text-accent transition-colors">
+                <Link to="/faqs" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   FAQs
                 </Link>
               </li>
               <li>
-                <Link to="/refer" className="hover:text-accent transition-colors">
+                <Link to="/refer" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Refer To Earn
                 </Link>
               </li>
               <li>
-                <Link to="/career" className="hover:text-accent transition-colors">
+                <Link to="/career" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Career
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="hover:text-accent transition-colors">
+                <Link to="/blog" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Blog
                 </Link>
               </li>
@@ -136,32 +137,32 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm opacity-80">
               <li>
-                <Link to="/rentals" className="hover:text-accent transition-colors">
+                <Link to="/rentals" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Property Rentals
                 </Link>
               </li>
               <li>
-                <Link to="/sales" className="hover:text-accent transition-colors">
+                <Link to="/sales" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Property Sales
                 </Link>
               </li>
               <li>
-                <Link to="/flexi-assist" className="hover:text-accent transition-colors">
+                <Link to="/flexi-assist" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Flexi-Assist Services
                 </Link>
               </li>
               <li>
-                <Link to="/project-management" className="hover:text-accent transition-colors">
+                <Link to="/project-management" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Project Management
                 </Link>
               </li>
               <li>
-                <Link to="/marketplace" className="hover:text-accent transition-colors">
+                <Link to="/marketplace" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Market Place
                 </Link>
               </li>
               <li>
-                <Link to="/projects" className="hover:text-accent transition-colors">
+                <Link to="/projects" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Projects
                 </Link>
               </li>

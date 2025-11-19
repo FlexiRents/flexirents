@@ -696,10 +696,10 @@ export default function ClientProfile() {
                               <SidebarMenuButton
                                 onClick={() => setActivePanel(item.id)}
                                 isActive={activePanel === item.id}
-                                className="w-full"
+                                className="w-full transition-all duration-200 active:scale-95 hover:scale-[1.02] active:bg-primary/20"
                               >
-                                <item.icon className="mr-2 h-4 w-4" />
-                                <span>{item.title}</span>
+                                <item.icon className="mr-2 h-4 w-4 transition-transform duration-200 group-active:scale-110" />
+                                <span className="transition-colors duration-200">{item.title}</span>
                               </SidebarMenuButton>
                             </TooltipTrigger>
                             <TooltipContent side="right" className="font-medium">
@@ -714,10 +714,10 @@ export default function ClientProfile() {
                           <TooltipTrigger asChild>
                             <SidebarMenuButton
                               onClick={handleSignOut}
-                              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200 active:scale-95 hover:scale-[1.02] active:bg-destructive/20"
                             >
-                              <LogOut className="mr-2 h-4 w-4" />
-                              <span>Sign Out</span>
+                              <LogOut className="mr-2 h-4 w-4 transition-transform duration-200 group-active:scale-110" />
+                              <span className="transition-colors duration-200">Sign Out</span>
                             </SidebarMenuButton>
                           </TooltipTrigger>
                           <TooltipContent side="right" className="font-medium">

@@ -398,23 +398,23 @@ export default function ClientProfile() {
                             />
                           </div>
 
-                          {tenantAddress && (
-                            <div className="space-y-2">
-                              <Label htmlFor="address">
-                                <MapPin className="inline h-4 w-4 mr-2" />
-                                Current Address
-                              </Label>
-                              <Input
-                                id="address"
-                                value={tenantAddress}
-                                disabled
-                                className="bg-muted"
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                This is the address of your leased property
-                              </p>
-                            </div>
-                          )}
+                          <div className="space-y-2">
+                            <Label htmlFor="address">
+                              <MapPin className="inline h-4 w-4 mr-2" />
+                              Current Address
+                            </Label>
+                            <Input
+                              id="address"
+                              value={tenantAddress || "No active lease"}
+                              disabled
+                              className="bg-muted"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              {tenantAddress 
+                                ? "This is the address of your leased property" 
+                                : "You don't have an active rental lease at the moment"}
+                            </p>
+                          </div>
 
                           <Button 
                             type="submit" 

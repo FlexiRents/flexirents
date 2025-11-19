@@ -35,6 +35,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface Profile {
@@ -57,6 +58,138 @@ const menuItems = [
   { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
 ];
+
+// Profile Section Component
+const ProfileSection = () => {
+  const { open } = useSidebar();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile>({ 
+    full_name: null, 
+    phone: null, 
+    avatar_url: null,
+    created_at: new Date().toISOString()
+  });
+  const [customerSatisfaction, setCustomerSatisfaction] = useState(0);
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        if (data) {
+          setProfile(data);
+        }
+      };
+      fetchProfile();
+    }
+  }, [user]);
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getMembershipDuration = (createdAt: string) => {
+    return formatDistanceToNow(new Date(createdAt), { addSuffix: false });
+  };
+
+  const getLastSeen = () => {
+    return formatDistanceToNow(new Date(), { addSuffix: true });
+  };
+
+  const getBadgeTier = (score: number) => {
+    if (score >= 90) return { name: "Platinum", icon: Crown, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200" };
+    if (score >= 75) return { name: "Gold", icon: Trophy, color: "text-yellow-600", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" };
+    if (score >= 50) return { name: "Silver", icon: Medal, color: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200" };
+    return { name: "Bronze", icon: Award, color: "text-orange-600", bgColor: "bg-orange-50", borderColor: "border-orange-200" };
+  };
+
+  if (!open) {
+    // Collapsed view - show only avatar
+    return (
+      <div className="p-4 border-b flex justify-center">
+        <div className="relative group">
+          <Avatar className="h-10 w-10 border-2 border-background shadow">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="Profile" className="object-cover" />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
+                {getInitials(profile.full_name)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+        </div>
+      </div>
+    );
+  }
+
+  // Expanded view - show full profile
+  return (
+    <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
+      <div className="flex flex-col items-center text-center space-y-3">
+        <div className="relative group flex-shrink-0">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="Profile" className="object-cover" />
+            ) : (
+              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
+                {getInitials(profile.full_name)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <button
+            onClick={() => setShowAvatarUpload(true)}
+            className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+            aria-label="Upload profile picture"
+          >
+            <Camera className="h-8 w-8 text-white" />
+          </button>
+        </div>
+        
+        <div className="w-full space-y-2">
+          <h3 className="font-semibold text-foreground break-words">
+            {profile.full_name || "Welcome"}
+          </h3>
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-1">
+              <User className="h-3 w-3 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">
+                {getMembershipDuration(profile.created_at)}
+              </p>
+            </div>
+            {(() => {
+              const badge = getBadgeTier(customerSatisfaction);
+              const BadgeIcon = badge.icon;
+              return (
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor} flex-shrink-0`}>
+                  <BadgeIcon className={`h-3 w-3 ${badge.color}`} />
+                  <span className={`text-[10px] font-semibold ${badge.color}`}>
+                    {badge.name}
+                  </span>
+                </div>
+              );
+            })()}
+          </div>
+          {getLastSeen() && (
+            <p className="text-xs text-muted-foreground">
+              Last seen {getLastSeen()}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -470,64 +603,10 @@ export default function ClientProfile() {
       <Navbar />
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-[calc(100vh-140px)] w-full pt-20">
-          <Sidebar className="border-r top-16">
+          <Sidebar collapsible="icon" className="border-r top-16">
             <SidebarContent className="pt-6">
               {/* User Profile Header */}
-              <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className="relative group flex-shrink-0">
-                    <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-                      {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt="Profile" className="object-cover" />
-                      ) : (
-                        <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
-                          {getInitials(profile.full_name)}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <button
-                      onClick={() => setShowAvatarUpload(true)}
-                      className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                      aria-label="Upload profile picture"
-                    >
-                      <Camera className="h-8 w-8 text-white" />
-                    </button>
-                  </div>
-                  
-                  <div className="w-full space-y-2">
-                    <h3 className="font-semibold text-foreground break-words">
-                      {profile.full_name || "Welcome"}
-                    </h3>
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">
-                          {getMembershipDuration(profile.created_at)}
-                        </p>
-                      </div>
-                      {/* Customer Satisfaction Badge */}
-                      {(() => {
-                        const badge = getBadgeTier(customerSatisfaction);
-                        const BadgeIcon = badge.icon;
-                        return (
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor} flex-shrink-0`}>
-                            <BadgeIcon className={`h-3 w-3 ${badge.color}`} />
-                            <span className={`text-[10px] font-semibold ${badge.color}`}>
-                              {badge.name}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    {getLastSeen() && (
-                      <p className="text-xs text-muted-foreground">
-                        Last seen {getLastSeen()}
-                      </p>
-                    )}
-                    
-                  </div>
-                </div>
-              </div>
+              <ProfileSection />
 
               <SidebarGroup>
                 <SidebarGroupLabel>Account</SidebarGroupLabel>

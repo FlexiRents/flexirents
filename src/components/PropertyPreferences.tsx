@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const listingTypes = [
 
 export default function PropertyPreferences() {
   const { user } = useAuth();
+  const { currency } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [matchingCount, setMatchingCount] = useState<number>(0);
@@ -452,7 +454,7 @@ export default function PropertyPreferences() {
 
         {/* Price Range */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Price Range (GHS)</Label>
+          <Label className="text-base font-semibold">Price Range ({currency})</Label>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="min_price">Minimum</Label>

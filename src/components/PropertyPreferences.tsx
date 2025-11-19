@@ -41,6 +41,8 @@ export default function PropertyPreferences() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [matchingCount, setMatchingCount] = useState<number>(0);
+  const [countLoading, setCountLoading] = useState(false);
   const [preferences, setPreferences] = useState<Preferences>({
     is_enabled: true,
     property_types: [],
@@ -59,6 +61,12 @@ export default function PropertyPreferences() {
       fetchPreferences();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchMatchingCount();
+    }
+  }, [preferences, loading]);
 
   const fetchPreferences = async () => {
     if (!user) return;
@@ -90,6 +98,63 @@ export default function PropertyPreferences() {
       console.error("Error fetching preferences:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMatchingCount = async () => {
+    setCountLoading(true);
+    try {
+      let query = supabase
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "available");
+
+      // Apply filters based on preferences
+      if (preferences.property_types.length > 0) {
+        query = query.in("property_type", preferences.property_types);
+      }
+
+      if (preferences.listing_types.length > 0) {
+        query = query.in("listing_type", preferences.listing_types);
+      }
+
+      if (preferences.regions.length > 0) {
+        query = query.in("region", preferences.regions);
+      }
+
+      if (preferences.min_price !== null) {
+        query = query.gte("price", preferences.min_price);
+      }
+
+      if (preferences.max_price !== null) {
+        query = query.lte("price", preferences.max_price);
+      }
+
+      if (preferences.min_bedrooms !== null) {
+        query = query.gte("bedrooms", preferences.min_bedrooms);
+      }
+
+      if (preferences.max_bedrooms !== null) {
+        query = query.lte("bedrooms", preferences.max_bedrooms);
+      }
+
+      if (preferences.min_bathrooms !== null) {
+        query = query.gte("bathrooms", preferences.min_bathrooms);
+      }
+
+      if (preferences.max_bathrooms !== null) {
+        query = query.lte("bathrooms", preferences.max_bathrooms);
+      }
+
+      const { count, error } = await query;
+
+      if (error) throw error;
+      setMatchingCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching matching count:", error);
+      setMatchingCount(0);
+    } finally {
+      setCountLoading(false);
     }
   };
 
@@ -150,9 +215,23 @@ export default function PropertyPreferences() {
             <CardTitle>Property Notification Preferences</CardTitle>
           </div>
         </div>
-        <CardDescription>
-          Get notified when properties matching your preferences are listed
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <CardDescription>
+            Get notified when properties matching your preferences are listed
+          </CardDescription>
+          <div className="flex items-center gap-2 text-sm">
+            {countLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <>
+                <span className="font-semibold text-primary text-lg">{matchingCount}</span>
+                <span className="text-muted-foreground">
+                  {matchingCount === 1 ? "property matches" : "properties match"}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Enable/Disable Toggle */}

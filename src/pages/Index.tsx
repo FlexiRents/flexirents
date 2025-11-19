@@ -9,6 +9,7 @@ import PropertyCard from "@/components/PropertyCard";
 import ServiceCard from "@/components/ServiceCard";
 import VendorCard from "@/components/VendorCard";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-property.jpg";
 import property1br from "@/assets/property-1br.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
@@ -176,12 +177,46 @@ const Index = () => {
   const { formatPrice } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPropertyIndex, setCurrentPropertyIndex] = useState(0);
+  const [recentProperties, setRecentProperties] = useState<any[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
 
-  // Combine all properties for rotation - showing 5 recent listings
-  const allNewProperties = [...featuredRentals, ...featuredSales.slice(0, 2)];
+  // Fetch recent properties from database
+  useEffect(() => {
+    const fetchRecentProperties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('status', 'available')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setRecentProperties(data);
+        } else {
+          // Fallback to sample data if no properties in database
+          setRecentProperties([...featuredRentals, ...featuredSales.slice(0, 2)]);
+        }
+      } catch (error) {
+        console.error('Error fetching recent properties:', error);
+        // Fallback to sample data on error
+        setRecentProperties([...featuredRentals, ...featuredSales.slice(0, 2)]);
+      } finally {
+        setLoadingProperties(false);
+      }
+    };
+
+    fetchRecentProperties();
+  }, []);
+
+  const allNewProperties = recentProperties;
 
   // Auto-rotate properties every 4 seconds
   useEffect(() => {
+    if (allNewProperties.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentPropertyIndex((prev) => (prev + 1) % allNewProperties.length);
     }, 4000);
@@ -251,82 +286,80 @@ const Index = () => {
             </form>
 
             {/* Newly Listed Property Carousel */}
-            <div className="bg-background/95 backdrop-blur-sm rounded-xl p-6 max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-accent" />
-                  Newly Listed
-                </h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={prevProperty}
-                    className="h-8 w-8 bg-background/50"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={nextProperty}
-                    className="h-8 w-8 bg-background/50"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+            {loadingProperties ? (
+              <div className="bg-background/95 backdrop-blur-sm rounded-xl p-6 max-w-2xl">
+                <div className="flex items-center justify-center h-32">
+                  <p className="text-muted-foreground">Loading properties...</p>
                 </div>
               </div>
-              
-              <div className="relative overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentPropertyIndex * 100}%)` }}
-                >
-                  {allNewProperties.map((property, index) => (
-                    <div key={index} className="min-w-full">
-                      <div className="flex items-center gap-4">
-                        <img
-                          src={property.image}
-                          alt={property.title}
-                          className="w-24 h-24 object-cover rounded-lg"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-foreground mb-1">{property.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">{property.location}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-accent">
-                              {formatPrice(property.price)}{property.type === "rent" ? "/month" : ""}
-                            </span>
-                            <Button 
-                              size="sm" 
-                              variant="secondary"
-                              onClick={() => navigate(property.type === "rent" ? "/rentals" : "/sales")}
-                            >
-                              View Details
-                            </Button>
+            ) : allNewProperties.length > 0 ? (
+              <div className="bg-background/95 backdrop-blur-sm rounded-xl p-6 max-w-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-accent" />
+                    Newly Listed
+                  </h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={prevProperty}
+                      className="h-8 w-8 bg-background/50"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={nextProperty}
+                      className="h-8 w-8 bg-background/50"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="relative overflow-hidden">
+                  <div 
+                    className="flex transition-transform duration-500 ease-in-out"
+                    style={{ transform: `translateX(-${currentPropertyIndex * 100}%)` }}
+                  >
+                    {allNewProperties.map((property, index) => {
+                      const propertyImage = property.images?.[0] || property.image || propertyApartment;
+                      const propertyType = property.listing_type || property.type;
+                      
+                      return (
+                        <div key={property.id || index} className="min-w-full">
+                          <div className="flex items-center gap-4">
+                            <img
+                              src={propertyImage}
+                              alt={property.title}
+                              className="w-24 h-24 object-cover rounded-lg"
+                            />
+                            <div className="flex-1">
+                               <h4 className="font-semibold text-foreground mb-1">{property.title}</h4>
+                              <p className="text-sm text-muted-foreground mb-2">{property.location}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-lg font-bold text-accent">
+                                  {formatPrice(property.price)}{propertyType === "rent" ? "/month" : ""}
+                                </span>
+                                <Button 
+                                  size="sm" 
+                                  variant="secondary"
+                                  onClick={() => navigate(propertyType === "rent" ? "/rentals" : "/sales")}
+                                >
+                                  View Details
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-              
-              {/* Carousel Dots */}
-              <div className="flex justify-center gap-2 mt-4">
-                {allNewProperties.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPropertyIndex(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      index === currentPropertyIndex 
-                        ? "w-8 bg-accent" 
-                        : "w-2 bg-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </section>

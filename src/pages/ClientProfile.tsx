@@ -24,6 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { formatDistanceToNow } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Sidebar,
   SidebarContent,
@@ -612,28 +613,44 @@ export default function ClientProfile() {
                 <SidebarGroupLabel>Account</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {menuItems.map((item) => (
-                      <SidebarMenuItem key={item.id}>
-                        <SidebarMenuButton
-                          onClick={() => setActivePanel(item.id)}
-                          isActive={activePanel === item.id}
-                          className="w-full"
-                        >
-                          <item.icon className="mr-2 h-4 w-4" />
-                          <span>{item.title}</span>
-                        </SidebarMenuButton>
+                    <TooltipProvider>
+                      {menuItems.map((item) => (
+                        <SidebarMenuItem key={item.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <SidebarMenuButton
+                                onClick={() => setActivePanel(item.id)}
+                                isActive={activePanel === item.id}
+                                className="w-full"
+                              >
+                                <item.icon className="mr-2 h-4 w-4" />
+                                <span>{item.title}</span>
+                              </SidebarMenuButton>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="font-medium">
+                              {item.title}
+                            </TooltipContent>
+                          </Tooltip>
+                        </SidebarMenuItem>
+                      ))}
+                      <Separator className="my-2" />
+                      <SidebarMenuItem>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              onClick={handleSignOut}
+                              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>Sign Out</span>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="font-medium">
+                            Sign Out
+                          </TooltipContent>
+                        </Tooltip>
                       </SidebarMenuItem>
-                    ))}
-                    <Separator className="my-2" />
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        onClick={handleSignOut}
-                        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Sign Out</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    </TooltipProvider>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

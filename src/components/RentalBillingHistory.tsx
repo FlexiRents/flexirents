@@ -323,9 +323,7 @@ export default function RentalBillingHistory() {
                 </TableHeader>
                 <TableBody>
                   {displayedPayments.map((payment, index) => {
-                    const pendingPayments = payments.filter(p => p.status === 'pending');
-                    const isNextPending = payment.status === 'pending' && 
-                      pendingPayments.findIndex(p => p.id === payment.id) === 0;
+                    const isNextPending = nextPendingPayment && payment.id === nextPendingPayment.id;
                     const canPay = isNextPending && payment.payment_link;
                     const isLocked = payment.status === 'pending' && !isNextPending;
                     

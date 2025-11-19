@@ -222,6 +222,9 @@ export default function ClientProfile() {
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [customerSatisfaction, setCustomerSatisfaction] = useState<number>(0);
   const [totalReviews, setTotalReviews] = useState<number>(0);
+  const [deletionRequest, setDeletionRequest] = useState<any>(null);
+  const [deletionReason, setDeletionReason] = useState("");
+  const [submittingDeletion, setSubmittingDeletion] = useState(false);
 
   // Enable property notifications
   usePropertyNotifications();
@@ -238,6 +241,7 @@ export default function ClientProfile() {
       fetchTenantAddress();
       fetchVerificationStatus();
       fetchCustomerSatisfaction();
+      fetchDeletionRequest();
     }
   }, [user]);
 
@@ -462,13 +466,84 @@ export default function ClientProfile() {
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      // In a real app, you'd want to call an edge function to properly delete the account
-      toast.error("Account deletion requires admin approval. Please contact support.");
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      toast.error("Failed to delete account");
+    if (!user) return;
+    
+    if (!deletionReason.trim()) {
+      toast.error("Please provide a reason for account deletion");
+      return;
     }
+
+    setSubmittingDeletion(true);
+    try {
+      const { error } = await supabase
+        .from("account_deletion_requests")
+        .insert({
+          user_id: user.id,
+          reason: deletionReason,
+          status: "pending"
+        });
+
+      if (error) throw error;
+
+      toast.success("Deletion request submitted successfully. You'll be notified once it's reviewed.");
+      setDeletionReason("");
+      fetchDeletionRequest();
+    } catch (error) {
+      console.error("Error submitting deletion request:", error);
+      toast.error("Failed to submit deletion request");
+    } finally {
+      setSubmittingDeletion(false);
+    }
+  };
+
+  const fetchDeletionRequest = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("account_deletion_requests")
+        .select("*")
+        .eq("user_id", user.id)
+        .in("status", ["pending", "approved", "rejected"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      setDeletionRequest(data);
+    } catch (error) {
+      console.error("Error fetching deletion request:", error);
+    }
+  };
+
+  const handleCancelDeletionRequest = async () => {
+    if (!user || !deletionRequest) return;
+
+    try {
+      const { error } = await supabase
+        .from("account_deletion_requests")
+        .update({ status: "cancelled" })
+        .eq("id", deletionRequest.id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Deletion request cancelled successfully");
+      fetchDeletionRequest();
+    } catch (error) {
+      console.error("Error cancelling deletion request:", error);
+      toast.error("Failed to cancel deletion request");
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { label: string; className: string }> = {
+      pending: { label: "Pending Review", className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+      approved: { label: "Approved", className: "bg-green-100 text-green-800 border-green-300" },
+      rejected: { label: "Rejected", className: "bg-red-100 text-red-800 border-red-300" },
+      cancelled: { label: "Cancelled", className: "bg-gray-100 text-gray-800 border-gray-300" }
+    };
+    return badges[status] || badges.pending;
   };
 
   const getInitials = (name: string | null) => {
@@ -956,32 +1031,89 @@ export default function ClientProfile() {
                         <CardTitle className="text-destructive">Danger Zone</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="w-full">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Account
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your
-                                account and remove your data from our servers.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={handleDeleteAccount}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        {deletionRequest && deletionRequest.status !== "cancelled" ? (
+                          <div className="space-y-4">
+                            <div className="p-4 border rounded-lg bg-muted/50">
+                              <div className="flex items-center justify-between mb-3">
+                                <h3 className="font-semibold">Account Deletion Request</h3>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(deletionRequest.status).className}`}>
+                                  {getStatusBadge(deletionRequest.status).label}
+                                </span>
+                              </div>
+                              <div className="space-y-2 text-sm text-muted-foreground">
+                                <p><strong>Requested:</strong> {new Date(deletionRequest.requested_at).toLocaleDateString()}</p>
+                                {deletionRequest.reason && (
+                                  <p><strong>Reason:</strong> {deletionRequest.reason}</p>
+                                )}
+                                {deletionRequest.status === "rejected" && deletionRequest.admin_notes && (
+                                  <p className="text-destructive"><strong>Admin Notes:</strong> {deletionRequest.admin_notes}</p>
+                                )}
+                                {deletionRequest.status === "approved" && (
+                                  <p className="text-green-600 font-medium">Your account will be deleted within 24-48 hours.</p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {deletionRequest.status === "pending" && (
+                              <Button 
+                                variant="outline"
+                                className="w-full"
+                                onClick={handleCancelDeletionRequest}
                               >
-                                Delete Account
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                Cancel Deletion Request
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="deletionReason">Reason for Account Deletion</Label>
+                              <textarea
+                                id="deletionReason"
+                                className="w-full min-h-[100px] px-3 py-2 border rounded-md bg-background resize-none"
+                                placeholder="Please tell us why you want to delete your account..."
+                                value={deletionReason}
+                                onChange={(e) => setDeletionReason(e.target.value)}
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                Your request will be reviewed by our team. You'll be notified of the decision.
+                              </p>
+                            </div>
+                            
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="destructive" 
+                                  className="w-full"
+                                  disabled={!deletionReason.trim()}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Request Account Deletion
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Request Account Deletion?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Your deletion request will be submitted for admin review. If approved, 
+                                    your account and all associated data will be permanently deleted. 
+                                    This action cannot be undone once approved.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={handleDeleteAccount}
+                                    disabled={submittingDeletion}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    {submittingDeletion ? "Submitting..." : "Submit Request"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>

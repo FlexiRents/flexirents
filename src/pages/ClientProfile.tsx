@@ -183,24 +183,78 @@ export default function ClientProfile() {
     if (!user) return;
 
     try {
-      // Fetch reviews where user is the target (as a service provider, vendor, or property owner)
-      const { data: reviews, error } = await supabase
-        .from("reviews")
-        .select("rating")
-        .eq("target_id", user.id);
+      // First, check user role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
 
-      if (error) throw error;
+      const userRole = roleData?.role || "user";
 
-      if (reviews && reviews.length > 0) {
-        const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-        // Convert 5-star rating to 0-100 scale
-        const satisfactionScore = (avgRating / 5) * 100;
-        setCustomerSatisfaction(Math.round(satisfactionScore));
-        setTotalReviews(reviews.length);
+      // If service provider, vendor, or admin - use review-based scoring
+      if (userRole === "service_provider" || userRole === "vendor" || userRole === "admin") {
+        const { data: reviews, error } = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("target_id", user.id);
+
+        if (error) throw error;
+
+        if (reviews && reviews.length > 0) {
+          const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+          const satisfactionScore = (avgRating / 5) * 100;
+          setCustomerSatisfaction(Math.round(satisfactionScore));
+          setTotalReviews(reviews.length);
+        } else {
+          setCustomerSatisfaction(0);
+          setTotalReviews(0);
+        }
       } else {
-        // No reviews yet - default to Bronze tier (0 score)
-        setCustomerSatisfaction(0);
-        setTotalReviews(0);
+        // For regular users - use activity-based scoring
+        let activityScore = 0;
+        let activityCount = 0;
+
+        // Check bookings made (max 30 points)
+        const { count: bookingsCount } = await supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        
+        if (bookingsCount) {
+          activityScore += Math.min((bookingsCount / 5) * 30, 30); // 5+ bookings = 30 points
+          activityCount += bookingsCount;
+        }
+
+        // Check wishlist items (max 20 points)
+        const { count: wishlistCount } = await supabase
+          .from("wishlist")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        
+        if (wishlistCount) {
+          activityScore += Math.min((wishlistCount / 10) * 20, 20); // 10+ items = 20 points
+          activityCount++;
+        }
+
+        // Check active leases (max 25 points)
+        const { count: leasesCount } = await supabase
+          .from("rental_leases")
+          .select("*", { count: "exact", head: true })
+          .eq("tenant_id", user.id)
+          .eq("status", "active");
+        
+        if (leasesCount) {
+          activityScore += Math.min((leasesCount / 2) * 25, 25); // 2+ leases = 25 points
+          activityCount++;
+        }
+
+        // Check profile completion (max 25 points)
+        const profileScore = calculateProfileCompletion();
+        activityScore += (profileScore / 100) * 25;
+
+        setCustomerSatisfaction(Math.round(activityScore));
+        setTotalReviews(activityCount); // Show activity count instead of review count
       }
     } catch (error) {
       console.error("Error fetching customer satisfaction:", error);
@@ -467,7 +521,7 @@ export default function ClientProfile() {
                               </span>
                               {totalReviews > 0 && (
                                 <span className="text-[10px] text-muted-foreground">
-                                  {totalReviews} review{totalReviews !== 1 ? 's' : ''}
+                                  {totalReviews} {totalReviews === 1 ? 'activity' : 'activities'}
                                 </span>
                               )}
                             </div>

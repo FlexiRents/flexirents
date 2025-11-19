@@ -432,6 +432,68 @@ export type Database = {
           },
         ]
       }
+      rental_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          landlord_id: string
+          lease_id: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          status: string
+          tenant_id: string
+          transaction_reference: string | null
+          updated_at: string
+          verification_status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          landlord_id: string
+          lease_id: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          tenant_id: string
+          transaction_reference?: string | null
+          updated_at?: string
+          verification_status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          landlord_id?: string
+          lease_id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string
+          tenant_id?: string
+          transaction_reference?: string | null
+          updated_at?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_payments_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "rental_leases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_votes: {
         Row: {
           created_at: string

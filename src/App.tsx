@@ -37,6 +37,7 @@ import VendorsManagement from "./pages/admin/VendorsManagement";
 import BookingsManagement from "./pages/admin/BookingsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
+import VerificationManagement from "./pages/admin/VerificationManagement";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="users" element={<UsersManagement />} />
+                  <Route path="verification" element={<VerificationManagement />} />
                   <Route path="properties" element={<PropertiesManagement />} />
                   <Route path="service-providers" element={<ServiceProvidersManagement />} />
                   <Route path="vendors" element={<VendorsManagement />} />

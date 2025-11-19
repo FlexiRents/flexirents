@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Clock } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -40,6 +40,10 @@ interface Profile {
   phone: string | null;
   avatar_url: string | null;
   created_at: string;
+}
+
+interface VerificationStatus {
+  status: string;
 }
 
 type ActivePanel = "dashboard" | "billing" | "verification" | "preferences" | "settings";
@@ -78,6 +82,8 @@ export default function ClientProfile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [tenantAddress, setTenantAddress] = useState<string>("");
+  const [verificationStatus, setVerificationStatus] = useState<string>("not_verified");
+  const [lastLogin, setLastLogin] = useState<string>("");
 
   // Enable property notifications
   usePropertyNotifications();
@@ -92,6 +98,8 @@ export default function ClientProfile() {
     if (user) {
       fetchProfile();
       fetchTenantAddress();
+      fetchVerificationStatus();
+      fetchLastLogin();
     }
   }, [user]);
 
@@ -144,6 +152,40 @@ export default function ClientProfile() {
       }
     } catch (error) {
       console.error("Error fetching tenant address:", error);
+    }
+  };
+
+  const fetchVerificationStatus = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("user_verification")
+        .select("status")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setVerificationStatus(data.status);
+      }
+    } catch (error) {
+      console.error("Error fetching verification status:", error);
+    }
+  };
+
+  const fetchLastLogin = async () => {
+    if (!user) return;
+
+    try {
+      // Get last sign in time from user metadata
+      const lastSignIn = user.last_sign_in_at;
+      if (lastSignIn) {
+        setLastLogin(formatDistanceToNow(new Date(lastSignIn), { addSuffix: true }));
+      }
+    } catch (error) {
+      console.error("Error fetching last login:", error);
     }
   };
 
@@ -241,6 +283,19 @@ export default function ClientProfile() {
     }
   };
 
+  const getVerificationLabel = (status: string) => {
+    switch (status) {
+      case "verified":
+        return { text: "Verified", color: "text-green-600" };
+      case "pending":
+        return { text: "Pending", color: "text-yellow-600" };
+      case "rejected":
+        return { text: "Rejected", color: "text-red-600" };
+      default:
+        return { text: "Not Verified", color: "text-muted-foreground" };
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -281,6 +336,22 @@ export default function ClientProfile() {
                     <p className="text-xs text-muted-foreground mt-1">
                       Member {getMembershipDuration(profile.created_at)}
                     </p>
+                    <div className="flex flex-col gap-1 mt-2">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        <span className={`text-xs font-medium ${getVerificationLabel(verificationStatus).color}`}>
+                          {getVerificationLabel(verificationStatus).text}
+                        </span>
+                      </div>
+                      {lastLogin && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            Last login {lastLogin}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -177,8 +177,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPropertyIndex, setCurrentPropertyIndex] = useState(0);
 
-  // Combine all properties for rotation
-  const allNewProperties = [...featuredRentals.slice(0, 2), featuredSales[0]];
+  // Combine all properties for rotation - showing 5 recent listings
+  const allNewProperties = [...featuredRentals, ...featuredSales.slice(0, 2)];
 
   // Auto-rotate properties every 4 seconds
   useEffect(() => {

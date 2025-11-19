@@ -86,6 +86,8 @@ export default function ClientProfile() {
   const [tenantAddress, setTenantAddress] = useState<string>("");
   const [verificationStatus, setVerificationStatus] = useState<string>("not_verified");
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
+  const [customerSatisfaction, setCustomerSatisfaction] = useState<number>(0);
+  const [totalReviews, setTotalReviews] = useState<number>(0);
 
   // Enable property notifications
   usePropertyNotifications();
@@ -101,6 +103,7 @@ export default function ClientProfile() {
       fetchProfile();
       fetchTenantAddress();
       fetchVerificationStatus();
+      fetchCustomerSatisfaction();
     }
   }, [user]);
 
@@ -173,6 +176,34 @@ export default function ClientProfile() {
       }
     } catch (error) {
       console.error("Error fetching verification status:", error);
+    }
+  };
+
+  const fetchCustomerSatisfaction = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch reviews where user is the target (as a service provider, vendor, or property owner)
+      const { data: reviews, error } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("target_id", user.id);
+
+      if (error) throw error;
+
+      if (reviews && reviews.length > 0) {
+        const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+        // Convert 5-star rating to 0-100 scale
+        const satisfactionScore = (avgRating / 5) * 100;
+        setCustomerSatisfaction(Math.round(satisfactionScore));
+        setTotalReviews(reviews.length);
+      } else {
+        // No reviews yet - default to Bronze tier (0 score)
+        setCustomerSatisfaction(0);
+        setTotalReviews(0);
+      }
+    } catch (error) {
+      console.error("Error fetching customer satisfaction:", error);
     }
   };
 
@@ -421,6 +452,29 @@ export default function ClientProfile() {
                         Last seen {getLastSeen()}
                       </p>
                     )}
+                    
+                    {/* Customer Satisfaction Badge */}
+                    <div className="flex items-center justify-center gap-2 pt-2">
+                      {(() => {
+                        const badge = getBadgeTier(customerSatisfaction);
+                        const BadgeIcon = badge.icon;
+                        return (
+                          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${badge.bgColor} ${badge.borderColor}`}>
+                            <BadgeIcon className={`h-4 w-4 ${badge.color}`} />
+                            <div className="flex flex-col items-start">
+                              <span className={`text-xs font-semibold ${badge.color}`}>
+                                {badge.name}
+                              </span>
+                              {totalReviews > 0 && (
+                                <span className="text-[10px] text-muted-foreground">
+                                  {totalReviews} review{totalReviews !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
                     
                   </div>
                 </div>

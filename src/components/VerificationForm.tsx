@@ -105,6 +105,10 @@ export default function VerificationForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Create preview URL immediately
+    const previewUrl = URL.createObjectURL(file);
+    setVerification({ ...verification, [urlField]: previewUrl });
+
     setUploading({ ...uploading, [field]: true });
 
     try {
@@ -116,6 +120,7 @@ export default function VerificationForm() {
     } catch (error) {
       console.error("Error uploading file:", error);
       toast.error("Failed to upload file");
+      setVerification({ ...verification, [urlField]: null });
     } finally {
       setUploading({ ...uploading, [field]: false });
     }
@@ -233,7 +238,13 @@ export default function VerificationForm() {
                   />
                   {uploading.id_front && <Loader2 className="h-4 w-4 animate-spin" />}
                   {verification.id_front_url && (
-                    <span className="text-sm text-success">✓ Uploaded</span>
+                    <div className="mt-2">
+                      <img
+                        src={verification.id_front_url}
+                        alt="ID Front Preview"
+                        className="w-full h-40 object-cover rounded-lg border"
+                      />
+                    </div>
                   )}
                 </div>
               </div>
@@ -249,7 +260,13 @@ export default function VerificationForm() {
                   />
                   {uploading.id_back && <Loader2 className="h-4 w-4 animate-spin" />}
                   {verification.id_back_url && (
-                    <span className="text-sm text-success">✓ Uploaded</span>
+                    <div className="mt-2">
+                      <img
+                        src={verification.id_back_url}
+                        alt="ID Back Preview"
+                        className="w-full h-40 object-cover rounded-lg border"
+                      />
+                    </div>
                   )}
                 </div>
               </div>
@@ -309,7 +326,13 @@ export default function VerificationForm() {
                 <p className="text-sm text-muted-foreground">Upload a clear portrait picture of yourself</p>
                 {uploading.personal_picture && <Loader2 className="h-4 w-4 animate-spin" />}
                 {verification.personal_picture_url && (
-                  <span className="text-sm text-success">✓ Uploaded</span>
+                  <div className="mt-2">
+                    <img
+                      src={verification.personal_picture_url}
+                      alt="Personal Picture Preview"
+                      className="w-full h-40 object-cover rounded-lg border"
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -364,7 +387,24 @@ export default function VerificationForm() {
                 </p>
                 {uploading.proof_of_work && <Loader2 className="h-4 w-4 animate-spin" />}
                 {verification.proof_of_work_url && (
-                  <span className="text-sm text-success">✓ Uploaded</span>
+                  <div className="mt-2">
+                    {verification.proof_of_work_url.endsWith('.pdf') ? (
+                      <a
+                        href={verification.proof_of_work_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        View Document
+                      </a>
+                    ) : (
+                      <img
+                        src={verification.proof_of_work_url}
+                        alt="Proof of Work Preview"
+                        className="w-full h-40 object-cover rounded-lg border"
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             </div>

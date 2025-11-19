@@ -8,6 +8,7 @@ import {
   Calendar,
   MessageSquare,
   BarChart3,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -25,6 +26,7 @@ import {
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
   { title: "Properties", url: "/admin/properties", icon: Home },
   { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
   { title: "Vendors", url: "/admin/vendors", icon: Store },

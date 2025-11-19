@@ -42,10 +42,9 @@ interface Profile {
   created_at: string;
 }
 
-type ActivePanel = "account" | "dashboard" | "billing" | "verification" | "preferences" | "settings";
+type ActivePanel = "dashboard" | "billing" | "verification" | "preferences" | "settings";
 
 const menuItems = [
-  { id: "account" as ActivePanel, title: "Account", icon: User },
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
@@ -69,7 +68,7 @@ export default function ClientProfile() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [activePanel, setActivePanel] = useState<ActivePanel>(
-    (location.state as any)?.activePanel || "account"
+    (location.state as any)?.activePanel || "dashboard"
   );
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [bookingNotifications, setBookingNotifications] = useState(true);
@@ -315,34 +314,6 @@ export default function ClientProfile() {
                 {menuItems.find(item => item.id === activePanel)?.title}
               </h1>
             </div>
-
-            {activePanel === "account" && (
-              <Card className="max-w-2xl">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 mb-6">
-                    <Avatar className="h-20 w-20">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                        {getInitials(profile.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h2 className="text-xl font-semibold text-foreground">
-                        {profile.full_name || "User"}
-                      </h2>
-                      <p className="text-muted-foreground">{user.email}</p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {activePanel === "dashboard" && (
               <ClientDashboard />

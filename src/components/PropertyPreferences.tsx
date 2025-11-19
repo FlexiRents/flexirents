@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Bell, BellOff } from "lucide-react";
+import { Loader2, Bell, BellOff, X } from "lucide-react";
 import { ghanaRegions } from "@/data/ghanaLocations";
 
 interface Preferences {
@@ -16,6 +17,7 @@ interface Preferences {
   property_types: string[];
   listing_types: string[];
   regions: string[];
+  locations: string[];
   min_price: number | null;
   max_price: number | null;
   min_bedrooms: number | null;
@@ -43,11 +45,13 @@ export default function PropertyPreferences() {
   const [saving, setSaving] = useState(false);
   const [matchingCount, setMatchingCount] = useState<number>(0);
   const [countLoading, setCountLoading] = useState(false);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [preferences, setPreferences] = useState<Preferences>({
     is_enabled: true,
     property_types: [],
     listing_types: [],
     regions: [],
+    locations: [],
     min_price: null,
     max_price: null,
     min_bedrooms: null,
@@ -61,6 +65,18 @@ export default function PropertyPreferences() {
       fetchPreferences();
     }
   }, [user]);
+
+  useEffect(() => {
+    // Update available cities when regions change
+    const cities: string[] = [];
+    preferences.regions.forEach(regionName => {
+      const region = ghanaRegions.find(r => r.name === regionName);
+      if (region) {
+        cities.push(...region.cities);
+      }
+    });
+    setAvailableCities(cities);
+  }, [preferences.regions]);
 
   useEffect(() => {
     if (!loading) {
@@ -86,6 +102,7 @@ export default function PropertyPreferences() {
           property_types: data.property_types || [],
           listing_types: data.listing_types || [],
           regions: data.regions || [],
+          locations: data.locations || [],
           min_price: data.min_price,
           max_price: data.max_price,
           min_bedrooms: data.min_bedrooms,
@@ -192,6 +209,10 @@ export default function PropertyPreferences() {
     return [...array, value];
   };
 
+  const removeItem = (array: string[], value: string): string[] => {
+    return array.filter((item) => item !== value);
+  };
+
   if (loading) {
     return (
       <Card>
@@ -256,72 +277,176 @@ export default function PropertyPreferences() {
         {/* Property Types */}
         <div className="space-y-3">
           <Label className="text-base font-semibold">Property Types</Label>
-          <div className="grid grid-cols-2 gap-3">
-            {propertyTypes.map((type) => (
-              <div key={type.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`property-${type.id}`}
-                  checked={preferences.property_types.includes(type.id)}
-                  onCheckedChange={() =>
-                    setPreferences({
-                      ...preferences,
-                      property_types: toggleArrayValue(preferences.property_types, type.id),
-                    })
-                  }
-                />
-                <Label htmlFor={`property-${type.id}`} className="font-normal cursor-pointer">
+          <Select
+            onValueChange={(value) => {
+              if (!preferences.property_types.includes(value)) {
+                setPreferences({
+                  ...preferences,
+                  property_types: [...preferences.property_types, value],
+                });
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select property types" />
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-background">
+              {propertyTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
                   {type.label}
-                </Label>
-              </div>
-            ))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {preferences.property_types.map((type) => {
+              const label = propertyTypes.find((t) => t.id === type)?.label || type;
+              return (
+                <Badge key={type} variant="secondary" className="flex items-center gap-1">
+                  {label}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() =>
+                      setPreferences({
+                        ...preferences,
+                        property_types: removeItem(preferences.property_types, type),
+                      })
+                    }
+                  />
+                </Badge>
+              );
+            })}
           </div>
         </div>
 
         {/* Listing Types */}
         <div className="space-y-3">
           <Label className="text-base font-semibold">Listing Types</Label>
-          <div className="grid grid-cols-2 gap-3">
-            {listingTypes.map((type) => (
-              <div key={type.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`listing-${type.id}`}
-                  checked={preferences.listing_types.includes(type.id)}
-                  onCheckedChange={() =>
-                    setPreferences({
-                      ...preferences,
-                      listing_types: toggleArrayValue(preferences.listing_types, type.id),
-                    })
-                  }
-                />
-                <Label htmlFor={`listing-${type.id}`} className="font-normal cursor-pointer">
+          <Select
+            onValueChange={(value) => {
+              if (!preferences.listing_types.includes(value)) {
+                setPreferences({
+                  ...preferences,
+                  listing_types: [...preferences.listing_types, value],
+                });
+              }
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select listing types" />
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-background">
+              {listingTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
                   {type.label}
-                </Label>
-              </div>
-            ))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {preferences.listing_types.map((type) => {
+              const label = listingTypes.find((t) => t.id === type)?.label || type;
+              return (
+                <Badge key={type} variant="secondary" className="flex items-center gap-1">
+                  {label}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() =>
+                      setPreferences({
+                        ...preferences,
+                        listing_types: removeItem(preferences.listing_types, type),
+                      })
+                    }
+                  />
+                </Badge>
+              );
+            })}
           </div>
         </div>
 
-        {/* Regions */}
-        <div className="space-y-3">
-          <Label className="text-base font-semibold">Preferred Regions</Label>
-          <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-            {ghanaRegions.map((region) => (
-              <div key={region.name} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`region-${region.name}`}
-                  checked={preferences.regions.includes(region.name)}
-                  onCheckedChange={() =>
-                    setPreferences({
-                      ...preferences,
-                      regions: toggleArrayValue(preferences.regions, region.name),
-                    })
-                  }
-                />
-                <Label htmlFor={`region-${region.name}`} className="font-normal cursor-pointer">
-                  {region.name}
-                </Label>
-              </div>
-            ))}
+        {/* Regions and Cities */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Preferred Regions</Label>
+            <Select
+              onValueChange={(value) => {
+                if (!preferences.regions.includes(value)) {
+                  setPreferences({
+                    ...preferences,
+                    regions: [...preferences.regions, value],
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select regions" />
+              </SelectTrigger>
+              <SelectContent className="z-50 bg-background max-h-60">
+                {ghanaRegions.map((region) => (
+                  <SelectItem key={region.name} value={region.name}>
+                    {region.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {preferences.regions.map((region) => (
+                <Badge key={region} variant="secondary" className="flex items-center gap-1">
+                  {region}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() =>
+                      setPreferences({
+                        ...preferences,
+                        regions: removeItem(preferences.regions, region),
+                      })
+                    }
+                  />
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Sub-Cities/Locations</Label>
+            <Select
+              disabled={availableCities.length === 0}
+              onValueChange={(value) => {
+                if (!preferences.locations.includes(value)) {
+                  setPreferences({
+                    ...preferences,
+                    locations: [...preferences.locations, value],
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={availableCities.length === 0 ? "Select regions first" : "Select cities"} />
+              </SelectTrigger>
+              <SelectContent className="z-50 bg-background max-h-60">
+                {availableCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {preferences.locations.map((location) => (
+                <Badge key={location} variant="secondary" className="flex items-center gap-1">
+                  {location}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() =>
+                      setPreferences({
+                        ...preferences,
+                        locations: removeItem(preferences.locations, location),
+                      })
+                    }
+                  />
+                </Badge>
+              ))}
+            </div>
           </div>
         </div>
 

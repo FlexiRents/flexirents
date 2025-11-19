@@ -648,6 +648,7 @@ export type Database = {
           id: string
           is_enabled: boolean
           listing_types: string[] | null
+          locations: string[] | null
           max_bathrooms: number | null
           max_bedrooms: number | null
           max_price: number | null
@@ -664,6 +665,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           listing_types?: string[] | null
+          locations?: string[] | null
           max_bathrooms?: number | null
           max_bedrooms?: number | null
           max_price?: number | null
@@ -680,6 +682,7 @@ export type Database = {
           id?: string
           is_enabled?: boolean
           listing_types?: string[] | null
+          locations?: string[] | null
           max_bathrooms?: number | null
           max_bedrooms?: number | null
           max_price?: number | null

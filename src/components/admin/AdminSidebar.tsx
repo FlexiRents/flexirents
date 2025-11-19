@@ -57,13 +57,13 @@ export function AdminSidebar() {
                       to={item.url}
                       end={item.end}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 hover:bg-accent transition-colors ${
+                        `flex items-center gap-3 hover:bg-accent transition-all duration-200 active:scale-95 hover:scale-[1.02] ${
                           isActive ? "bg-primary/10 text-primary font-medium" : ""
                         }`
                       }
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 transition-transform duration-200 group-active:scale-110" />
+                      {!isCollapsed && <span className="transition-colors duration-200">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

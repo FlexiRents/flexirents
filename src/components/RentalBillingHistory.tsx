@@ -146,63 +146,7 @@ export default function RentalBillingHistory() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {/* Payment Reminders */}
-      {upcomingPayments.length > 0 && (
-        <Alert className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800 dark:text-blue-400">
-            Payment Reminders
-          </AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-300">
-            <div className="space-y-3 mt-2">
-              {upcomingPayments.map((payment, index) => {
-                const isNextPending = index === 0;
-                const canPay = isNextPending || payment.is_first_payment;
-                
-                return (
-                  <div 
-                    key={payment.id} 
-                    className={`p-3 rounded-lg border ${
-                      isNextPending 
-                        ? 'border-blue-500 bg-blue-100/50 dark:bg-blue-900/20' 
-                        : 'border-blue-200 bg-white dark:bg-gray-800'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-blue-900 dark:text-blue-100">
-                            {payment.is_first_payment 
-                              ? "First Payment (6-12 months)" 
-                              : `Installment #${payment.installment_number}`}
-                          </span>
-                          {isNextPending && (
-                            <Badge variant="default" className="bg-blue-600">Next Due</Badge>
-                          )}
-                        </div>
-                        <div className="text-sm space-y-1">
-                          <p className="font-medium">{formatPrice(payment.amount)}</p>
-                          <p>Due: {format(new Date(payment.due_date), "MMM dd, yyyy")}</p>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        disabled={!canPay || !payment.payment_link}
-                        onClick={() => handlePayment(payment.id, payment.payment_link)}
-                        className={canPay ? "bg-blue-600 hover:bg-blue-700" : ""}
-                      >
-                        {canPay ? "Pay Now" : "Locked"}
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Payment History Table */}
+      {/* Payment History Table with Integrated Reminders */}
       <Card>
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
@@ -224,51 +168,82 @@ export default function RentalBillingHistory() {
                     <TableHead>Status</TableHead>
                     <TableHead>Verification</TableHead>
                     <TableHead>Payment Date</TableHead>
-                    <TableHead>Receipt</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {payment.is_first_payment 
-                              ? "First (6-12mo)" 
-                              : `#${payment.installment_number}`}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {format(new Date(payment.due_date), "MMM dd, yyyy")}
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatPrice(payment.amount)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                      <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
-                      <TableCell>
-                        {payment.payment_date
-                          ? format(new Date(payment.payment_date), "MMM dd, yyyy")
-                          : <span className="text-muted-foreground">Pending</span>}
-                      </TableCell>
-                      <TableCell>
-                        {payment.receipt_url ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownloadReceipt(payment)}
-                            className="h-8"
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Receipt
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {payments.map((payment, index) => {
+                    const pendingPayments = payments.filter(p => p.status === 'pending');
+                    const isNextPending = payment.status === 'pending' && 
+                      pendingPayments.findIndex(p => p.id === payment.id) === 0;
+                    const canPay = isNextPending && payment.payment_link;
+                    const isLocked = payment.status === 'pending' && !isNextPending;
+                    
+                    return (
+                      <TableRow 
+                        key={payment.id}
+                        className={isNextPending ? 'bg-blue-50/50 dark:bg-blue-950/20 border-l-4 border-l-blue-500' : ''}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {payment.is_first_payment 
+                                ? "First (6-12mo)" 
+                                : `#${payment.installment_number}`}
+                            </span>
+                            {isNextPending && (
+                              <Badge variant="default" className="bg-blue-600 text-xs">
+                                Next Due
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {format(new Date(payment.due_date), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {formatPrice(payment.amount)}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                        <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
+                        <TableCell>
+                          {payment.payment_date
+                            ? format(new Date(payment.payment_date), "MMM dd, yyyy")
+                            : <span className="text-muted-foreground">Pending</span>}
+                        </TableCell>
+                        <TableCell>
+                          {payment.status === 'paid' && payment.receipt_url ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadReceipt(payment)}
+                              className="h-8"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Receipt
+                            </Button>
+                          ) : payment.status === 'pending' ? (
+                            <Button
+                              size="sm"
+                              disabled={!canPay}
+                              onClick={() => handlePayment(payment.id, payment.payment_link)}
+                              className={canPay ? "bg-blue-600 hover:bg-blue-700 h-8" : "h-8"}
+                            >
+                              {isLocked ? (
+                                <>🔒 Locked</>
+                              ) : canPay ? (
+                                "Pay Now"
+                              ) : (
+                                "Unavailable"
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -11,8 +11,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, Calendar, Star, Activity, CreditCard, Wallet, FileText, MapPin, ShieldCheck } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, Calendar, Star, Activity, CreditCard, Wallet, FileText, MapPin, ShieldCheck, Bell } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
+import PropertyPreferences from "@/components/PropertyPreferences";
+import { usePropertyNotifications } from "@/hooks/usePropertyNotifications";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +33,7 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "account" | "activity" | "subscriptions" | "wallet" | "billing" | "address" | "verification" | "settings";
+type ActivePanel = "account" | "activity" | "subscriptions" | "wallet" | "billing" | "address" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "account" as ActivePanel, title: "Account", icon: User },
@@ -41,6 +43,7 @@ const menuItems = [
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "address" as ActivePanel, title: "Address", icon: MapPin },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
+  { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
 ];
 
@@ -54,6 +57,9 @@ export default function ClientProfile() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [activePanel, setActivePanel] = useState<ActivePanel>("account");
+
+  // Enable property notifications
+  usePropertyNotifications();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -276,6 +282,10 @@ export default function ClientProfile() {
 
             {activePanel === "verification" && (
               <VerificationForm />
+            )}
+
+            {activePanel === "preferences" && (
+              <PropertyPreferences />
             )}
 
             {activePanel === "settings" && (

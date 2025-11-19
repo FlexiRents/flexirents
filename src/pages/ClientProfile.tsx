@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,12 +54,15 @@ export default function ClientProfile() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [activePanel, setActivePanel] = useState<ActivePanel>("account");
+  const [activePanel, setActivePanel] = useState<ActivePanel>(
+    (location.state as any)?.activePanel || "account"
+  );
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [bookingNotifications, setBookingNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);

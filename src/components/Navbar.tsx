@@ -59,7 +59,7 @@ const Navbar = () => {
             </Link>
             {user && <NotificationPanel />}
             {user ? (
-              <Link to="/profile">
+              <Link to="/profile" state={{ activePanel: "dashboard" }}>
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Profile
@@ -141,7 +141,7 @@ const Navbar = () => {
                 </div>
               )}
               {user ? (
-                <Link to="/profile" onClick={() => setIsOpen(false)}>
+                <Link to="/profile" state={{ activePanel: "dashboard" }} onClick={() => setIsOpen(false)}>
                   <Button variant="ghost" className="w-full justify-start">
                     <User className="h-4 w-4 mr-2" />
                     Profile

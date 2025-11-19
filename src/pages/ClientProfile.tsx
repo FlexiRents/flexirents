@@ -498,37 +498,29 @@ export default function ClientProfile() {
                     <h3 className="font-semibold text-foreground break-words">
                       {profile.full_name || "Welcome"}
                     </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {getMembershipDuration(profile.created_at)}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {getMembershipDuration(profile.created_at)}
+                      </p>
+                      {/* Customer Satisfaction Badge */}
+                      {(() => {
+                        const badge = getBadgeTier(customerSatisfaction);
+                        const BadgeIcon = badge.icon;
+                        return (
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor} flex-shrink-0`}>
+                            <BadgeIcon className={`h-3 w-3 ${badge.color}`} />
+                            <span className={`text-[10px] font-semibold ${badge.color}`}>
+                              {badge.name}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
                     {getLastSeen() && (
                       <p className="text-xs text-muted-foreground">
                         Last seen {getLastSeen()}
                       </p>
                     )}
-                    
-                    {/* Customer Satisfaction Badge */}
-                    <div className="flex items-center justify-center gap-2 pt-2">
-                      {(() => {
-                        const badge = getBadgeTier(customerSatisfaction);
-                        const BadgeIcon = badge.icon;
-                        return (
-                          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${badge.bgColor} ${badge.borderColor}`}>
-                            <BadgeIcon className={`h-4 w-4 ${badge.color}`} />
-                            <div className="flex flex-col items-start">
-                              <span className={`text-xs font-semibold ${badge.color}`}>
-                                {badge.name}
-                              </span>
-                              {totalReviews > 0 && (
-                                <span className="text-[10px] text-muted-foreground">
-                                  {totalReviews} {totalReviews === 1 ? 'activity' : 'activities'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
                     
                   </div>
                 </div>

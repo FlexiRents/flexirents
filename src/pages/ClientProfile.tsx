@@ -424,8 +424,7 @@ export default function ClientProfile() {
                     
                     {/* Profile Completion Progress */}
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{calculateProfileCompletion()} pts</span>
+                      <div className="flex items-center justify-end">
                         <span className="text-xs text-muted-foreground">{calculateProfileCompletion()}%</span>
                       </div>
                       <div className="flex items-center gap-2">

@@ -389,7 +389,7 @@ export default function ClientProfile() {
             <SidebarContent className="pt-6">
               {/* User Profile Header */}
               <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center text-center space-y-3">
                   <div className="relative group flex-shrink-0">
                     <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
                       {profile.avatar_url ? (
@@ -409,7 +409,7 @@ export default function ClientProfile() {
                     </button>
                   </div>
                   
-                  <div className="flex-1 min-w-0">
+                  <div className="w-full space-y-2">
                     <h3 className="font-semibold text-foreground break-words">
                       {profile.full_name || "Welcome"}
                     </h3>
@@ -422,7 +422,7 @@ export default function ClientProfile() {
                       </p>
                     )}
                     
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center justify-center gap-2">
                       {/* Badge Tier */}
                       {(() => {
                         const badge = getBadgeTier(calculateProfileCompletion());
@@ -439,7 +439,7 @@ export default function ClientProfile() {
                     </div>
                     
                     {/* Profile Completion Progress */}
-                    <div className="mt-2 space-y-1">
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{calculateProfileCompletion()} pts</span>
                         <span className="text-xs text-muted-foreground">{calculateProfileCompletion()}%</span>

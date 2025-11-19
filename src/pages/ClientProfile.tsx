@@ -399,13 +399,6 @@ export default function ClientProfile() {
                     )}
                     
                     <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center gap-1">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <span className={`text-xs font-medium ${getVerificationLabel(verificationStatus).color}`}>
-                          {getVerificationLabel(verificationStatus).text}
-                        </span>
-                      </div>
-                      
                       {/* Badge Tier */}
                       {(() => {
                         const badge = getBadgeTier(calculateProfileCompletion());

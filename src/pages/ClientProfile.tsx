@@ -545,6 +545,15 @@ export default function ClientProfile() {
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={handleSignOut}
+                        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -876,17 +885,6 @@ export default function ClientProfile() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-
-                        <Separator />
-
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={handleSignOut}
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Sign Out
-                        </Button>
                       </CardContent>
                     </Card>
                   </TabsContent>

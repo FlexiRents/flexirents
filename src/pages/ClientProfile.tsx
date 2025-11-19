@@ -67,6 +67,7 @@ export default function ClientProfile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [tenantAddress, setTenantAddress] = useState<string>("");
 
   // Enable property notifications
   usePropertyNotifications();
@@ -80,6 +81,7 @@ export default function ClientProfile() {
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchTenantAddress();
     }
   }, [user]);
 
@@ -104,6 +106,34 @@ export default function ClientProfile() {
       console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTenantAddress = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("rental_leases")
+        .select(`
+          property_id,
+          properties (
+            location,
+            region
+          )
+        `)
+        .eq("tenant_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.properties) {
+        const property = data.properties as { location: string; region: string };
+        setTenantAddress(`${property.location}, ${property.region}`);
+      }
+    } catch (error) {
+      console.error("Error fetching tenant address:", error);
     }
   };
 
@@ -367,6 +397,24 @@ export default function ClientProfile() {
                               placeholder="Enter your phone number"
                             />
                           </div>
+
+                          {tenantAddress && (
+                            <div className="space-y-2">
+                              <Label htmlFor="address">
+                                <MapPin className="inline h-4 w-4 mr-2" />
+                                Current Address
+                              </Label>
+                              <Input
+                                id="address"
+                                value={tenantAddress}
+                                disabled
+                                className="bg-muted"
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                This is the address of your leased property
+                              </p>
+                            </div>
+                          )}
 
                           <Button 
                             type="submit" 

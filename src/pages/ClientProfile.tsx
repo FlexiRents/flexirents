@@ -410,7 +410,7 @@ export default function ClientProfile() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground truncate">
+                    <h3 className="font-semibold text-foreground break-words">
                       {profile.full_name || "Welcome"}
                     </h3>
                     <p className="text-xs text-muted-foreground">

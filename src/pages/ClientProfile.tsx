@@ -284,7 +284,16 @@ export default function ClientProfile() {
   const getLastSeen = () => {
     if (!user?.last_sign_in_at) return null;
     try {
-      return formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true });
+      const distance = formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true });
+      // Shorten the format: "22 minutes ago" -> "22 min ago"
+      return distance
+        .replace(' minutes', ' min')
+        .replace(' minute', ' min')
+        .replace(' hours', ' hr')
+        .replace(' hour', ' hr')
+        .replace(' days', ' d')
+        .replace(' day', ' d')
+        .replace('about ', '');
     } catch {
       return null;
     }

@@ -38,6 +38,7 @@ import BookingsManagement from "./pages/admin/BookingsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/rentals" element={<Rentals />} />

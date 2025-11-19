@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Clock } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -84,7 +84,6 @@ export default function ClientProfile() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [tenantAddress, setTenantAddress] = useState<string>("");
   const [verificationStatus, setVerificationStatus] = useState<string>("not_verified");
-  const [lastLogin, setLastLogin] = useState<string>("");
 
   // Enable property notifications
   usePropertyNotifications();
@@ -100,7 +99,6 @@ export default function ClientProfile() {
       fetchProfile();
       fetchTenantAddress();
       fetchVerificationStatus();
-      fetchLastLogin();
     }
   }, [user]);
 
@@ -173,20 +171,6 @@ export default function ClientProfile() {
       }
     } catch (error) {
       console.error("Error fetching verification status:", error);
-    }
-  };
-
-  const fetchLastLogin = async () => {
-    if (!user) return;
-
-    try {
-      // Get last sign in time from user metadata
-      const lastSignIn = user.last_sign_in_at;
-      if (lastSignIn) {
-        setLastLogin(formatDistanceToNow(new Date(lastSignIn), { addSuffix: true }));
-      }
-    } catch (error) {
-      console.error("Error fetching last login:", error);
     }
   };
 
@@ -338,43 +322,44 @@ export default function ClientProfile() {
             <SidebarContent className="pt-6">
               {/* User Profile Header */}
               <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
-                <div className="flex flex-col items-center gap-3">
-                  <Avatar className="h-16 w-16 border-4 border-background shadow-lg">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16 border-4 border-background shadow-lg flex-shrink-0">
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
                       {getInitials(profile.full_name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="text-center">
-                    <h3 className="font-semibold text-foreground">
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground truncate">
                       {profile.full_name || "Welcome"}
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       Member {getMembershipDuration(profile.created_at)}
                     </p>
-                    <div className="flex flex-col gap-1 mt-2">
-                      <div className="flex items-center justify-center gap-1.5">
+                    
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <div className="flex items-center gap-1">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         <span className={`text-xs font-medium ${getVerificationLabel(verificationStatus).color}`}>
                           {getVerificationLabel(verificationStatus).text}
                         </span>
                       </div>
-                      {lastLogin && (
-                        <div className="flex items-center justify-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">
-                            Last login {lastLogin}
-                          </span>
-                        </div>
-                      )}
+                      
+                      {/* Renter Score */}
+                      <div className="flex items-center gap-1">
+                        <Award className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs font-semibold text-primary">
+                          {calculateProfileCompletion()} pts
+                        </span>
+                      </div>
                     </div>
                     
                     {/* Profile Completion Progress */}
-                    <div className="w-full mt-3 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Profile Completion</span>
-                        <span className="text-xs font-semibold text-foreground">{calculateProfileCompletion()}%</span>
-                      </div>
+                    <div className="mt-2 space-y-1">
                       <Progress value={calculateProfileCompletion()} className="h-1.5" />
+                      <span className="text-xs text-muted-foreground">
+                        {calculateProfileCompletion()}% Complete
+                      </span>
                     </div>
                   </div>
                 </div>

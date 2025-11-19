@@ -391,11 +391,11 @@ export default function ClientProfile() {
               <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
                 <div className="flex items-center gap-4">
                   <div className="relative group flex-shrink-0">
-                    <Avatar className="h-16 w-16 border-4 border-background shadow-lg">
+                    <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
                       {profile.avatar_url ? (
                         <img src={profile.avatar_url} alt="Profile" className="object-cover" />
                       ) : (
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">
                           {getInitials(profile.full_name)}
                         </AvatarFallback>
                       )}
@@ -405,7 +405,7 @@ export default function ClientProfile() {
                       className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                       aria-label="Upload profile picture"
                     >
-                      <Camera className="h-6 w-6 text-white" />
+                      <Camera className="h-8 w-8 text-white" />
                     </button>
                   </div>
                   

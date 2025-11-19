@@ -11,7 +11,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, Calendar, Star, Activity, CreditCard, Wallet, FileText, MapPin } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, Calendar, Star, Activity, CreditCard, Wallet, FileText, MapPin, ShieldCheck } from "lucide-react";
+import VerificationForm from "@/components/VerificationForm";
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +31,7 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "account" | "activity" | "subscriptions" | "wallet" | "billing" | "address" | "settings";
+type ActivePanel = "account" | "activity" | "subscriptions" | "wallet" | "billing" | "address" | "verification" | "settings";
 
 const menuItems = [
   { id: "account" as ActivePanel, title: "Account", icon: User },
@@ -39,6 +40,7 @@ const menuItems = [
   { id: "wallet" as ActivePanel, title: "Wallet", icon: Wallet },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "address" as ActivePanel, title: "Address", icon: MapPin },
+  { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
 ];
 
@@ -270,6 +272,10 @@ export default function ClientProfile() {
                   <p className="text-muted-foreground">No addresses saved.</p>
                 </CardContent>
               </Card>
+            )}
+
+            {activePanel === "verification" && (
+              <VerificationForm />
             )}
 
             {activePanel === "settings" && (

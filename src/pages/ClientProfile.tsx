@@ -679,7 +679,7 @@ export default function ClientProfile() {
       <Navbar />
       <SidebarProvider defaultOpen={true}>
         <div className="flex flex-1 w-full pt-20">
-          <Sidebar collapsible="icon" className="border-r">
+          <Sidebar collapsible="icon" className="border-r pt-20">
             <SidebarContent className="pt-6">
               {/* User Profile Header */}
               <ProfileSection />

@@ -362,22 +362,6 @@ export default function ClientProfile() {
     return Math.round((completed / total) * 100);
   };
 
-  const getMissingProfileItems = () => {
-    const missing: { label: string; points: number; icon: any }[] = [];
-    
-    if (!profile.phone) {
-      missing.push({ label: "Add phone number", points: 33, icon: Phone });
-    }
-    if (!profile.avatar_url) {
-      missing.push({ label: "Upload profile picture", points: 33, icon: Camera });
-    }
-    if (verificationStatus !== "verified") {
-      missing.push({ label: "Complete verification", points: 34, icon: ShieldCheck });
-    }
-
-    return missing;
-  };
-
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -462,25 +446,6 @@ export default function ClientProfile() {
                       </div>
                       <Progress value={calculateProfileCompletion()} className="h-1.5" />
                     </div>
-
-                    {/* Profile Completion Tips */}
-                    {getMissingProfileItems().length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Complete your profile:</p>
-                        {getMissingProfileItems().map((item, index) => {
-                          const ItemIcon = item.icon;
-                          return (
-                            <div key={index} className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <ItemIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-xs text-foreground">{item.label}</span>
-                              </div>
-                              <span className="text-xs font-semibold text-primary">+{item.points} pts</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

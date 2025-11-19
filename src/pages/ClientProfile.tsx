@@ -38,13 +38,12 @@ interface Profile {
   phone: string | null;
 }
 
-type ActivePanel = "account" | "dashboard" | "billing" | "address" | "verification" | "preferences" | "settings";
+type ActivePanel = "account" | "dashboard" | "billing" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "account" as ActivePanel, title: "Account", icon: User },
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
-  { id: "address" as ActivePanel, title: "Address", icon: MapPin },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
   { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
   { id: "settings" as ActivePanel, title: "Settings", icon: Settings },
@@ -316,17 +315,6 @@ export default function ClientProfile() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">No billing history.</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {activePanel === "address" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>Address</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">No addresses saved.</p>
                 </CardContent>
               </Card>
             )}

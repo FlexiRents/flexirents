@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -21,6 +21,7 @@ import RentalBillingHistory from "@/components/RentalBillingHistory";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatDistanceToNow } from "date-fns";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +38,8 @@ import {
 interface Profile {
   full_name: string | null;
   phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
 }
 
 type ActivePanel = "account" | "dashboard" | "billing" | "verification" | "preferences" | "settings";
@@ -55,7 +58,12 @@ export default function ClientProfile() {
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
-  const [profile, setProfile] = useState<Profile>({ full_name: null, phone: null });
+  const [profile, setProfile] = useState<Profile>({ 
+    full_name: null, 
+    phone: null, 
+    avatar_url: null,
+    created_at: new Date().toISOString()
+  });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -94,7 +102,7 @@ export default function ClientProfile() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, phone")
+        .select("full_name, phone, avatar_url, created_at")
         .eq("id", user.id)
         .single();
 
@@ -156,7 +164,7 @@ export default function ClientProfile() {
 
       if (error) throw error;
 
-      setProfile({ full_name: fullName, phone: phone });
+      setProfile({ ...profile, full_name: fullName, phone: phone });
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -222,7 +230,16 @@ export default function ClientProfile() {
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase();
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getMembershipDuration = (createdAt: string) => {
+    try {
+      return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+    } catch {
+      return "Recently joined";
+    }
   };
 
   if (authLoading || loading) {
@@ -250,6 +267,25 @@ export default function ClientProfile() {
         <div className="flex min-h-[calc(100vh-140px)] w-full">
           <Sidebar className="border-r">
             <SidebarContent>
+              {/* User Profile Header */}
+              <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
+                <div className="flex flex-col items-center gap-3">
+                  <Avatar className="h-16 w-16 border-4 border-background shadow-lg">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                      {getInitials(profile.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <h3 className="font-semibold text-foreground">
+                      {profile.full_name || "Welcome"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Member {getMembershipDuration(profile.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <SidebarGroup>
                 <SidebarGroupLabel>Account</SidebarGroupLabel>
                 <SidebarGroupContent>

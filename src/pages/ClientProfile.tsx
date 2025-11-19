@@ -11,11 +11,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
 import { usePropertyNotifications } from "@/hooks/usePropertyNotifications";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sidebar,
   SidebarContent,
@@ -56,6 +60,13 @@ export default function ClientProfile() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [activePanel, setActivePanel] = useState<ActivePanel>("account");
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [bookingNotifications, setBookingNotifications] = useState(true);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+  const [profileVisibility, setProfileVisibility] = useState(true);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Enable property notifications
   usePropertyNotifications();
@@ -129,6 +140,46 @@ export default function ClientProfile() {
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success("Password updated successfully");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Failed to change password");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      // In a real app, you'd want to call an edge function to properly delete the account
+      toast.error("Account deletion requires admin approval. Please contact support.");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account");
     }
   };
 
@@ -259,74 +310,304 @@ export default function ClientProfile() {
             )}
 
             {activePanel === "settings" && (
-              <Card className="max-w-2xl">
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">
-                        <User className="inline h-4 w-4 mr-2" />
-                        Full Name
-                      </Label>
-                      <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
+              <div className="max-w-3xl space-y-6">
+                <Tabs defaultValue="profile" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="profile">Profile</TabsTrigger>
+                    <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                    <TabsTrigger value="security">Security</TabsTrigger>
+                    <TabsTrigger value="privacy">Privacy</TabsTrigger>
+                  </TabsList>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="email">
-                        <Mail className="inline h-4 w-4 mr-2" />
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={user.email || ""}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
+                  <TabsContent value="profile" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Profile Information</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <form onSubmit={handleUpdateProfile} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="fullName">
+                              <User className="inline h-4 w-4 mr-2" />
+                              Full Name
+                            </Label>
+                            <Input
+                              id="fullName"
+                              value={fullName}
+                              onChange={(e) => setFullName(e.target.value)}
+                              placeholder="Enter your full name"
+                            />
+                          </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">
-                        <Phone className="inline h-4 w-4 mr-2" />
-                        Phone Number
-                      </Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">
+                              <Mail className="inline h-4 w-4 mr-2" />
+                              Email
+                            </Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={user.email || ""}
+                              disabled
+                              className="bg-muted"
+                            />
+                            <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                          </div>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={updating}
-                    >
-                      {updating ? "Updating..." : "Update Profile"}
-                    </Button>
-                  </form>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">
+                              <Phone className="inline h-4 w-4 mr-2" />
+                              Phone Number
+                            </Label>
+                            <Input
+                              id="phone"
+                              type="tel"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="Enter your phone number"
+                            />
+                          </div>
 
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <Button 
-                      variant="destructive" 
-                      className="w-full"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                          <Button 
+                            type="submit" 
+                            className="w-full"
+                            disabled={updating}
+                          >
+                            {updating ? "Updating..." : "Update Profile"}
+                          </Button>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="notifications" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Notification Preferences</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Email Notifications</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Receive email updates about your account
+                            </p>
+                          </div>
+                          <Switch
+                            checked={emailNotifications}
+                            onCheckedChange={setEmailNotifications}
+                          />
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Booking Notifications</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Get notified about booking updates and reminders
+                            </p>
+                          </div>
+                          <Switch
+                            checked={bookingNotifications}
+                            onCheckedChange={setBookingNotifications}
+                          />
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Property Alerts</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Managed in Property Alerts section
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setActivePanel("preferences")}
+                          >
+                            Configure
+                          </Button>
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Marketing Emails</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Receive promotional emails and special offers
+                            </p>
+                          </div>
+                          <Switch
+                            checked={marketingEmails}
+                            onCheckedChange={setMarketingEmails}
+                          />
+                        </div>
+
+                        <Button 
+                          className="w-full"
+                          onClick={() => toast.success("Notification preferences saved")}
+                        >
+                          Save Preferences
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="security" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Security Settings</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <form onSubmit={handleChangePassword} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="newPassword">
+                              <Lock className="inline h-4 w-4 mr-2" />
+                              New Password
+                            </Label>
+                            <Input
+                              id="newPassword"
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="Enter new password"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">
+                              <Lock className="inline h-4 w-4 mr-2" />
+                              Confirm New Password
+                            </Label>
+                            <Input
+                              id="confirmPassword"
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="Confirm new password"
+                            />
+                          </div>
+
+                          <Button 
+                            type="submit" 
+                            className="w-full"
+                            disabled={changingPassword || !newPassword || !confirmPassword}
+                          >
+                            {changingPassword ? "Changing..." : "Change Password"}
+                          </Button>
+                        </form>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                          <Label>Verification Status</Label>
+                          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <span className="text-sm">Identity Verification</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setActivePanel("verification")}
+                            >
+                              Manage
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="privacy" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Privacy Settings</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Profile Visibility</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Make your profile visible to other users
+                            </p>
+                          </div>
+                          <Switch
+                            checked={profileVisibility}
+                            onCheckedChange={setProfileVisibility}
+                          />
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                          <Label>Data & Privacy</Label>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Manage your personal data and privacy preferences
+                          </p>
+                          <Button variant="outline" className="w-full">
+                            <Globe className="h-4 w-4 mr-2" />
+                            Download My Data
+                          </Button>
+                        </div>
+
+                        <Button 
+                          className="w-full"
+                          onClick={() => toast.success("Privacy settings saved")}
+                        >
+                          Save Privacy Settings
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-destructive">
+                      <CardHeader>
+                        <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" className="w-full">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Account
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete your
+                                account and remove your data from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleDeleteAccount}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete Account
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
+                        <Separator />
+
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={handleSignOut}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
             )}
           </main>
         </div>

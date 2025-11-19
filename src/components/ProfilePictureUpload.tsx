@@ -12,7 +12,7 @@ interface ProfilePictureUploadProps {
   currentImageUrl?: string | null;
   onImageUpdate: (url: string) => void;
   bucketName: string;
-  userType: "service_provider" | "vendor";
+  userType: "service_provider" | "vendor" | "user";
   userId: string;
 }
 
@@ -150,19 +150,29 @@ export const ProfilePictureUpload = ({
         .from(bucketName)
         .getPublicUrl(uploadData.path);
 
-      // Update database
-      const tableName =
-        userType === "service_provider"
-          ? "service_provider_registrations"
-          : "vendor_registrations";
-
+      // Update database based on user type
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user?.email) throw new Error("User not authenticated");
 
-      const { error: updateError } = await supabase
-        .from(tableName)
-        .update({ profile_image_url: urlData.publicUrl })
-        .eq("email", userData.user.email);
+      let updateError;
+      
+      if (userType === "user") {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ avatar_url: urlData.publicUrl })
+          .eq("id", userData.user.id);
+        updateError = error;
+      } else {
+        const tableName = userType === "service_provider"
+          ? "service_provider_registrations"
+          : "vendor_registrations";
+        
+        const { error } = await supabase
+          .from(tableName)
+          .update({ profile_image_url: urlData.publicUrl })
+          .eq("email", userData.user.email);
+        updateError = error;
+      }
 
       if (updateError) throw updateError;
 

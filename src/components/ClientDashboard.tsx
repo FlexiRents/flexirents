@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar } from "lucide-react";
+import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
 
 interface DashboardStats {
   verificationStatus: string;
@@ -11,6 +13,12 @@ interface DashboardStats {
   matchingProperties: number;
   totalBookings: number;
   activeListings: number;
+  userProfile: {
+    full_name: string | null;
+    avatar_url: string | null;
+    created_at: string;
+  } | null;
+  activityScore: number;
 }
 
 export default function ClientDashboard() {
@@ -33,6 +41,8 @@ export default function ClientDashboard() {
         preferencesData,
         bookingsData,
         propertiesData,
+        profileData,
+        reviewsData,
       ] = await Promise.all([
         supabase
           .from("user_verification")
@@ -52,14 +62,32 @@ export default function ClientDashboard() {
           .from("properties")
           .select("id", { count: "exact", head: true })
           .eq("owner_id", user.id),
+        supabase
+          .from("profiles")
+          .select("full_name, avatar_url, created_at")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("reviews")
+          .select("id", { count: "exact", head: true })
+          .eq("reviewer_user_id", user.id),
       ]);
+
+      // Calculate activity score based on user engagement
+      const verificationScore = verificationData.data?.status === "verified" ? 30 : 0;
+      const bookingScore = Math.min((bookingsData.count || 0) * 10, 30);
+      const propertyScore = Math.min((propertiesData.count || 0) * 15, 25);
+      const reviewScore = Math.min((reviewsData.count || 0) * 5, 15);
+      const activityScore = verificationScore + bookingScore + propertyScore + reviewScore;
 
       setStats({
         verificationStatus: verificationData.data?.status || "not_verified",
         propertyAlertsEnabled: preferencesData.data?.is_enabled || false,
-        matchingProperties: 0, // This will be calculated based on preferences
+        matchingProperties: 0,
         totalBookings: bookingsData.count || 0,
         activeListings: propertiesData.count || 0,
+        userProfile: profileData.data || null,
+        activityScore: activityScore,
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -94,24 +122,65 @@ export default function ClientDashboard() {
     }
   };
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getMembershipDuration = (createdAt: string) => {
+    try {
+      return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+    } catch {
+      return "Recently joined";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-5 w-5" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-3 w-32 mt-2" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-5" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
+
+  const getActivityLevel = (score: number) => {
+    if (score >= 80) return { label: "Excellent", color: "text-green-500" };
+    if (score >= 60) return { label: "Very Active", color: "text-blue-500" };
+    if (score >= 40) return { label: "Active", color: "text-yellow-500" };
+    if (score >= 20) return { label: "Getting Started", color: "text-orange-500" };
+    return { label: "New Member", color: "text-muted-foreground" };
+  };
+
+  const activityLevel = getActivityLevel(stats?.activityScore || 0);
 
   const statCards = [
     {
@@ -144,22 +213,46 @@ export default function ClientDashboard() {
     },
     {
       title: "Activity Score",
-      value: "85%",
-      icon: TrendingUp,
-      color: "text-green-500",
-      description: "Platform engagement",
+      value: `${stats?.activityScore || 0}/100`,
+      icon: Award,
+      color: activityLevel.color,
+      description: activityLevel.label,
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
-        <p className="text-muted-foreground mt-1">
-          Track your account metrics and activity
-        </p>
-      </div>
+      {/* User Profile Header */}
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+              <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                {getInitials(stats?.userProfile?.full_name || null)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-foreground">
+                {stats?.userProfile?.full_name || "Welcome"}
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                Member {getMembershipDuration(stats?.userProfile?.created_at || new Date().toISOString())}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <Award className={`h-4 w-4 ${activityLevel.color}`} />
+                <span className={`text-sm font-medium ${activityLevel.color}`}>
+                  {activityLevel.label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  • {stats?.activityScore || 0} points
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">

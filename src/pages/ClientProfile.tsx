@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -262,9 +262,65 @@ export default function ClientProfile() {
 
   const getMembershipDuration = (createdAt: string) => {
     try {
-      return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+      const created = new Date(createdAt);
+      const now = new Date();
+      const diffInMonths = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+      const years = Math.floor(diffInMonths / 12);
+      
+      if (years >= 1) {
+        return `${years}+ year${years > 1 ? 's' : ''} on Flexi`;
+      } else if (diffInMonths >= 1) {
+        return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} on Flexi`;
+      } else {
+        return "New on Flexi";
+      }
     } catch {
-      return "Recently joined";
+      return "New on Flexi";
+    }
+  };
+
+  const getLastSeen = () => {
+    if (!user?.last_sign_in_at) return null;
+    try {
+      return formatDistanceToNow(new Date(user.last_sign_in_at), { addSuffix: true });
+    } catch {
+      return null;
+    }
+  };
+
+  const getBadgeTier = (score: number) => {
+    if (score >= 90) {
+      return { 
+        name: "Platinum", 
+        icon: Crown, 
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        borderColor: "border-purple-200"
+      };
+    } else if (score >= 70) {
+      return { 
+        name: "Gold", 
+        icon: Trophy, 
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-50",
+        borderColor: "border-yellow-200"
+      };
+    } else if (score >= 50) {
+      return { 
+        name: "Silver", 
+        icon: Star, 
+        color: "text-gray-600",
+        bgColor: "bg-gray-50",
+        borderColor: "border-gray-200"
+      };
+    } else {
+      return { 
+        name: "Bronze", 
+        icon: Medal, 
+        color: "text-orange-600",
+        bgColor: "bg-orange-50",
+        borderColor: "border-orange-200"
+      };
     }
   };
 
@@ -334,10 +390,15 @@ export default function ClientProfile() {
                       {profile.full_name || "Welcome"}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Member {getMembershipDuration(profile.created_at)}
+                      {getMembershipDuration(profile.created_at)}
                     </p>
+                    {getLastSeen() && (
+                      <p className="text-xs text-muted-foreground">
+                        Last seen {getLastSeen()}
+                      </p>
+                    )}
                     
-                    <div className="flex items-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-2 mt-2">
                       <div className="flex items-center gap-1">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         <span className={`text-xs font-medium ${getVerificationLabel(verificationStatus).color}`}>
@@ -345,21 +406,28 @@ export default function ClientProfile() {
                         </span>
                       </div>
                       
-                      {/* Renter Score */}
-                      <div className="flex items-center gap-1">
-                        <Award className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-xs font-semibold text-primary">
-                          {calculateProfileCompletion()} pts
-                        </span>
-                      </div>
+                      {/* Badge Tier */}
+                      {(() => {
+                        const badge = getBadgeTier(calculateProfileCompletion());
+                        const BadgeIcon = badge.icon;
+                        return (
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${badge.bgColor} ${badge.borderColor}`}>
+                            <BadgeIcon className={`h-3.5 w-3.5 ${badge.color}`} />
+                            <span className={`text-xs font-semibold ${badge.color}`}>
+                              {badge.name}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     
                     {/* Profile Completion Progress */}
                     <div className="mt-2 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{calculateProfileCompletion()} pts</span>
+                        <span className="text-xs text-muted-foreground">{calculateProfileCompletion()}%</span>
+                      </div>
                       <Progress value={calculateProfileCompletion()} className="h-1.5" />
-                      <span className="text-xs text-muted-foreground">
-                        {calculateProfileCompletion()}% Complete
-                      </span>
                     </div>
                   </div>
                 </div>

@@ -312,55 +312,6 @@ export default function RentalBillingHistory() {
           )}
         </CardContent>
       </Card>
-
-      {/* Payment Summary */}
-      {payments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Paid</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatPrice(
-                    payments
-                      .filter((p) => p.status === "paid")
-                      .reduce((sum, p) => sum + Number(p.amount), 0)
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {formatPrice(
-                    payments
-                      .filter((p) => p.status === "pending")
-                      .reduce((sum, p) => sum + Number(p.amount), 0)
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {formatPrice(
-                    payments
-                      .filter((p) => p.status === "overdue")
-                      .reduce((sum, p) => sum + Number(p.amount), 0)
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Verified Payments</p>
-                <p className="text-2xl font-bold">
-                  {payments.filter((p) => p.verification_status === "verified").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

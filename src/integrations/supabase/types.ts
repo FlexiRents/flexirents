@@ -571,6 +571,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          listing_types: string[] | null
+          max_bathrooms: number | null
+          max_bedrooms: number | null
+          max_price: number | null
+          min_bathrooms: number | null
+          min_bedrooms: number | null
+          min_price: number | null
+          property_types: string[] | null
+          regions: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_types?: string[] | null
+          max_bathrooms?: number | null
+          max_bedrooms?: number | null
+          max_price?: number | null
+          min_bathrooms?: number | null
+          min_bedrooms?: number | null
+          min_price?: number | null
+          property_types?: string[] | null
+          regions?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_types?: string[] | null
+          max_bathrooms?: number | null
+          max_bedrooms?: number | null
+          max_price?: number | null
+          min_bathrooms?: number | null
+          min_bedrooms?: number | null
+          min_price?: number | null
+          property_types?: string[] | null
+          regions?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

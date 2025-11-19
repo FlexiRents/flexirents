@@ -575,6 +575,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_enabled: boolean
           listing_types: string[] | null
           max_bathrooms: number | null
           max_bedrooms: number | null
@@ -590,6 +591,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_enabled?: boolean
           listing_types?: string[] | null
           max_bathrooms?: number | null
           max_bedrooms?: number | null
@@ -605,6 +607,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_enabled?: boolean
           listing_types?: string[] | null
           max_bathrooms?: number | null
           max_bedrooms?: number | null

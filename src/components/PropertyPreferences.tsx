@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Bell } from "lucide-react";
+import { Loader2, Bell, BellOff } from "lucide-react";
 import { ghanaRegions } from "@/data/ghanaLocations";
 
 interface Preferences {
+  is_enabled: boolean;
   property_types: string[];
   listing_types: string[];
   regions: string[];
@@ -40,6 +42,7 @@ export default function PropertyPreferences() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState<Preferences>({
+    is_enabled: true,
     property_types: [],
     listing_types: [],
     regions: [],
@@ -65,12 +68,13 @@ export default function PropertyPreferences() {
         .from("user_preferences")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
 
       if (data) {
         setPreferences({
+          is_enabled: data.is_enabled ?? true,
           property_types: data.property_types || [],
           listing_types: data.listing_types || [],
           regions: data.regions || [],
@@ -103,7 +107,11 @@ export default function PropertyPreferences() {
 
       if (error) throw error;
 
-      toast.success("Preferences saved! You'll receive notifications for matching properties.");
+      toast.success(
+        preferences.is_enabled
+          ? "Preferences saved! You'll receive notifications for matching properties."
+          : "Preferences saved. Notifications are paused."
+      );
     } catch (error) {
       console.error("Error saving preferences:", error);
       toast.error("Failed to save preferences");
@@ -132,15 +140,40 @@ export default function PropertyPreferences() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
-          <CardTitle>Property Notification Preferences</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {preferences.is_enabled ? (
+              <Bell className="h-5 w-5 text-primary" />
+            ) : (
+              <BellOff className="h-5 w-5 text-muted-foreground" />
+            )}
+            <CardTitle>Property Notification Preferences</CardTitle>
+          </div>
         </div>
         <CardDescription>
           Get notified when properties matching your preferences are listed
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Enable/Disable Toggle */}
+        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+          <div className="space-y-0.5">
+            <Label className="text-base font-semibold">
+              {preferences.is_enabled ? "Notifications Enabled" : "Notifications Paused"}
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {preferences.is_enabled
+                ? "You'll receive alerts for matching properties"
+                : "Notifications are paused. Your preferences are saved."}
+            </p>
+          </div>
+          <Switch
+            checked={preferences.is_enabled}
+            onCheckedChange={(checked) =>
+              setPreferences({ ...preferences, is_enabled: checked })
+            }
+          />
+        </div>
         {/* Property Types */}
         <div className="space-y-3">
           <Label className="text-base font-semibold">Property Types</Label>

@@ -19,6 +19,7 @@ interface PropertyPayload {
 }
 
 interface UserPreferences {
+  is_enabled: boolean;
   property_types: string[];
   listing_types: string[];
   regions: string[];
@@ -44,7 +45,7 @@ export const usePropertyNotifications = () => {
         .from("user_preferences")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         preferencesRef.current = data;
@@ -67,7 +68,8 @@ export const usePropertyNotifications = () => {
           const property = payload.new;
           const preferences = preferencesRef.current;
 
-          if (!preferences) return;
+          // Don't show notifications if disabled or no preferences set
+          if (!preferences || !preferences.is_enabled) return;
 
           // Check if property matches user preferences
           const matchesPropertyType =

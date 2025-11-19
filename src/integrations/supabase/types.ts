@@ -438,10 +438,13 @@ export type Database = {
           created_at: string
           due_date: string
           id: string
+          installment_number: number | null
+          is_first_payment: boolean | null
           landlord_id: string
           lease_id: string
           notes: string | null
           payment_date: string | null
+          payment_link: string | null
           payment_method: string | null
           receipt_url: string | null
           status: string
@@ -455,10 +458,13 @@ export type Database = {
           created_at?: string
           due_date: string
           id?: string
+          installment_number?: number | null
+          is_first_payment?: boolean | null
           landlord_id: string
           lease_id: string
           notes?: string | null
           payment_date?: string | null
+          payment_link?: string | null
           payment_method?: string | null
           receipt_url?: string | null
           status?: string
@@ -472,10 +478,13 @@ export type Database = {
           created_at?: string
           due_date?: string
           id?: string
+          installment_number?: number | null
+          is_first_payment?: boolean | null
           landlord_id?: string
           lease_id?: string
           notes?: string | null
           payment_date?: string | null
+          payment_link?: string | null
           payment_method?: string | null
           receipt_url?: string | null
           status?: string
@@ -1000,6 +1009,17 @@ export type Database = {
       }
     }
     Functions: {
+      generate_payment_schedule: {
+        Args: {
+          p_landlord_id: string
+          p_lease_duration_months: number
+          p_lease_id: string
+          p_lease_start_date: string
+          p_monthly_rent: number
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       get_average_rating: {
         Args: { p_target_id: string; p_target_type: string }
         Returns: number

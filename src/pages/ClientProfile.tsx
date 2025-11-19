@@ -21,6 +21,7 @@ import RentalBillingHistory from "@/components/RentalBillingHistory";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { formatDistanceToNow } from "date-fns";
 import {
   Sidebar,
@@ -296,6 +297,20 @@ export default function ClientProfile() {
     }
   };
 
+  const calculateProfileCompletion = () => {
+    let completed = 0;
+    let total = 3;
+
+    // Check phone
+    if (profile.phone) completed++;
+    // Check avatar
+    if (profile.avatar_url) completed++;
+    // Check verification
+    if (verificationStatus === "verified") completed++;
+
+    return Math.round((completed / total) * 100);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -351,6 +366,15 @@ export default function ClientProfile() {
                           </span>
                         </div>
                       )}
+                    </div>
+                    
+                    {/* Profile Completion Progress */}
+                    <div className="w-full mt-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Profile Completion</span>
+                        <span className="text-xs font-semibold text-foreground">{calculateProfileCompletion()}%</span>
+                      </div>
+                      <Progress value={calculateProfileCompletion()} className="h-1.5" />
                     </div>
                   </div>
                 </div>

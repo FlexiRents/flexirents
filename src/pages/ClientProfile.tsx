@@ -545,6 +545,7 @@ export default function ClientProfile() {
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
+                    <Separator className="my-2" />
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={handleSignOut}

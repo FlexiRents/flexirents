@@ -1142,8 +1142,6 @@ export default function ClientProfile() {
           userId={user.id}
         />
       )}
-      
-      <Footer />
     </div>
   );
 }

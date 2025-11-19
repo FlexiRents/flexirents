@@ -11,9 +11,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
+import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 import ClientDashboard from "@/components/ClientDashboard";
 import { usePropertyNotifications } from "@/hooks/usePropertyNotifications";
 import { Separator } from "@/components/ui/separator";
@@ -84,6 +85,7 @@ export default function ClientProfile() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [tenantAddress, setTenantAddress] = useState<string>("");
   const [verificationStatus, setVerificationStatus] = useState<string>("not_verified");
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
 
   // Enable property notifications
   usePropertyNotifications();
@@ -379,11 +381,24 @@ export default function ClientProfile() {
               {/* User Profile Header */}
               <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-accent/5">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 border-4 border-background shadow-lg flex-shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                      {getInitials(profile.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative group flex-shrink-0">
+                    <Avatar className="h-16 w-16 border-4 border-background shadow-lg">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt="Profile" className="object-cover" />
+                      ) : (
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                          {getInitials(profile.full_name)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <button
+                      onClick={() => setShowAvatarUpload(true)}
+                      className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                      aria-label="Upload profile picture"
+                    >
+                      <Camera className="h-6 w-6 text-white" />
+                    </button>
+                  </div>
                   
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-foreground truncate">
@@ -793,6 +808,22 @@ export default function ClientProfile() {
           </main>
         </div>
       </SidebarProvider>
+      
+      {/* Profile Picture Upload Dialog */}
+      {showAvatarUpload && user && (
+        <ProfilePictureUpload
+          currentImageUrl={profile.avatar_url}
+          onImageUpdate={(url) => {
+            setProfile({ ...profile, avatar_url: url });
+            setShowAvatarUpload(false);
+            toast.success("Profile picture updated successfully!");
+          }}
+          bucketName="avatars"
+          userType="user"
+          userId={user.id}
+        />
+      )}
+      
       <Footer />
     </div>
   );

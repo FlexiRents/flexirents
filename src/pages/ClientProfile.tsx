@@ -675,11 +675,11 @@ export default function ClientProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-[calc(100vh-140px)] w-full pt-20">
-          <Sidebar collapsible="icon" className="border-r top-16">
+        <div className="flex flex-1 w-full pt-20">
+          <Sidebar collapsible="icon" className="border-r">
             <SidebarContent className="pt-6">
               {/* User Profile Header */}
               <ProfileSection />
@@ -1123,6 +1123,10 @@ export default function ClientProfile() {
           </main>
         </div>
       </SidebarProvider>
+      
+      <div className="relative z-10">
+        <Footer />
+      </div>
       
       {/* Profile Picture Upload Dialog */}
       {showAvatarUpload && user && (

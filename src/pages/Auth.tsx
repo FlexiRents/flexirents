@@ -36,8 +36,8 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get the return URL from state, default to profile
-  const returnUrl = (location.state as any)?.returnUrl || "/profile";
+  // Get the return URL from state, default to home for property exploration
+  const returnUrl = (location.state as any)?.returnUrl || "/";
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

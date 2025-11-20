@@ -51,7 +51,6 @@ const Navbar = () => {
                 <SelectItem value="NGN">NGN (₦)</SelectItem>
               </SelectContent>
             </Select>
-            <ThemeToggle />
             <div className="flex items-center gap-2">
               <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
@@ -74,6 +73,7 @@ const Navbar = () => {
                   <Link to="/auth" onClick={scrollToTop}>Login</Link>
                 </Button>
               )}
+              <ThemeToggle />
             </div>
           </div>
 

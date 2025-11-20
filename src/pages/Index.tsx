@@ -301,18 +301,16 @@ const Index = () => {
                   </h3>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
                       size="icon"
                       onClick={prevProperty}
-                      className="h-9 w-9 bg-background border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/10 shadow-md"
+                      className="h-9 w-9 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
                     <Button
-                      variant="outline"
                       size="icon"
                       onClick={nextProperty}
-                      className="h-9 w-9 bg-background border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/10 shadow-md"
+                      className="h-9 w-9 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>

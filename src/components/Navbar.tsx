@@ -7,6 +7,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NotificationPanel } from "@/components/NotificationPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { scrollToTop } from "@/components/ScrollToTop";
 import logo from "@/assets/logo-main.png";
 
@@ -50,6 +51,7 @@ const Navbar = () => {
                 <SelectItem value="NGN">NGN (₦)</SelectItem>
               </SelectContent>
             </Select>
+            <ThemeToggle />
             <div className="flex items-center gap-2">
               <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
@@ -129,6 +131,10 @@ const Navbar = () => {
                     <SelectItem value="NGN">NGN (₦)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="py-2 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Theme:</span>
+                <ThemeToggle />
               </div>
               <Link
                 to="/wishlist"

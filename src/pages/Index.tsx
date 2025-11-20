@@ -304,17 +304,17 @@ const Index = () => {
                       variant="outline"
                       size="icon"
                       onClick={prevProperty}
-                      className="h-8 w-8 bg-background/50"
+                      className="h-9 w-9 bg-background border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/10 shadow-md"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-5 w-5" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={nextProperty}
-                      className="h-8 w-8 bg-background/50"
+                      className="h-9 w-9 bg-background border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/10 shadow-md"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>

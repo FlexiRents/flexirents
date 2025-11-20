@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import FlexiBot from "@/components/FlexiBot";
 import Index from "./pages/Index";
 import Rentals from "./pages/Rentals";
@@ -46,13 +47,14 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <CurrencyProvider>
-        <WishlistProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
+        <CurrencyProvider>
+          <WishlistProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
               <ScrollProgressIndicator />
               <ScrollToTop />
               <BackToTop />
@@ -101,6 +103,7 @@ const App = () => (
         </WishlistProvider>
       </CurrencyProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

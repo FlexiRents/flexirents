@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 type Currency = 'USD' | 'GHS' | 'EUR' | 'GBP' | 'NGN';
 
@@ -12,8 +13,8 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-// Exchange rates (approximate)
-const EXCHANGE_RATES = {
+// Default exchange rates (fallback if database fetch fails)
+const DEFAULT_EXCHANGE_RATES = {
   USD: 1,
   GHS: 12.5,
   EUR: 0.92,
@@ -26,13 +27,60 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const saved = localStorage.getItem('preferred-currency');
     return (saved as Currency) || 'USD';
   });
+  const [exchangeRates, setExchangeRates] = useState<Record<Currency, number>>(DEFAULT_EXCHANGE_RATES);
+
+  // Fetch exchange rates from database
+  useEffect(() => {
+    const fetchExchangeRates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('currency_rates')
+          .select('currency_code, rate_to_usd');
+
+        if (error) throw error;
+
+        if (data) {
+          const rates: Record<string, number> = {};
+          data.forEach((rate) => {
+            rates[rate.currency_code] = rate.rate_to_usd;
+          });
+          setExchangeRates(rates as Record<Currency, number>);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rates:', error);
+        // Fallback to default rates
+      }
+    };
+
+    fetchExchangeRates();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('currency_rates_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'currency_rates',
+        },
+        () => {
+          fetchExchangeRates();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('preferred-currency', currency);
   }, [currency]);
 
   const convertPrice = (priceUSD: number): number => {
-    return priceUSD * EXCHANGE_RATES[currency];
+    return priceUSD * exchangeRates[currency];
   };
 
   const currencySymbols: Record<Currency, string> = {
@@ -50,9 +98,9 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const getAllCurrencyPrices = (priceUSD: number) => {
-    return Object.keys(EXCHANGE_RATES).map((curr) => {
+    return Object.keys(exchangeRates).map((curr) => {
       const currencyKey = curr as Currency;
-      const converted = priceUSD * EXCHANGE_RATES[currencyKey];
+      const converted = priceUSD * exchangeRates[currencyKey];
       return {
         currency: currencyKey,
         formatted: `${currencySymbols[currencyKey]}${converted.toLocaleString()}`,

@@ -223,14 +223,20 @@ FlexiSpace Platform
     │   ├── Review Documents
     │   └── Approve/Reject with Reason
     │
-    └── Analytics (/admin/analytics)
-        ├── Revenue Trends Chart
-        ├── Booking Patterns Chart
-        ├── User Growth Chart
-        ├── Category Distribution Chart
-        ├── Regional Analysis
-        ├── Export to PDF
-        └── Export to CSV
+    ├── Analytics (/admin/analytics)
+    │   ├── Revenue Trends Chart
+    │   ├── Booking Patterns Chart
+    │   ├── User Growth Chart
+    │   ├── Category Distribution Chart
+    │   ├── Regional Analysis
+    │   ├── Export to PDF
+    │   └── Export to CSV
+    │
+    └── Currency Management (/admin/currency-rates)
+        ├── View All Exchange Rates
+        ├── Edit Exchange Rates
+        ├── Real-time Updates
+        └── Rate History
 
 ```
 
@@ -269,6 +275,7 @@ FlexiSpace Platform
 | `/admin/reviews` | `admin/ReviewsManagement.tsx` | Protected | admin, moderator |
 | `/admin/verification` | `admin/VerificationManagement.tsx` | Protected | admin, moderator |
 | `/admin/analytics` | `admin/AnalyticsPage.tsx` | Protected | admin, moderator |
+| `/admin/currency-rates` | `admin/CurrencyManagement.tsx` | Protected | admin, moderator |
 
 ## Navigation Structure
 
@@ -325,6 +332,8 @@ FlexiSpace Platform
 - Reviews
 - Verification
 - Analytics
+- Currency Rates
+- Home
 - Sign Out
 
 ## User Journey Flows
@@ -453,7 +462,8 @@ users (auth.users)
   ├── review_votes (1:many)
   ├── rental_leases (1:many) [as tenant or landlord]
   ├── rental_payments (1:many) [as tenant or landlord]
-  └── account_deletion_requests (1:many)
+  ├── account_deletion_requests (1:many)
+  └── currency_rates (1:many) [as admin updater]
 
 properties
   ├── owner_id → profiles
@@ -492,7 +502,8 @@ reviews
 
 ### CurrencyContext
 - Selected currency
-- Exchange rates
+- Exchange rates (fetched from database)
+- Real-time rate updates
 - Currency switch handler
 
 ### WishlistContext

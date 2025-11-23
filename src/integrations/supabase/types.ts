@@ -170,6 +170,39 @@ export type Database = {
           },
         ]
       }
+      currency_rates: {
+        Row: {
+          created_at: string | null
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          id: string
+          rate_to_usd: number
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency_code: string
+          currency_name: string
+          currency_symbol: string
+          id?: string
+          rate_to_usd: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency_code?: string
+          currency_name?: string
+          currency_symbol?: string
+          id?: string
+          rate_to_usd?: number
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           booking_id: string

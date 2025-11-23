@@ -60,6 +60,9 @@ FlexiSpace is a comprehensive real estate platform for property rentals, sales, 
 - **user_preferences**: Property notification preferences
 - **account_deletion_requests**: Account deletion workflow
 
+#### Currency Management
+- **currency_rates**: Admin-managed exchange rates for multi-currency support
+
 #### Property Management
 - **properties**: Property listings (rentals/sales)
 - **rental_leases**: Active rental agreements
@@ -154,6 +157,7 @@ Location: `supabase/functions/`
 - `/admin/reviews` - Review moderation
 - `/admin/verification` - Verification approvals
 - `/admin/analytics` - Analytics & reports
+- `/admin/currency-rates` - Currency exchange rate management
 
 ## Key Features
 
@@ -161,8 +165,9 @@ Location: `supabase/functions/`
 Supported currencies: USD, GHS, EUR, GBP, NGN
 - Currency selector in navbar
 - All prices display in selected currency
-- Exchange rates defined in CurrencyContext
-- Hover tooltip shows all currency conversions
+- **Exchange rates managed by admins** via `/admin/currency-rates`
+- Real-time rate updates throughout the application
+- Hover tooltip on property cards shows prices in all supported currencies simultaneously
 
 ### 2. Property Notifications
 - Users set property preferences (type, location, price range, bedrooms/bathrooms)
@@ -206,6 +211,7 @@ Role-based access control:
 - Service provider & vendor approvals
 - Booking oversight
 - Review moderation
+- **Currency exchange rate management**
 - Analytics with charts (revenue, bookings, user growth)
 - Export reports (PDF, CSV)
 

@@ -39,6 +39,7 @@ import BookingsManagement from "./pages/admin/BookingsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
+import CurrencyManagement from "./pages/admin/CurrencyManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
 import { BackToTop } from "./components/BackToTop";
@@ -92,6 +93,7 @@ const App = () => (
                   <Route path="bookings" element={<BookingsManagement />} />
                   <Route path="reviews" element={<ReviewsManagement />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="currency-rates" element={<CurrencyManagement />} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -38,9 +38,8 @@ const Marketplace = () => {
   const fetchVendors = async () => {
     try {
       const { data, error } = await supabase
-        .from("vendor_registrations")
+        .from("approved_vendors")
         .select("*")
-        .eq("status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

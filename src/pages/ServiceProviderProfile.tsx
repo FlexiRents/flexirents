@@ -61,7 +61,7 @@ const ServiceProviderProfile = () => {
   const fetchProviderData = async () => {
     try {
       const { data, error } = await supabase
-        .from("service_provider_registrations")
+        .from("approved_service_providers")
         .select("*")
         .eq("id", id)
         .single();

@@ -9,6 +9,7 @@ import {
   MessageSquare,
   BarChart3,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,8 +21,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
@@ -38,6 +43,13 @@ const menuItems = [
 export function AdminSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-64"}>
@@ -72,6 +84,34 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-2 border-t border-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink
+                to="/"
+                className="flex items-center gap-3 hover:bg-accent transition-all duration-200"
+              >
+                <Home className="h-4 w-4" />
+                {!isCollapsed && <span>Home</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-auto py-2 px-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                {!isCollapsed && <span>Logout</span>}
+              </Button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

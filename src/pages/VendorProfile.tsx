@@ -38,7 +38,7 @@ const VendorProfile = () => {
   const fetchVendorData = async () => {
     try {
       const { data, error } = await supabase
-        .from("vendor_registrations")
+        .from("approved_vendors")
         .select("*")
         .eq("id", id)
         .single();

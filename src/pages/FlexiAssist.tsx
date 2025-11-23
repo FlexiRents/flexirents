@@ -26,9 +26,8 @@ const FlexiAssist = () => {
   const fetchProviders = async () => {
     try {
       const { data, error } = await supabase
-        .from("service_provider_registrations")
+        .from("approved_service_providers")
         .select("*")
-        .eq("status", "approved")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

@@ -159,7 +159,7 @@ const ProfileSection = () => {
         
         <div className="w-full space-y-2">
           <h3 className="font-semibold text-foreground break-words">
-            {profile.full_name || "Welcome"}
+            Welcome {profile.full_name ? profile.full_name.split(' ')[0] : 'Guest'}
           </h3>
           <div className="flex items-center justify-center gap-2">
             <div className="flex items-center gap-1">

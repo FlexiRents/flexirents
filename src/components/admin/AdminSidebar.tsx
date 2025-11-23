@@ -10,6 +10,7 @@ import {
   BarChart3,
   ShieldCheck,
   LogOut,
+  DollarSign,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const menuItems = [
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Currency Rates", url: "/admin/currency-rates", icon: DollarSign },
 ];
 
 export function AdminSidebar() {

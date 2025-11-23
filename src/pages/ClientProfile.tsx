@@ -214,6 +214,7 @@ export default function ClientProfile() {
   const [bookingNotifications, setBookingNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [profileVisibility, setProfileVisibility] = useState(true);
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
@@ -415,7 +416,8 @@ export default function ClientProfile() {
 
       if (error) throw error;
 
-      setProfile({ ...profile, full_name: fullName, phone: phone });
+      // Refetch profile to update sidebar
+      await fetchProfile();
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -437,10 +439,17 @@ export default function ClientProfile() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!oldPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+    
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
+    
     if (newPassword.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
@@ -448,6 +457,19 @@ export default function ClientProfile() {
 
     setChangingPassword(true);
     try {
+      // Verify old password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: oldPassword,
+      });
+
+      if (signInError) {
+        toast.error("Current password is incorrect");
+        setChangingPassword(false);
+        return;
+      }
+
+      // Update to new password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -455,6 +477,7 @@ export default function ClientProfile() {
       if (error) throw error;
 
       toast.success("Password updated successfully");
+      setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
@@ -930,6 +953,21 @@ export default function ClientProfile() {
                       <CardContent className="space-y-6">
                         <form onSubmit={handleChangePassword} className="space-y-4">
                           <div className="space-y-2">
+                            <Label htmlFor="oldPassword">
+                              <Lock className="inline h-4 w-4 mr-2" />
+                              Current Password
+                            </Label>
+                            <Input
+                              id="oldPassword"
+                              type="password"
+                              value={oldPassword}
+                              onChange={(e) => setOldPassword(e.target.value)}
+                              placeholder="Enter current password"
+                              required
+                            />
+                          </div>
+
+                          <div className="space-y-2">
                             <Label htmlFor="newPassword">
                               <Lock className="inline h-4 w-4 mr-2" />
                               New Password
@@ -940,6 +978,7 @@ export default function ClientProfile() {
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
                               placeholder="Enter new password"
+                              required
                             />
                           </div>
 

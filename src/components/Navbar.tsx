@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -16,6 +17,7 @@ const Navbar = () => {
   const { wishlist } = useWishlist();
   const { currency, setCurrency } = useCurrency();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdminRole();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -39,6 +41,11 @@ const Navbar = () => {
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
               List Property
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
+                Admin
+              </Link>
+            )}
             <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
               <SelectTrigger className="w-[110px]">
                 <SelectValue />
@@ -118,6 +125,15 @@ const Navbar = () => {
               >
                 List Property
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="text-foreground hover:text-accent transition-colors font-semibold"
+                  onClick={() => { setIsOpen(false); scrollToTop(); }}
+                >
+                  Admin
+                </Link>
+              )}
               <div className="py-2">
                 <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
                   <SelectTrigger className="w-full">

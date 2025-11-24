@@ -6,32 +6,41 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
-interface Booking {
+interface BookingRequest {
   id: string;
-  booking_date: string;
-  booking_time: string;
+  requested_date: string;
+  requested_time: string;
   service_type: string;
   status: string;
-  total_hours: number;
+  requested_hours: number;
   created_at: string;
+  provider_response: string | null;
+  notes: string | null;
+  user_id: string;
+  service_provider_registrations: {
+    provider_name: string;
+  } | null;
 }
 
 export default function BookingsManagement() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const { data, error } = await supabase
-          .from("bookings")
-          .select("*")
+          .from("booking_requests")
+          .select(`
+            *,
+            service_provider_registrations!booking_requests_provider_id_fkey(provider_name)
+          `)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
         setBookings(data || []);
       } catch (error) {
-        console.error("Error fetching bookings:", error);
+        console.error("Error fetching booking requests:", error);
       } finally {
         setLoading(false);
       }
@@ -49,7 +58,7 @@ export default function BookingsManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Bookings ({bookings.length})</CardTitle>
+          <CardTitle>All Booking Requests ({bookings.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -62,31 +71,39 @@ export default function BookingsManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>User ID</TableHead>
+                  <TableHead>Provider</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Booked On</TableHead>
+                  <TableHead>Requested On</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {bookings.map((booking) => (
                   <TableRow key={booking.id}>
+                    <TableCell className="font-medium text-xs">
+                      {booking.user_id.slice(0, 8)}...
+                    </TableCell>
+                    <TableCell>
+                      {booking.service_provider_registrations?.provider_name || "N/A"}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{booking.service_type}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {format(new Date(booking.booking_date), "MMM dd, yyyy")}
+                      {format(new Date(booking.requested_date), "MMM dd, yyyy")}
                     </TableCell>
-                    <TableCell>{booking.booking_time}</TableCell>
-                    <TableCell>{booking.total_hours} hours</TableCell>
+                    <TableCell>{booking.requested_time}</TableCell>
+                    <TableCell>{booking.requested_hours} hours</TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          booking.status === "confirmed" ? "default" :
+                          booking.status === "approved" ? "default" :
                           booking.status === "pending" ? "secondary" :
-                          booking.status === "completed" ? "default" : "destructive"
+                          "destructive"
                         }
                       >
                         {booking.status}

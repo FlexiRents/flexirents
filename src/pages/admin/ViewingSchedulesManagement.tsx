@@ -174,7 +174,7 @@ export default function ViewingSchedulesManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {schedule.profiles?.full_name || "User"}
+                        {schedule.profiles?.full_name || "Unknown User"}
                       </TableCell>
                       <TableCell>
                         <div>
@@ -233,7 +233,7 @@ export default function ViewingSchedulesManagement() {
               <div>
                 <div className="text-sm text-muted-foreground">User</div>
                 <div className="font-medium">
-                  {selectedSchedule.profiles?.full_name || "User"}
+                  {selectedSchedule.profiles?.full_name}
                 </div>
               </div>
 

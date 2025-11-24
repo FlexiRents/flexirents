@@ -183,6 +183,10 @@ const Index = () => {
   const [saleProperties, setSaleProperties] = useState<any[]>([]);
   const [loadingRentals, setLoadingRentals] = useState(true);
   const [loadingSales, setLoadingSales] = useState(true);
+  const [services, setServices] = useState<any[]>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [vendorCategories, setVendorCategories] = useState<any[]>([]);
+  const [loadingVendors, setLoadingVendors] = useState(true);
 
   // Fetch recent properties from database
   useEffect(() => {
@@ -273,6 +277,82 @@ const Index = () => {
     };
 
     fetchSales();
+  }, []);
+
+  // Fetch service providers
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('service_provider_registrations')
+          .select('*')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setServices(data);
+        } else {
+          setServices(featuredServices);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        setServices(featuredServices);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Fetch vendor categories with counts
+  useEffect(() => {
+    const fetchVendorCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vendor_registrations')
+          .select('business_category')
+          .eq('status', 'approved');
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Group by category and count
+          const categoryCounts = data.reduce((acc: any, vendor: any) => {
+            const category = vendor.business_category;
+            if (!acc[category]) {
+              acc[category] = { count: 0, category };
+            }
+            acc[category].count += 1;
+            return acc;
+          }, {});
+
+          // Convert to array and get top 4 categories
+          const categories = Object.entries(categoryCounts)
+            .map(([category, data]: [string, any]) => ({
+              id: category,
+              title: category,
+              description: `Browse verified vendors in ${category} with quality products and competitive prices.`,
+              vendorCount: data.count,
+            }))
+            .slice(0, 4);
+
+          setVendorCategories(categories);
+        } else {
+          setVendorCategories(vendorCategories);
+        }
+      } catch (error) {
+        console.error('Error fetching vendor categories:', error);
+        setVendorCategories(vendorCategories);
+      } finally {
+        setLoadingVendors(false);
+      }
+    };
+
+    fetchVendorCategories();
   }, []);
 
   const allNewProperties = recentProperties;
@@ -537,23 +617,35 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {featuredServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                {...service}
-                onSelect={() => navigate("/flexi-assist")}
-              />
-            ))}
-          </div>
+          {loadingServices ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading services...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-3 gap-8 mb-8">
+                {services.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    id={service.id}
+                    title={service.provider_name || service.title}
+                    description={service.description}
+                    rate={service.hourly_rate || service.rate}
+                    icon={service.icon || <Sparkles className="h-7 w-7" />}
+                    onSelect={() => navigate("/flexi-assist")}
+                  />
+                ))}
+              </div>
 
-          <div className="text-center">
-            <Button variant="default" size="lg" asChild>
-              <Link to="/flexi-assist">
-                Book Services <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+              <div className="text-center">
+                <Button variant="default" size="lg" asChild>
+                  <Link to="/flexi-assist">
+                    Book Services <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -567,23 +659,34 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {vendorCategories.map((category) => (
-              <VendorCard
-                key={category.id}
-                {...category}
-                onExplore={() => navigate("/marketplace")}
-              />
-            ))}
-          </div>
+          {loadingVendors ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading vendors...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {vendorCategories.map((category, index) => (
+                  <VendorCard
+                    key={category.id || index}
+                    title={category.title}
+                    description={category.description}
+                    vendorCount={category.vendorCount}
+                    icon={category.icon || <Monitor className="h-8 w-8" />}
+                    onExplore={() => navigate("/marketplace")}
+                  />
+                ))}
+              </div>
 
-          <div className="text-center">
-            <Button variant="default" size="lg" asChild>
-              <Link to="/marketplace">
-                Browse All Vendors <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+              <div className="text-center">
+                <Button variant="default" size="lg" asChild>
+                  <Link to="/marketplace">
+                    Browse All Vendors <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

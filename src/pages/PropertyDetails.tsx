@@ -229,6 +229,26 @@ const PropertyDetails = () => {
     fetchReviews();
   }, [id]);
 
+  // Keyboard navigation for image gallery
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!property?.images || property.images.length <= 1) return;
+
+      if (e.key === "ArrowLeft") {
+        setCurrentImageIndex((prev) =>
+          property.images ? (prev - 1 + property.images.length) % property.images.length : prev
+        );
+      } else if (e.key === "ArrowRight") {
+        setCurrentImageIndex((prev) =>
+          property.images ? (prev + 1) % property.images.length : prev
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [property?.images?.length]);
+
   const keyFeatures = getKeyFeatures();
 
   if (loadingProperty) {
@@ -394,7 +414,7 @@ const PropertyDetails = () => {
     });
   };
 
-  const images = property.images && property.images.length > 0 
+  const images = property?.images && property.images.length > 0 
     ? property.images 
     : ["/placeholder.svg"];
 
@@ -405,20 +425,6 @@ const PropertyDetails = () => {
   const previousImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        previousImage();
-      } else if (e.key === "ArrowRight") {
-        nextImage();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [images.length]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

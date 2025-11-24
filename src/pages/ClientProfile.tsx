@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MyProperties } from "@/components/MyProperties";
 import {
   Sidebar,
   SidebarContent,
@@ -50,10 +51,11 @@ interface VerificationStatus {
   status: string;
 }
 
-type ActivePanel = "dashboard" | "billing" | "verification" | "preferences" | "settings";
+type ActivePanel = "dashboard" | "properties" | "billing" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
+  { id: "properties" as ActivePanel, title: "My Properties", icon: HomeIcon },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
   { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
@@ -765,6 +767,10 @@ export default function ClientProfile() {
 
             {activePanel === "dashboard" && (
               <ClientDashboard />
+            )}
+
+            {activePanel === "properties" && (
+              <MyProperties />
             )}
 
             {activePanel === "billing" && (

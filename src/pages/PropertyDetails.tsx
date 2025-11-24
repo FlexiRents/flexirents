@@ -63,6 +63,7 @@ const PropertyDetails = () => {
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
   
   const inWishlist = isInWishlist(id || "");
   const [scheduleForm, setScheduleForm] = useState({
@@ -242,12 +243,14 @@ const PropertyDetails = () => {
         setCurrentImageIndex((prev) =>
           property.images ? (prev + 1) % property.images.length : prev
         );
+      } else if (e.key === "Escape" && showLightbox) {
+        setShowLightbox(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [property?.images?.length]);
+  }, [property?.images?.length, showLightbox]);
 
   const keyFeatures = getKeyFeatures();
 
@@ -442,7 +445,10 @@ const PropertyDetails = () => {
         </Button>
 
         {/* Hero Image Gallery */}
-        <div className="relative w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden mb-8 group">
+        <div 
+          className="relative w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden mb-8 group cursor-pointer"
+          onClick={() => setShowLightbox(true)}
+        >
           <img 
             src={images[currentImageIndex]} 
             alt={`${property.title} - Image ${currentImageIndex + 1}`}
@@ -470,7 +476,10 @@ const PropertyDetails = () => {
                 variant="secondary"
                 size="icon"
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={previousImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  previousImage();
+                }}
               >
                 <ChevronLeft className="h-6 w-6" />
               </Button>
@@ -478,7 +487,10 @@ const PropertyDetails = () => {
                 variant="secondary"
                 size="icon"
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={nextImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
               >
                 <ChevronRight className="h-6 w-6" />
               </Button>
@@ -493,7 +505,10 @@ const PropertyDetails = () => {
                 {images.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentImageIndex(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(index);
+                    }}
                     className={`w-2 h-2 rounded-full transition-all ${
                       index === currentImageIndex 
                         ? "bg-primary w-8" 
@@ -506,6 +521,66 @@ const PropertyDetails = () => {
             </>
           )}
         </div>
+
+        {/* Lightbox Overlay */}
+        <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
+          <DialogContent className="max-w-screen-xl w-full h-[90vh] p-0 bg-black/95 border-none">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img 
+                src={images[currentImageIndex]} 
+                alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+              />
+              
+              {images.length > 1 && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20"
+                    onClick={previousImage}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20"
+                    onClick={nextImage}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+
+                  {/* Image Counter in Lightbox */}
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm">
+                    {currentImageIndex + 1} / {images.length}
+                  </div>
+
+                  {/* Thumbnail Navigation */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 max-w-full overflow-x-auto px-4">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          index === currentImageIndex 
+                            ? "border-primary scale-110" 
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <img 
+                          src={img} 
+                          alt={`Thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -16,7 +16,7 @@ import RatingStars from "@/components/RatingStars";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
   Tag, CheckCircle, ArrowLeft, Heart, Star, Ruler, 
-  TreePine, Building2, ParkingCircle
+  TreePine, Building2, ParkingCircle, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,6 +62,7 @@ const PropertyDetails = () => {
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loadingProperty, setLoadingProperty] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const inWishlist = isInWishlist(id || "");
   const [scheduleForm, setScheduleForm] = useState({
@@ -77,7 +78,7 @@ const PropertyDetails = () => {
 
   // Fetch property data
   useEffect(() => {
-    const fetchProperty = async () => {
+  const fetchProperty = async () => {
       if (!id) return;
       
       setLoadingProperty(true);
@@ -90,6 +91,7 @@ const PropertyDetails = () => {
 
         if (error) throw error;
         setProperty(data);
+        setCurrentImageIndex(0); // Reset image index when property changes
       } catch (error) {
         console.error('Error fetching property:', error);
         toast({
@@ -392,6 +394,32 @@ const PropertyDetails = () => {
     });
   };
 
+  const images = property.images && property.images.length > 0 
+    ? property.images 
+    : ["/placeholder.svg"];
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const previousImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        previousImage();
+      } else if (e.key === "ArrowRight") {
+        nextImage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [images.length]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -407,14 +435,14 @@ const PropertyDetails = () => {
           Back to Listings
         </Button>
 
-        {/* Hero Image */}
-        <div className="relative w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden mb-8">
+        {/* Hero Image Gallery */}
+        <div className="relative w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden mb-8 group">
           <img 
-            src={property.images?.[0] || "/placeholder.svg"} 
-            alt={property.title}
-            className="w-full h-full object-cover"
+            src={images[currentImageIndex]} 
+            alt={`${property.title} - Image ${currentImageIndex + 1}`}
+            className="w-full h-full object-cover transition-opacity duration-300"
           />
-          <Badge className="absolute top-4 right-4 text-lg px-4 py-2">
+          <Badge className="absolute top-4 right-4 text-lg px-4 py-2 z-10">
             {property.listing_type === "rent" ? "For Rent" : "For Sale"}
           </Badge>
           <Button
@@ -428,6 +456,49 @@ const PropertyDetails = () => {
               fill={inWishlist ? "currentColor" : "none"}
             />
           </Button>
+
+          {/* Navigation Buttons */}
+          {images.length > 1 && (
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={previousImage}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={nextImage}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+
+              {/* Image Counter */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+
+              {/* Image Indicators */}
+              <div className="absolute bottom-4 right-4 z-10 flex gap-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentImageIndex 
+                        ? "bg-primary w-8" 
+                        : "bg-background/60 hover:bg-background/80"
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Main Content Grid */}

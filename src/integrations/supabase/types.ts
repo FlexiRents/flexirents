@@ -111,6 +111,20 @@ export type Database = {
             referencedRelation: "service_provider_registrations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "booking_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bookings: {

@@ -23,9 +23,9 @@ const Checkout = () => {
   const { user } = useAuth();
   const { type, property, service, paymentId } = location.state || {};
 
-  const [duration, setDuration] = useState(12);
+  const [duration, setDuration] = useState(6);
   const [hours, setHours] = useState(8);
-  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexible">("flexible");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexible">("full");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [mobileProvider, setMobileProvider] = useState("");
   const [transactionReference, setTransactionReference] = useState("");
@@ -123,7 +123,8 @@ const Checkout = () => {
   const handleDurationChange = (increment: boolean) => {
     setDuration((prev) => {
       const newValue = increment ? prev + 1 : prev - 1;
-      return Math.max(0, Math.min(24, newValue));
+      // Minimum 6 months, maximum 24 months
+      return Math.max(6, Math.min(24, newValue));
     });
   };
 
@@ -348,7 +349,7 @@ const Checkout = () => {
                           variant="outline"
                           size="icon"
                           onClick={() => handleDurationChange(false)}
-                          disabled={duration <= 0}
+                          disabled={duration <= 6}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>

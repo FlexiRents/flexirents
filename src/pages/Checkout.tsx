@@ -79,31 +79,36 @@ const Checkout = () => {
         });
       }
     } else if (type === "sale" && property) {
-      const salePrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
-      const securityDeposit = salePrice * 0.1; // 10% security deposit
+      const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
+      
+      // Calculate total sale amount: monthlyPrice × number of months
+      const totalSalePrice = monthlyPrice * duration;
+      
+      // Security deposit is 10% of total sale price
+      const securityDeposit = totalSalePrice * 0.1;
       
       if (paymentPlan === "full") {
-        // Full payment plan: 10% commission
-        const commission = salePrice * 0.10;
+        // Full payment plan: 10% commission on total sale price
+        const commission = totalSalePrice * 0.10;
         // Total due now: full price + security deposit + commission
-        const totalDueNow = salePrice + securityDeposit + commission;
+        const totalDueNow = totalSalePrice + securityDeposit + commission;
         
         setCalculations({
-          baseAmount: salePrice,
+          baseAmount: totalSalePrice,
           commission,
           total: totalDueNow,
           securityDeposit,
         });
       } else {
-        // Flexible payment plan: 12% commission
-        const commission = salePrice * 0.12;
-        // Advance payment: 50% of sale price
-        const advancePayment = salePrice * 0.50;
+        // Flexible payment plan: 12% commission on total sale price
+        const commission = totalSalePrice * 0.12;
+        // Advance payment: 50% of total sale price
+        const advancePayment = totalSalePrice * 0.50;
         // Total due now: 50% of price + security deposit + commission
         const totalDueNow = advancePayment + securityDeposit + commission;
         
         setCalculations({
-          baseAmount: salePrice,
+          baseAmount: totalSalePrice,
           commission,
           total: totalDueNow,
           securityDeposit,
@@ -544,7 +549,13 @@ const Checkout = () => {
 
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Property Price</span>
+                        <span className="text-muted-foreground">Monthly Price</span>
+                        <span className="font-semibold">
+                          {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total Sale Price ({duration} months)</span>
                         <span className="font-semibold">
                           {formatPrice(calculations.baseAmount)}
                         </span>

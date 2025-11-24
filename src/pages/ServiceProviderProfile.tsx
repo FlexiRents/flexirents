@@ -49,14 +49,43 @@ const ServiceProviderProfile = () => {
   const [customRequestModalOpen, setCustomRequestModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [canReview, setCanReview] = useState(false);
+  const [hasCompletedBooking, setHasCompletedBooking] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchProviderData();
       fetchReviews();
       fetchPortfolioImages();
+      checkCompletedBookings();
     }
-  }, [id]);
+  }, [id, user]);
+
+  const checkCompletedBookings = async () => {
+    if (!user || !id) {
+      setCanReview(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("service_provider_id", id)
+        .eq("status", "completed")
+        .limit(1);
+
+      if (error) throw error;
+
+      const hasCompleted = data && data.length > 0;
+      setHasCompletedBooking(hasCompleted);
+      setCanReview(hasCompleted);
+    } catch (error) {
+      console.error("Error checking completed bookings:", error);
+      setCanReview(false);
+    }
+  };
 
   const fetchProviderData = async () => {
     try {
@@ -306,9 +335,22 @@ const ServiceProviderProfile = () => {
                     <TabsContent value="reviews" className="space-y-4">
                       {user && (
                         <div className="mb-4">
-                          <Button onClick={() => setReviewModalOpen(true)}>
-                            Leave a Review
-                          </Button>
+                          {canReview ? (
+                            <Button onClick={() => setReviewModalOpen(true)}>
+                              Leave a Review
+                            </Button>
+                          ) : (
+                            <div className="space-y-2">
+                              <Button disabled>
+                                Leave a Review
+                              </Button>
+                              <p className="text-sm text-muted-foreground">
+                                {hasCompletedBooking 
+                                  ? "Loading..." 
+                                  : "Complete a booking with this provider to leave a review"}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                       

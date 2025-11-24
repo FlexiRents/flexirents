@@ -301,7 +301,7 @@ const Checkout = () => {
           .from("rental_payments")
           .insert({
             tenant_id: user.id,
-            landlord_id: service.id, // Using service provider ID
+            landlord_id: service.provider_id || service.id || null,
             due_date: new Date().toISOString().split('T')[0],
             payment_date: new Date().toISOString(),
             amount: calculations.total,
@@ -310,7 +310,7 @@ const Checkout = () => {
             status: "pending",
             verification_status: "pending_review",
             payment_type: "service",
-            notes: `Service booking payment (${hours} hours). Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+            notes: `Service booking payment (${hours} hours). Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}. Service: ${service.title || service.name || 'N/A'}`,
           });
 
         if (servicePaymentError) throw servicePaymentError;

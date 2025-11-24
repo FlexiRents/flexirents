@@ -513,7 +513,7 @@ export type Database = {
           id: string
           installment_number: number | null
           is_first_payment: boolean | null
-          landlord_id: string
+          landlord_id: string | null
           lease_id: string | null
           notes: string | null
           payment_date: string | null
@@ -523,7 +523,7 @@ export type Database = {
           property_id: string | null
           receipt_url: string | null
           status: string
-          tenant_id: string
+          tenant_id: string | null
           transaction_reference: string | null
           updated_at: string
           verification_status: string
@@ -536,7 +536,7 @@ export type Database = {
           id?: string
           installment_number?: number | null
           is_first_payment?: boolean | null
-          landlord_id: string
+          landlord_id?: string | null
           lease_id?: string | null
           notes?: string | null
           payment_date?: string | null
@@ -546,7 +546,7 @@ export type Database = {
           property_id?: string | null
           receipt_url?: string | null
           status?: string
-          tenant_id: string
+          tenant_id?: string | null
           transaction_reference?: string | null
           updated_at?: string
           verification_status?: string
@@ -559,7 +559,7 @@ export type Database = {
           id?: string
           installment_number?: number | null
           is_first_payment?: boolean | null
-          landlord_id?: string
+          landlord_id?: string | null
           lease_id?: string | null
           notes?: string | null
           payment_date?: string | null
@@ -569,7 +569,7 @@ export type Database = {
           property_id?: string | null
           receipt_url?: string | null
           status?: string
-          tenant_id?: string
+          tenant_id?: string | null
           transaction_reference?: string | null
           updated_at?: string
           verification_status?: string

@@ -43,31 +43,38 @@ const Checkout = () => {
     if (paymentId) {
       fetchPaymentDetails();
     } else if (type === "rental" && property) {
-      const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
-      const baseRent = monthlyPrice * duration;
-      const securityDeposit = monthlyPrice * 1; // 1 month refundable security deposit
+      const monthlyRent = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
+      
+      // Calculate full rent: monthlyRent × number of months
+      const fullRent = monthlyRent * duration;
+      
+      // Security deposit is always 1 month's rent
+      const securityDeposit = monthlyRent;
       
       if (paymentPlan === "full") {
-        // Full payment: Pay all months upfront + security deposit + 10% commission
-        const commission = baseRent * 0.10;
-        const total = baseRent + securityDeposit + commission;
+        // Full payment plan: 10% commission on full rent
+        const commission = fullRent * 0.10;
+        // Total due now: full rent + security deposit + commission
+        const totalDueNow = fullRent + securityDeposit + commission;
         
         setCalculations({
-          baseAmount: baseRent,
+          baseAmount: fullRent,
           commission,
-          total,
+          total: totalDueNow,
           securityDeposit,
         });
       } else {
-        // Flexible payment: Pay 50% advance + security deposit + 12% commission
-        const advance = baseRent * 0.50;
-        const commission = baseRent * 0.12;
-        const total = advance + securityDeposit + commission;
+        // Flexible payment plan: 12% commission on full rent
+        const commission = fullRent * 0.12;
+        // Advance payment: 50% of full rent
+        const advancePayment = fullRent * 0.50;
+        // Total due now: 50% of full rent + security deposit + commission
+        const totalDueNow = advancePayment + securityDeposit + commission;
         
         setCalculations({
-          baseAmount: baseRent,
+          baseAmount: fullRent,
           commission,
-          total,
+          total: totalDueNow,
           securityDeposit,
         });
       }

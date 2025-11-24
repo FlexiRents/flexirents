@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,14 @@ import { Calculator, Plus, Minus, CreditCard, Smartphone } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Checkout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
   const { type, property, service, paymentId } = location.state || {};
 
   const [duration, setDuration] = useState(12);
@@ -25,8 +28,10 @@ const Checkout = () => {
   const [paymentPlan, setPaymentPlan] = useState<"full" | "flexible">("flexible");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [mobileProvider, setMobileProvider] = useState("");
+  const [transactionReference, setTransactionReference] = useState("");
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -129,11 +134,124 @@ const Checkout = () => {
     });
   };
 
-  const handlePayment = () => {
-    toast({
-      title: "Payment Successful!",
-      description: "Your booking has been confirmed. We'll contact you shortly.",
-    });
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to complete payment",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (!transactionReference.trim()) {
+      toast({
+        title: "Transaction Reference Required",
+        description: "Please enter your transaction reference number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      if (paymentId) {
+        // Update existing rental payment
+        const { error } = await supabase
+          .from("rental_payments")
+          .update({
+            payment_date: new Date().toISOString(),
+            payment_method: paymentMethod,
+            transaction_reference: transactionReference,
+            status: "pending",
+            verification_status: "pending_review",
+            notes: `Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+          })
+          .eq("id", paymentId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Payment Submitted!",
+          description: "Your payment has been submitted for admin verification. You'll be notified once approved.",
+        });
+        navigate("/profile");
+      } else if (type === "rental" && property) {
+        // For new rental, create lease and payment records
+        const monthlyRent = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
+        const leaseStartDate = new Date().toISOString().split('T')[0];
+        const firstPaymentDate = leaseStartDate;
+        
+        // Calculate rent expiration date
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + duration);
+        const rentExpirationDate = expirationDate.toISOString().split('T')[0];
+
+        // Create lease first
+        const { data: leaseData, error: leaseError } = await supabase
+          .from("rental_leases")
+          .insert({
+            property_id: property.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            lease_start_date: leaseStartDate,
+            first_payment_date: firstPaymentDate,
+            rent_expiration_date: rentExpirationDate,
+            lease_duration_months: duration,
+            monthly_rent: monthlyRent,
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment plan selected`,
+            status: "pending",
+          })
+          .select()
+          .single();
+
+        if (leaseError) throw leaseError;
+
+        // Create initial payment record
+        const { error: paymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            lease_id: leaseData.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            due_date: firstPaymentDate,
+            payment_date: new Date().toISOString(),
+            amount: calculations.total,
+            payment_method: paymentMethod,
+            transaction_reference: transactionReference,
+            status: "pending",
+            verification_status: "pending_review",
+            is_first_payment: true,
+            installment_number: 1,
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+          });
+
+        if (paymentError) throw paymentError;
+
+        toast({
+          title: "Payment Submitted!",
+          description: "Your rental payment has been submitted for admin verification. You'll be notified once approved.",
+        });
+        navigate("/profile");
+      } else {
+        // For other types (sale, service), just show success
+        toast({
+          title: "Payment Submitted!",
+          description: "Your payment has been submitted. We'll contact you shortly.",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      toast({
+        title: "Payment Failed",
+        description: "Failed to process your payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!type && !paymentId) {
@@ -560,8 +678,29 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  <Button type="submit" variant="hero" size="lg" className="w-full mt-6">
-                    Complete Payment - {formatPrice(calculations.total)}
+                  {/* Transaction Reference */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label htmlFor="transactionRef">Transaction Reference *</Label>
+                    <Input
+                      id="transactionRef"
+                      placeholder="Enter transaction reference or payment confirmation code"
+                      value={transactionReference}
+                      onChange={(e) => setTransactionReference(e.target.value)}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your payment confirmation reference number
+                    </p>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    size="lg" 
+                    className="w-full mt-6"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Processing..." : `Complete Payment - ${formatPrice(calculations.total)}`}
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">

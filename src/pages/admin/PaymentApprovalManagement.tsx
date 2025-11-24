@@ -75,7 +75,8 @@ export default function PaymentApprovalManagement() {
 
     setProcessing(true);
     try {
-      const { error } = await supabase
+      // Update payment status
+      const { error: paymentError } = await supabase
         .from("rental_payments")
         .update({
           verification_status: "verified",
@@ -84,7 +85,26 @@ export default function PaymentApprovalManagement() {
         })
         .eq("id", selectedPayment.id);
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
+
+      // If this is a first payment for a rental, update property and lease status
+      if (selectedPayment.is_first_payment && selectedPayment.property_id && selectedPayment.lease_id) {
+        // Update property status to rented
+        const { error: propertyError } = await supabase
+          .from("properties")
+          .update({ status: "rented" })
+          .eq("id", selectedPayment.property_id);
+
+        if (propertyError) throw propertyError;
+
+        // Update lease status to active
+        const { error: leaseError } = await supabase
+          .from("rental_leases")
+          .update({ status: "active" })
+          .eq("id", selectedPayment.lease_id);
+
+        if (leaseError) throw leaseError;
+      }
 
       toast.success("Payment approved and verified");
       setReviewDialogOpen(false);

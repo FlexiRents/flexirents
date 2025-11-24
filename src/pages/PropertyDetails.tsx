@@ -400,21 +400,54 @@ const PropertyDetails = () => {
     }
   };
 
-  const handleScheduleSubmit = (e: React.FormEvent) => {
+  const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Viewing scheduled!",
-      description: `We'll contact you at ${scheduleForm.email} to confirm your viewing for ${property.title}.`,
-    });
-    setShowSchedule(false);
-    setScheduleForm({
-      name: "",
-      email: "",
-      phone: "",
-      date: "",
-      time: "",
-      message: "",
-    });
+    
+    if (!user || !property) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to schedule a viewing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("viewing_schedules")
+        .insert({
+          property_id: property.id,
+          user_id: user.id,
+          scheduled_date: scheduleForm.date,
+          scheduled_time: scheduleForm.time,
+          notes: scheduleForm.message || null,
+          status: "pending",
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Viewing scheduled!",
+        description: `Your viewing request for ${property.title} has been submitted. We'll contact you soon to confirm.`,
+      });
+      
+      setShowSchedule(false);
+      setScheduleForm({
+        name: "",
+        email: "",
+        phone: "",
+        date: "",
+        time: "",
+        message: "",
+      });
+    } catch (error: any) {
+      console.error("Error scheduling viewing:", error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule viewing. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const images = property?.images && property.images.length > 0 

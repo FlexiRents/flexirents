@@ -507,17 +507,20 @@ export type Database = {
       rental_payments: {
         Row: {
           amount: number
+          booking_id: string | null
           created_at: string
           due_date: string
           id: string
           installment_number: number | null
           is_first_payment: boolean | null
           landlord_id: string
-          lease_id: string
+          lease_id: string | null
           notes: string | null
           payment_date: string | null
           payment_link: string | null
           payment_method: string | null
+          payment_type: string | null
+          property_id: string | null
           receipt_url: string | null
           status: string
           tenant_id: string
@@ -527,17 +530,20 @@ export type Database = {
         }
         Insert: {
           amount: number
+          booking_id?: string | null
           created_at?: string
           due_date: string
           id?: string
           installment_number?: number | null
           is_first_payment?: boolean | null
           landlord_id: string
-          lease_id: string
+          lease_id?: string | null
           notes?: string | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null
+          payment_type?: string | null
+          property_id?: string | null
           receipt_url?: string | null
           status?: string
           tenant_id: string
@@ -547,17 +553,20 @@ export type Database = {
         }
         Update: {
           amount?: number
+          booking_id?: string | null
           created_at?: string
           due_date?: string
           id?: string
           installment_number?: number | null
           is_first_payment?: boolean | null
           landlord_id?: string
-          lease_id?: string
+          lease_id?: string | null
           notes?: string | null
           payment_date?: string | null
           payment_link?: string | null
           payment_method?: string | null
+          payment_type?: string | null
+          property_id?: string | null
           receipt_url?: string | null
           status?: string
           tenant_id?: string
@@ -566,6 +575,20 @@ export type Database = {
           verification_status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_booking"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_property"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rental_payments_lease_id_fkey"
             columns: ["lease_id"]

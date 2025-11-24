@@ -13,7 +13,9 @@ import { Label } from "@/components/ui/label";
 
 interface Payment {
   id: string;
-  lease_id: string;
+  lease_id: string | null;
+  property_id: string | null;
+  booking_id: string | null;
   tenant_id: string;
   landlord_id: string;
   amount: number;
@@ -27,6 +29,7 @@ interface Payment {
   notes: string | null;
   installment_number: number | null;
   is_first_payment: boolean | null;
+  payment_type: string;
 }
 
 export default function PaymentApprovalManagement() {
@@ -154,7 +157,7 @@ export default function PaymentApprovalManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Payment Approval</h1>
-        <p className="text-muted-foreground">Review and verify rental payments</p>
+        <p className="text-muted-foreground">Review and verify all payments (rentals, sales, and services)</p>
       </div>
 
       <Card>
@@ -170,6 +173,7 @@ export default function PaymentApprovalManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Type</TableHead>
                   <TableHead>Payment Date</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Amount</TableHead>
@@ -183,6 +187,11 @@ export default function PaymentApprovalManagement() {
               <TableBody>
                 {payments.map((payment) => (
                   <TableRow key={payment.id}>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {payment.payment_type || "rental"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       {payment.payment_date
                         ? format(new Date(payment.payment_date), "MMM dd, yyyy")
@@ -231,6 +240,10 @@ export default function PaymentApprovalManagement() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
+                  <span className="text-muted-foreground">Payment Type:</span>
+                  <p className="font-semibold capitalize">{selectedPayment.payment_type || "rental"}</p>
+                </div>
+                <div>
                   <span className="text-muted-foreground">Amount:</span>
                   <p className="font-semibold">${selectedPayment.amount.toLocaleString()}</p>
                 </div>
@@ -250,10 +263,20 @@ export default function PaymentApprovalManagement() {
                   <span className="text-muted-foreground">Method:</span>
                   <p className="capitalize">{selectedPayment.payment_method || "-"}</p>
                 </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <p>{getStatusBadge(selectedPayment.status)}</p>
+                </div>
                 <div className="col-span-2">
                   <span className="text-muted-foreground">Transaction Reference:</span>
                   <p className="font-mono text-sm">{selectedPayment.transaction_reference || "-"}</p>
                 </div>
+                {selectedPayment.notes && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Payment Notes:</span>
+                    <p className="text-sm">{selectedPayment.notes}</p>
+                  </div>
+                )}
                 {selectedPayment.receipt_url && (
                   <div className="col-span-2">
                     <a

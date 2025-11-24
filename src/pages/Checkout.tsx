@@ -246,6 +246,7 @@ const Checkout = () => {
           .from("rental_payments")
           .insert({
             lease_id: leaseData.id,
+            property_id: property.id,
             tenant_id: user.id,
             landlord_id: property.owner_id,
             due_date: firstPaymentDate,
@@ -257,6 +258,7 @@ const Checkout = () => {
             verification_status: "pending_review",
             is_first_payment: true,
             installment_number: 1,
+            payment_type: "rental",
             notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
           });
 
@@ -267,8 +269,59 @@ const Checkout = () => {
           description: "Your rental payment has been submitted for admin verification. You'll be notified once approved.",
         });
         navigate("/profile");
+      } else if (type === "sale" && property) {
+        // Create payment record for sale
+        const { error: salePaymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            property_id: property.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            due_date: new Date().toISOString().split('T')[0],
+            payment_date: new Date().toISOString(),
+            amount: calculations.total,
+            payment_method: paymentMethod,
+            transaction_reference: transactionReference,
+            status: "pending",
+            verification_status: "pending_review",
+            payment_type: "sale",
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment for property sale. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+          });
+
+        if (salePaymentError) throw salePaymentError;
+
+        toast({
+          title: "Payment Submitted!",
+          description: "Your sale payment has been submitted for admin verification. You'll be notified once approved.",
+        });
+        navigate("/profile");
+      } else if (type === "service" && service) {
+        // Create payment record for service booking
+        const { error: servicePaymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            tenant_id: user.id,
+            landlord_id: service.id, // Using service provider ID
+            due_date: new Date().toISOString().split('T')[0],
+            payment_date: new Date().toISOString(),
+            amount: calculations.total,
+            payment_method: paymentMethod,
+            transaction_reference: transactionReference,
+            status: "pending",
+            verification_status: "pending_review",
+            payment_type: "service",
+            notes: `Service booking payment (${hours} hours). Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+          });
+
+        if (servicePaymentError) throw servicePaymentError;
+
+        toast({
+          title: "Payment Submitted!",
+          description: "Your service payment has been submitted for admin verification. You'll be notified once approved.",
+        });
+        navigate("/profile");
       } else {
-        // For other types (sale, service), just show success
+        // Fallback for any other payment types
         toast({
           title: "Payment Submitted!",
           description: "Your payment has been submitted. We'll contact you shortly.",

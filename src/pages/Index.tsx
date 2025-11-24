@@ -179,6 +179,10 @@ const Index = () => {
   const [currentPropertyIndex, setCurrentPropertyIndex] = useState(0);
   const [recentProperties, setRecentProperties] = useState<any[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
+  const [rentalProperties, setRentalProperties] = useState<any[]>([]);
+  const [saleProperties, setSaleProperties] = useState<any[]>([]);
+  const [loadingRentals, setLoadingRentals] = useState(true);
+  const [loadingSales, setLoadingSales] = useState(true);
 
   // Fetch recent properties from database
   useEffect(() => {
@@ -209,6 +213,66 @@ const Index = () => {
     };
 
     fetchRecentProperties();
+  }, []);
+
+  // Fetch rental properties
+  useEffect(() => {
+    const fetchRentals = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('status', 'available')
+          .eq('listing_type', 'rent')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setRentalProperties(data);
+        } else {
+          setRentalProperties(featuredRentals);
+        }
+      } catch (error) {
+        console.error('Error fetching rental properties:', error);
+        setRentalProperties(featuredRentals);
+      } finally {
+        setLoadingRentals(false);
+      }
+    };
+
+    fetchRentals();
+  }, []);
+
+  // Fetch sale properties
+  useEffect(() => {
+    const fetchSales = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('status', 'available')
+          .eq('listing_type', 'sale')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setSaleProperties(data);
+        } else {
+          setSaleProperties(featuredSales);
+        }
+      } catch (error) {
+        console.error('Error fetching sale properties:', error);
+        setSaleProperties(featuredSales);
+      } finally {
+        setLoadingSales(false);
+      }
+    };
+
+    fetchSales();
   }, []);
 
   const allNewProperties = recentProperties;
@@ -373,23 +437,43 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {featuredRentals.map((property) => (
-              <PropertyCard
-                key={property.id}
-                {...property}
-                onSelect={() => navigate("/rentals")}
-              />
-            ))}
-          </div>
+          {loadingRentals ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading rentals...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-3 gap-8 mb-8">
+                {rentalProperties.map((property) => {
+                  const propertyImage = property.images?.[0] || property.image || propertyApartment;
+                  return (
+                    <PropertyCard
+                      key={property.id}
+                      id={property.id}
+                      image={propertyImage}
+                      title={property.title}
+                      price={property.price}
+                      beds={property.bedrooms}
+                      baths={property.bathrooms}
+                      sqft={property.sqft}
+                      location={property.location}
+                      type="rent"
+                      features={property.features}
+                      onSelect={() => navigate("/rentals")}
+                    />
+                  );
+                })}
+              </div>
 
-          <div className="text-center">
-            <Button variant="default" size="lg" asChild>
-              <Link to="/rentals">
-                Explore All Rentals <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+              <div className="text-center">
+                <Button variant="default" size="lg" asChild>
+                  <Link to="/rentals">
+                    Explore All Rentals <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -403,23 +487,43 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            {featuredSales.map((property) => (
-              <PropertyCard
-                key={property.id}
-                {...property}
-                onSelect={() => navigate("/sales")}
-              />
-            ))}
-          </div>
+          {loadingSales ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading properties...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-3 gap-8 mb-8">
+                {saleProperties.map((property) => {
+                  const propertyImage = property.images?.[0] || property.image || property3br;
+                  return (
+                    <PropertyCard
+                      key={property.id}
+                      id={property.id}
+                      image={propertyImage}
+                      title={property.title}
+                      price={property.price}
+                      beds={property.bedrooms}
+                      baths={property.bathrooms}
+                      sqft={property.sqft}
+                      location={property.location}
+                      type="sale"
+                      features={property.features}
+                      onSelect={() => navigate("/sales")}
+                    />
+                  );
+                })}
+              </div>
 
-          <div className="text-center">
-            <Button variant="default" size="lg" asChild>
-              <Link to="/sales">
-                View All Properties <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+              <div className="text-center">
+                <Button variant="default" size="lg" asChild>
+                  <Link to="/sales">
+                    View All Properties <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

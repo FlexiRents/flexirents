@@ -90,6 +90,38 @@ export const ReviewForm = ({
       return;
     }
 
+    // Check if user has completed booking/service for service providers
+    if (targetType === "service_provider" && !bookingId && !editMode) {
+      try {
+        const { data: completedBookings, error } = await supabase
+          .from("bookings")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("service_provider_id", targetId)
+          .eq("status", "completed")
+          .limit(1);
+
+        if (error) throw error;
+
+        if (!completedBookings || completedBookings.length === 0) {
+          toast({
+            title: "Service Not Completed",
+            description: "You can only review service providers after completing a booking with them.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking bookings:", error);
+        toast({
+          title: "Error",
+          description: "Could not verify booking status.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {

@@ -58,13 +58,17 @@ export default function ViewingSchedulesManagement() {
               .from("properties")
               .select("title, location")
               .eq("id", schedule.property_id)
-              .single(),
+              .maybeSingle(),
             supabase
               .from("profiles")
               .select("full_name")
               .eq("id", schedule.user_id)
-              .single(),
+              .maybeSingle(),
           ]);
+
+          if (profileResult.error) {
+            console.error("Profile fetch error for user:", schedule.user_id, profileResult.error);
+          }
 
           return {
             ...schedule,

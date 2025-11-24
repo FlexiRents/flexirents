@@ -6,114 +6,18 @@ import PropertyCard from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlidersHorizontal, Search, ChevronDown, ChevronUp } from "lucide-react";
-import property3br from "@/assets/property-3br.jpg";
-import propertyCommercial from "@/assets/property-commercial.jpg";
-import propertyLand from "@/assets/property-land.jpg";
 import { ghanaRegions } from "@/data/ghanaLocations";
 import { useCurrency } from "@/contexts/CurrencyContext";
-
-const properties = [
-  {
-    id: 1,
-    image: property3br,
-    title: "Luxury Family Home",
-    price: 450000,
-    propertyCategory: "residential",
-    beds: 4,
-    baths: 3,
-    sqft: 2800,
-    location: "Suburban Heights",
-    type: "sale" as const,
-    features: {
-      descriptions: ["Newly Renovated", "Move-in Ready", "Open Floor Plan"],
-      amenities: ["Swimming Pool", "Garden/Yard", "Parking Space", "Air Conditioning"],
-      facilities: ["24/7 Security", "Community Center", "Playground"],
-    },
-  },
-  {
-    id: 2,
-    image: property3br,
-    title: "Modern Townhouse",
-    price: 320000,
-    propertyCategory: "residential",
-    beds: 3,
-    baths: 2.5,
-    sqft: 1900,
-    location: "Downtown Area",
-    type: "sale" as const,
-    features: {
-      descriptions: ["Newly Renovated", "High Ceilings", "Hardwood Floors"],
-      amenities: ["Parking Space", "Balcony/Terrace", "Storage Unit"],
-      facilities: ["Elevator", "Bike Storage"],
-    },
-  },
-  {
-    id: 3,
-    image: propertyCommercial,
-    title: "Commercial Office Space",
-    price: 850000,
-    propertyCategory: "commercial",
-    sqft: 5000,
-    location: "Business District",
-    type: "sale" as const,
-    features: {
-      descriptions: ["Move-in Ready", "High Ceilings", "Natural Light"],
-      amenities: ["Parking Space", "Air Conditioning", "Elevator"],
-      facilities: ["24/7 Security", "Business Center", "Guest Parking"],
-    },
-  },
-  {
-    id: 4,
-    image: propertyCommercial,
-    title: "Retail Building",
-    price: 1200000,
-    propertyCategory: "commercial",
-    sqft: 8000,
-    location: "Main Street",
-    type: "sale" as const,
-    features: {
-      descriptions: ["Corner Unit", "High Ceilings"],
-      amenities: ["Parking Space", "Storage Unit"],
-      facilities: ["24/7 Security", "Guest Parking", "EV Charging"],
-    },
-  },
-  {
-    id: 5,
-    image: propertyLand,
-    title: "Residential Development Land",
-    price: 280000,
-    propertyCategory: "land",
-    sqft: 12000,
-    location: "City Outskirts",
-    type: "sale" as const,
-    features: {
-      descriptions: ["Move-in Ready"],
-      amenities: [],
-      facilities: [],
-    },
-  },
-  {
-    id: 6,
-    image: propertyLand,
-    title: "Commercial Plot",
-    price: 550000,
-    propertyCategory: "land",
-    sqft: 20000,
-    location: "Highway Access",
-    type: "sale" as const,
-    features: {
-      descriptions: [],
-      amenities: [],
-      facilities: [],
-    },
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Sales = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [propertyType, setPropertyType] = useState("all");
@@ -121,6 +25,33 @@ const Sales = () => {
   const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Fetch properties for sale from database
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .eq("listing_type", "sale")
+          .eq("status", "available")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        setProperties(data || []);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Failed to load properties for sale",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [toast]);
 
   // Load search query from URL on mount
   useEffect(() => {
@@ -130,10 +61,8 @@ const Sales = () => {
     }
   }, [searchParams]);
 
-  const handleSelectProperty = (propertyId: number) => {
-    setSelectedProperty(propertyId);
-    const property = properties.find((p) => p.id === propertyId);
-    navigate("/checkout", { state: { type: "sale", property } });
+  const handleSelectProperty = (propertyId: string) => {
+    navigate(`/property/${propertyId}?type=sale`);
   };
 
   const filteredProperties = properties.filter((property) => {
@@ -141,7 +70,7 @@ const Sales = () => {
       property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const priceNum = typeof property.price === 'number' ? property.price : parseInt(String(property.price).replace(/[^0-9]/g, ""));
+    const priceNum = Number(property.price);
     
     // Price range filter
     const min = minPrice ? parseInt(minPrice) : 0;
@@ -149,16 +78,19 @@ const Sales = () => {
     if (priceNum < min || priceNum > max) return false;
     
     // Property type filter
-    if (propertyType !== "all" && property.propertyCategory !== propertyType) return false;
+    if (propertyType !== "all" && property.property_type !== propertyType) return false;
     
-    // Bedroom filter (only for residential properties)
-    if (property.propertyCategory === "residential" && property.beds) {
-      if (bedroomFilter === "1" && property.beds !== 1) return false;
-      if (bedroomFilter === "2" && property.beds !== 2) return false;
-      if (bedroomFilter === "3+" && property.beds < 3) return false;
+    // Bedroom filter
+    if (property.bedrooms) {
+      if (bedroomFilter === "1" && property.bedrooms !== 1) return false;
+      if (bedroomFilter === "2" && property.bedrooms !== 2) return false;
+      if (bedroomFilter === "3+" && property.bedrooms < 3) return false;
     }
     
-    // Location filter
+    // Region filter
+    if (selectedRegion !== "all" && property.region !== selectedRegion) return false;
+    
+    // Location/City filter
     if (selectedCity !== "all" && !property.location.toLowerCase().includes(selectedCity.toLowerCase())) {
       return false;
     }
@@ -328,20 +260,37 @@ const Sales = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                {...property}
-                onSelect={() => handleSelectProperty(property.id)}
-              />
-            ))}
-          </div>
-
-          {filteredProperties.length === 0 && (
+          {loading ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">No properties match your filters. Try adjusting your criteria.</p>
+              <p className="text-muted-foreground text-lg">Loading properties...</p>
             </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    id={property.id}
+                    image={property.images?.[0] || ""}
+                    title={property.title}
+                    price={property.price}
+                    beds={property.bedrooms}
+                    baths={property.bathrooms}
+                    sqft={property.sqft}
+                    location={property.location}
+                    type="sale"
+                    features={property.features || { descriptions: [], amenities: [], facilities: [] }}
+                    onSelect={() => handleSelectProperty(property.id)}
+                  />
+                ))}
+              </div>
+
+              {filteredProperties.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg">No properties match your filters. Try adjusting your criteria.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

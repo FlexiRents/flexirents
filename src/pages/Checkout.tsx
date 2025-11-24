@@ -80,15 +80,35 @@ const Checkout = () => {
       }
     } else if (type === "sale" && property) {
       const salePrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
-      const commission = salePrice * 0.10;
-      const total = salePrice + commission;
-
-      setCalculations({
-        baseAmount: salePrice,
-        commission,
-        total,
-        securityDeposit: 0,
-      });
+      const securityDeposit = salePrice * 0.1; // 10% security deposit
+      
+      if (paymentPlan === "full") {
+        // Full payment plan: 10% commission
+        const commission = salePrice * 0.10;
+        // Total due now: full price + security deposit + commission
+        const totalDueNow = salePrice + securityDeposit + commission;
+        
+        setCalculations({
+          baseAmount: salePrice,
+          commission,
+          total: totalDueNow,
+          securityDeposit,
+        });
+      } else {
+        // Flexible payment plan: 12% commission
+        const commission = salePrice * 0.12;
+        // Advance payment: 50% of sale price
+        const advancePayment = salePrice * 0.50;
+        // Total due now: 50% of price + security deposit + commission
+        const totalDueNow = advancePayment + securityDeposit + commission;
+        
+        setCalculations({
+          baseAmount: salePrice,
+          commission,
+          total: totalDueNow,
+          securityDeposit,
+        });
+      }
     } else if (type === "service" && service) {
       const hourlyRate = parseFloat(service.rate.replace(/[^0-9.-]+/g, ""));
       const baseAmount = hourlyRate * hours;
@@ -473,6 +493,54 @@ const Checkout = () => {
                       <h3 className="font-semibold text-lg">{property.title}</h3>
                       <p className="text-muted-foreground text-sm">{property.location}</p>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Payment Duration (Months)</Label>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDurationChange(false)}
+                          disabled={duration <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <div className="flex-1 text-center">
+                          <span className="text-2xl font-bold">{duration}</span>
+                          <span className="text-muted-foreground ml-1">months</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDurationChange(true)}
+                          disabled={duration >= 24}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label>Payment Plan</Label>
+                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexible") => setPaymentPlan(value)}>
+                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                          <RadioGroupItem value="flexible" id="sale-flexible" />
+                          <Label htmlFor="sale-flexible" className="cursor-pointer flex-1">
+                            <div className="font-semibold">Flexible Payment (12% commission)</div>
+                            <div className="text-xs text-muted-foreground">Pay 50% advance + security deposit now, remaining balance paid over time</div>
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                          <RadioGroupItem value="full" id="sale-full" />
+                          <Label htmlFor="sale-full" className="cursor-pointer flex-1">
+                            <div className="font-semibold">Full Payment (10% commission)</div>
+                            <div className="text-xs text-muted-foreground">Pay all months + security deposit upfront and save 2%</div>
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
 
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between">
@@ -481,18 +549,55 @@ const Checkout = () => {
                           {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Commission (10%)</span>
-                        <span className="font-semibold">
-                          {formatPrice(calculations.commission)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                        <span>Total Amount</span>
-                        <span className="text-accent">
-                          {formatPrice(calculations.total)}
-                        </span>
-                      </div>
+                      {paymentPlan === "full" ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Security Deposit (10% of price, refundable)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.securityDeposit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Commission (10% of price)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.commission)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total (Pay Once)</span>
+                            <span className="text-accent">
+                              {formatPrice(calculations.total)}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Advance Payment (50% of price)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.baseAmount * 0.50)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Security Deposit (10% of price, refundable)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.securityDeposit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Commission (12%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.commission)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total (Initial Payment)</span>
+                            <span className="text-accent">
+                              {formatPrice(calculations.total)}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </>
                 )}

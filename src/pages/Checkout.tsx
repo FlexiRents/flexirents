@@ -32,6 +32,7 @@ const Checkout = () => {
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [createdPaymentId, setCreatedPaymentId] = useState<string | null>(null);
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
@@ -129,6 +130,107 @@ const Checkout = () => {
     }
   }, [type, property, service, duration, hours, paymentPlan, paymentId]);
 
+  // Create payment record immediately when checkout page loads for tracking
+  useEffect(() => {
+    if (!paymentId && !createdPaymentId && user && calculations.total > 0) {
+      createInitialPaymentRecord();
+    }
+  }, [calculations.total, user]);
+
+  const createInitialPaymentRecord = async () => {
+    if (!user) return;
+
+    try {
+      if (type === "rental" && property) {
+        const monthlyRent = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
+        const leaseStartDate = new Date().toISOString().split('T')[0];
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + duration);
+        const rentExpirationDate = expirationDate.toISOString().split('T')[0];
+
+        const { data: leaseData, error: leaseError } = await supabase
+          .from("rental_leases")
+          .insert({
+            property_id: property.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            lease_start_date: leaseStartDate,
+            first_payment_date: leaseStartDate,
+            rent_expiration_date: rentExpirationDate,
+            lease_duration_months: duration,
+            monthly_rent: monthlyRent,
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment plan - Checkout initiated`,
+            status: "pending",
+          })
+          .select()
+          .single();
+
+        if (leaseError) throw leaseError;
+
+        const { data: paymentData, error: paymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            lease_id: leaseData.id,
+            property_id: property.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            due_date: leaseStartDate,
+            amount: calculations.total,
+            status: "pending",
+            verification_status: "pending_review",
+            is_first_payment: true,
+            installment_number: 1,
+            payment_type: "rental",
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment - Checkout initiated`,
+          })
+          .select()
+          .single();
+
+        if (paymentError) throw paymentError;
+        setCreatedPaymentId(paymentData.id);
+      } else if (type === "sale" && property) {
+        const { data: paymentData, error: salePaymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            property_id: property.id,
+            tenant_id: user.id,
+            landlord_id: property.owner_id,
+            due_date: new Date().toISOString().split('T')[0],
+            amount: calculations.total,
+            status: "pending",
+            verification_status: "pending_review",
+            payment_type: "sale",
+            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment for sale - Checkout initiated`,
+          })
+          .select()
+          .single();
+
+        if (salePaymentError) throw salePaymentError;
+        setCreatedPaymentId(paymentData.id);
+      } else if (type === "service" && service) {
+        const { data: paymentData, error: servicePaymentError } = await supabase
+          .from("rental_payments")
+          .insert({
+            tenant_id: user.id,
+            landlord_id: service.provider_id || service.id || null,
+            due_date: new Date().toISOString().split('T')[0],
+            amount: calculations.total,
+            status: "pending",
+            verification_status: "pending_review",
+            payment_type: "service",
+            notes: `Service booking (${hours} hours) - Checkout initiated. Service: ${service.title || service.name || 'N/A'}`,
+          })
+          .select()
+          .single();
+
+        if (servicePaymentError) throw servicePaymentError;
+        setCreatedPaymentId(paymentData.id);
+      }
+    } catch (error) {
+      console.error("Error creating initial payment record:", error);
+    }
+  };
+
   const fetchPaymentDetails = async () => {
     setLoadingPayment(true);
     try {
@@ -189,8 +291,10 @@ const Checkout = () => {
     setSubmitting(true);
 
     try {
-      if (paymentId) {
-        // Update existing rental payment
+      const targetPaymentId = paymentId || createdPaymentId;
+
+      if (targetPaymentId) {
+        // Update existing payment record with transaction details
         const { error } = await supabase
           .from("rental_payments")
           .update({
@@ -199,9 +303,9 @@ const Checkout = () => {
             transaction_reference: transactionReference,
             status: "pending",
             verification_status: "pending_review",
-            notes: `Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+            notes: `Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}. ${paymentPlan === "full" ? "Full" : "Flexible"} payment plan.`,
           })
-          .eq("id", paymentId);
+          .eq("id", targetPaymentId);
 
         if (error) throw error;
 

@@ -189,32 +189,6 @@ const PropertyDetails = () => {
     ];
   };
 
-  const keyFeatures = getKeyFeatures();
-
-  if (loadingProperty) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-8">
-          <div className="text-center">Loading property details...</div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!property) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-8">
-          <div className="text-center">Property not found</div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
   // Fetch reviews
   useEffect(() => {
     const fetchReviews = async () => {
@@ -252,6 +226,32 @@ const PropertyDetails = () => {
 
     fetchReviews();
   }, [id]);
+
+  const keyFeatures = getKeyFeatures();
+
+  if (loadingProperty) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center">Loading property details...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center">Property not found</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleReviewSuccess = () => {
     setEditingReview(null);

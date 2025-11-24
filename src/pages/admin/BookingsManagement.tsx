@@ -20,6 +20,9 @@ interface BookingRequest {
   service_provider_registrations: {
     provider_name: string;
   } | null;
+  profiles: {
+    full_name: string;
+  } | null;
 }
 
 export default function BookingsManagement() {
@@ -33,7 +36,8 @@ export default function BookingsManagement() {
           .from("booking_requests")
           .select(`
             *,
-            service_provider_registrations!booking_requests_provider_id_fkey(provider_name)
+            service_provider_registrations!booking_requests_provider_id_fkey(provider_name),
+            profiles!booking_requests_user_id_fkey(full_name)
           `)
           .order("created_at", { ascending: false });
 
@@ -71,7 +75,7 @@ export default function BookingsManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User ID</TableHead>
+                  <TableHead>Client Name</TableHead>
                   <TableHead>Provider</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Date</TableHead>
@@ -84,8 +88,8 @@ export default function BookingsManagement() {
               <TableBody>
                 {bookings.map((booking) => (
                   <TableRow key={booking.id}>
-                    <TableCell className="font-medium text-xs">
-                      {booking.user_id.slice(0, 8)}...
+                    <TableCell className="font-medium">
+                      {booking.profiles?.full_name || "Unknown User"}
                     </TableCell>
                     <TableCell>
                       {booking.service_provider_registrations?.provider_name || "N/A"}

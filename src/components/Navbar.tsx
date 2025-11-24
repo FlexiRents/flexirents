@@ -6,6 +6,7 @@ import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -18,6 +19,7 @@ const Navbar = () => {
   const { currency, setCurrency } = useCurrency();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { isServiceProvider, isVendor } = useUserRole();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -44,6 +46,16 @@ const Navbar = () => {
             {isAdmin && (
               <Link to="/admin" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
                 Admin
+              </Link>
+            )}
+            {isServiceProvider && (
+              <Link to="/service-provider-dashboard" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
+                Provider Panel
+              </Link>
+            )}
+            {isVendor && (
+              <Link to="/vendor-dashboard" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
+                Vendor Panel
               </Link>
             )}
             <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
@@ -132,6 +144,24 @@ const Navbar = () => {
                   onClick={() => { setIsOpen(false); scrollToTop(); }}
                 >
                   Admin
+                </Link>
+              )}
+              {isServiceProvider && (
+                <Link
+                  to="/service-provider-dashboard"
+                  className="text-foreground hover:text-accent transition-colors font-semibold"
+                  onClick={() => { setIsOpen(false); scrollToTop(); }}
+                >
+                  Provider Panel
+                </Link>
+              )}
+              {isVendor && (
+                <Link
+                  to="/vendor-dashboard"
+                  className="text-foreground hover:text-accent transition-colors font-semibold"
+                  onClick={() => { setIsOpen(false); scrollToTop(); }}
+                >
+                  Vendor Panel
                 </Link>
               )}
               <div className="py-2">

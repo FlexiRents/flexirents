@@ -12,6 +12,7 @@ import {
   LogOut,
   DollarSign,
   CheckCircle,
+  CalendarCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const menuItems = [
   { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
   { title: "Vendors", url: "/admin/vendors", icon: Store },
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },
+  { title: "Viewing Schedules", url: "/admin/viewing-schedules", icon: CalendarCheck },
   { title: "Payment Approval", url: "/admin/payment-approval", icon: CheckCircle },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },

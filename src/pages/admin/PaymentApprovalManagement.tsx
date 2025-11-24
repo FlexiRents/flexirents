@@ -10,6 +10,9 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Payment {
   id: string;
@@ -37,20 +40,34 @@ export default function PaymentApprovalManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pending" | "approved">("pending");
+  const [editForm, setEditForm] = useState({
+    amount: "",
+    payment_date: "",
+    payment_method: "",
+    transaction_reference: "",
+    notes: "",
+  });
 
   useEffect(() => {
-    fetchPendingPayments();
-  }, []);
+    fetchPayments(activeTab);
+  }, [activeTab]);
 
-  const fetchPendingPayments = async () => {
+  const fetchPayments = async (tab: "pending" | "approved") => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("rental_payments")
-        .select("*")
-        .in("verification_status", ["unverified", "pending_review"])
+      let query = supabase.from("rental_payments").select("*");
+      
+      if (tab === "pending") {
+        query = query.in("verification_status", ["unverified", "pending_review"]);
+      } else {
+        query = query.eq("verification_status", "verified");
+      }
+      
+      const { data, error } = await query
         .order("payment_date", { ascending: false, nullsFirst: false })
         .order("due_date", { ascending: false });
 
@@ -108,7 +125,7 @@ export default function PaymentApprovalManagement() {
 
       toast.success("Payment approved and verified");
       setReviewDialogOpen(false);
-      fetchPendingPayments();
+      fetchPayments(activeTab);
     } catch (error) {
       console.error("Error approving payment:", error);
       toast.error("Failed to approve payment");
@@ -135,7 +152,7 @@ export default function PaymentApprovalManagement() {
 
       toast.success("Payment rejected");
       setReviewDialogOpen(false);
-      fetchPendingPayments();
+      fetchPayments(activeTab);
     } catch (error) {
       console.error("Error rejecting payment:", error);
       toast.error("Failed to reject payment");
@@ -164,6 +181,47 @@ export default function PaymentApprovalManagement() {
     return <Badge variant={variants[status] || "default"}>{status}</Badge>;
   };
 
+  const handleEdit = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setEditForm({
+      amount: payment.amount.toString(),
+      payment_date: payment.payment_date || "",
+      payment_method: payment.payment_method || "",
+      transaction_reference: payment.transaction_reference || "",
+      notes: payment.notes || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedPayment) return;
+
+    setProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("rental_payments")
+        .update({
+          amount: parseFloat(editForm.amount),
+          payment_date: editForm.payment_date || null,
+          payment_method: editForm.payment_method || null,
+          transaction_reference: editForm.transaction_reference || null,
+          notes: editForm.notes || null,
+        })
+        .eq("id", selectedPayment.id);
+
+      if (error) throw error;
+
+      toast.success("Payment updated successfully");
+      setEditDialogOpen(false);
+      fetchPayments(activeTab);
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      toast.error("Failed to update payment");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -180,72 +238,160 @@ export default function PaymentApprovalManagement() {
         <p className="text-muted-foreground">Review and verify all payments (rentals, sales, and services)</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Pending Payment Reviews ({payments.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {payments.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No payments pending review
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Payment Date</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Transaction Ref</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Verification</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>
-                      <Badge variant="outline" className="capitalize">
-                        {payment.payment_type || "rental"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {payment.payment_date
-                        ? format(new Date(payment.payment_date), "MMM dd, yyyy")
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(payment.due_date), "MMM dd, yyyy")}
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      ${payment.amount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="capitalize">
-                      {payment.payment_method || "-"}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {payment.transaction_reference || "-"}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                    <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        onClick={() => handleReview(payment)}
-                      >
-                        Review
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "pending" | "approved")}>
+        <TabsList>
+          <TabsTrigger value="pending">Pending Reviews</TabsTrigger>
+          <TabsTrigger value="approved">Approved Payments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Payment Reviews ({payments.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No payments pending review
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Payment Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Transaction Ref</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Verification</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {payment.payment_type || "rental"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {payment.payment_date
+                            ? format(new Date(payment.payment_date), "MMM dd, yyyy")
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(payment.due_date), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          ${payment.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="capitalize">
+                          {payment.payment_method || "-"}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {payment.transaction_reference || "-"}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                        <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(payment)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReview(payment)}
+                            >
+                              Review
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="approved" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Approved Payments ({payments.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No approved payments yet
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Payment Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Transaction Ref</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Verification</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {payment.payment_type || "rental"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {payment.payment_date
+                            ? format(new Date(payment.payment_date), "MMM dd, yyyy")
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(payment.due_date), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          ${payment.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="capitalize">
+                          {payment.payment_method || "-"}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {payment.transaction_reference || "-"}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                        <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(payment)}
+                          >
+                            Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
         <DialogContent>
@@ -342,6 +488,96 @@ export default function PaymentApprovalManagement() {
                   disabled={processing}
                 >
                   Approve & Verify
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+            <DialogDescription>
+              Update payment details
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPayment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-amount">Amount</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    step="0.01"
+                    value={editForm.amount}
+                    onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-payment-date">Payment Date</Label>
+                  <Input
+                    id="edit-payment-date"
+                    type="date"
+                    value={editForm.payment_date}
+                    onChange={(e) => setEditForm({ ...editForm, payment_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-payment-method">Payment Method</Label>
+                  <Select
+                    value={editForm.payment_method}
+                    onValueChange={(value) => setEditForm({ ...editForm, payment_method: value })}
+                  >
+                    <SelectTrigger id="edit-payment-method">
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-transaction-ref">Transaction Reference</Label>
+                  <Input
+                    id="edit-transaction-ref"
+                    value={editForm.transaction_reference}
+                    onChange={(e) => setEditForm({ ...editForm, transaction_reference: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes</Label>
+                <Textarea
+                  id="edit-notes"
+                  placeholder="Add payment notes..."
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(false)}
+                  disabled={processing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveEdit}
+                  disabled={processing}
+                >
+                  Save Changes
                 </Button>
               </div>
             </div>

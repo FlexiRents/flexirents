@@ -24,32 +24,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 
-// This would normally come from a database or API
-const getPropertyById = (id: string, type: string) => {
-  // Mock data - in production this would fetch from your database
-  return {
-    id,
-    title: "Luxury Family Home",
-    listingType: type === "sale" ? "For Sale" : "For Rent",
-    description: "Beautiful and spacious property with modern amenities. This stunning home features high-end finishes, an open floor plan, and is located in a highly sought-after neighborhood. Perfect for families looking for comfort and convenience.",
-    region: "Greater Accra",
-    city: "Accra",
-    landmark: "Near Accra Mall",
-    price: type === "sale" ? 450000 : 2500,
-    apartmentType: "Single Family Home",
-    numberOfRooms: 4,
-    propertySize: 2800,
-    furnishingType: "Fully Furnished",
-    compoundType: "Gated Community",
-    numberOfWashrooms: 3,
-    tags: ["Newly Renovated", "Move-in Ready", "Open Floor Plan"],
-    facilities: ["24/7 Security", "Community Center", "Playground", "Swimming Pool"],
-    amenities: ["Air Conditioning", "Parking Space", "Garden/Yard", "Storage Unit"],
-    googleLocation: "5.6037° N, 0.1870° W",
-    duration: type === "rent" ? "12 months" : "N/A",
-    images: ["/placeholder.svg"],
-  };
-};
+interface PropertyData {
+  id: string;
+  title: string;
+  listing_type: string;
+  description: string | null;
+  region: string;
+  location: string;
+  price: number;
+  property_type: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sqft: number | null;
+  images: string[] | null;
+  features: any;
+  status: string;
+}
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -70,8 +60,10 @@ const PropertyDetails = () => {
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [property, setProperty] = useState<PropertyData | null>(null);
+  const [loadingProperty, setLoadingProperty] = useState(true);
   
-  const inWishlist = isInWishlist(id || "1");
+  const inWishlist = isInWishlist(id || "");
   const [scheduleForm, setScheduleForm] = useState({
     name: "",
     email: "",
@@ -81,25 +73,52 @@ const PropertyDetails = () => {
     message: "",
   });
   
-  // Get listing type from URL search params
-  const searchParams = new URLSearchParams(window.location.search);
-  const listingType = searchParams.get("type") || "sale";
-  
-  const property = getPropertyById(id || "1", listingType);
-  const isRental = listingType === "rent";
+  const isRental = property?.listing_type === "rent";
+
+  // Fetch property data
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!id) return;
+      
+      setLoadingProperty(true);
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+        setProperty(data);
+      } catch (error) {
+        console.error('Error fetching property:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load property details",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingProperty(false);
+      }
+    };
+
+    fetchProperty();
+  }, [id]);
 
   // Get contextual features based on property type
   const getKeyFeatures = () => {
-    const propertyType = property.apartmentType?.toLowerCase() || '';
+    if (!property) return [];
+    
+    const propertyType = property.property_type?.toLowerCase() || '';
     
     // Land/Plot properties
     if (propertyType.includes('land') || propertyType.includes('plot')) {
       return [
         {
           icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
-          value: property.propertySize,
+          value: property.sqft || 0,
           label: "Sq Ft",
-          subLabel: `${(property.propertySize / 43560).toFixed(2)} acres`
+          subLabel: property.sqft ? `${(property.sqft / 43560).toFixed(2)} acres` : undefined
         },
         {
           icon: <TreePine className="h-6 w-6 mb-2 text-primary" />,
@@ -108,8 +127,8 @@ const PropertyDetails = () => {
         },
         {
           icon: <MapPin className="h-6 w-6 mb-2 text-primary" />,
-          value: property.compoundType || "Fenced",
-          label: "Property Status"
+          value: property.region,
+          label: "Location"
         },
         {
           icon: <Ruler className="h-6 w-6 mb-2 text-primary" />,
@@ -124,22 +143,22 @@ const PropertyDetails = () => {
       return [
         {
           icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
-          value: property.propertySize,
+          value: property.sqft || 0,
           label: "Sq Ft"
         },
         {
           icon: <Building2 className="h-6 w-6 mb-2 text-primary" />,
-          value: property.numberOfRooms || "Multiple",
+          value: property.bedrooms || "Multiple",
           label: "Units/Floors"
         },
         {
           icon: <ParkingCircle className="h-6 w-6 mb-2 text-primary" />,
-          value: property.numberOfWashrooms || "Available",
+          value: property.bathrooms || "Available",
           label: "Parking Spaces"
         },
         {
           icon: <Home className="h-6 w-6 mb-2 text-primary" />,
-          value: property.apartmentType,
+          value: property.property_type,
           label: "Type"
         }
       ];
@@ -149,28 +168,52 @@ const PropertyDetails = () => {
     return [
       {
         icon: <Bed className="h-6 w-6 mb-2 text-primary" />,
-        value: property.numberOfRooms,
+        value: property.bedrooms || 0,
         label: "Bedrooms"
       },
       {
         icon: <Bath className="h-6 w-6 mb-2 text-primary" />,
-        value: property.numberOfWashrooms,
+        value: property.bathrooms || 0,
         label: "Bathrooms"
       },
       {
         icon: <Maximize className="h-6 w-6 mb-2 text-primary" />,
-        value: property.propertySize,
+        value: property.sqft || 0,
         label: "Sq Ft"
       },
       {
         icon: <Home className="h-6 w-6 mb-2 text-primary" />,
-        value: property.apartmentType,
+        value: property.property_type,
         label: "Type"
       }
     ];
   };
 
   const keyFeatures = getKeyFeatures();
+
+  if (loadingProperty) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center">Loading property details...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="text-center">Property not found</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Fetch reviews
   useEffect(() => {
@@ -298,13 +341,13 @@ const PropertyDetails = () => {
     navigate('/checkout', {
       state: {
         type: isRental ? 'rental' : 'sale',
-        property: {
-          id: property.id,
-          title: property.title,
-          price: `$${property.price}`,
-          location: `${property.city}, ${property.region}`,
-          image: property.images[0]
-        }
+      property: {
+        id: property.id,
+        title: property.title,
+        price: `$${property.price}`,
+        location: property.location,
+        image: property.images?.[0] || "/placeholder.svg"
+      }
       }
     });
   };
@@ -318,12 +361,12 @@ const PropertyDetails = () => {
       });
     } else {
       await addToWishlist({
-        id: id || "1",
+        id: id || "",
         type: isRental ? "rental" : "sale",
         title: property.title,
         price: `$${property.price}`,
-        location: `${property.city}, ${property.region}`,
-        image: property.images[0],
+        location: property.location,
+        image: property.images?.[0] || "/placeholder.svg",
       });
       toast({
         title: "Added to wishlist",
@@ -367,12 +410,12 @@ const PropertyDetails = () => {
         {/* Hero Image */}
         <div className="relative w-full h-[400px] md:h-[500px] rounded-lg overflow-hidden mb-8">
           <img 
-            src={property.images[0]} 
+            src={property.images?.[0] || "/placeholder.svg"} 
             alt={property.title}
             className="w-full h-full object-cover"
           />
           <Badge className="absolute top-4 right-4 text-lg px-4 py-2">
-            {property.listingType}
+            {property.listing_type === "rent" ? "For Rent" : "For Sale"}
           </Badge>
           <Button
             variant="secondary"
@@ -400,8 +443,7 @@ const PropertyDetails = () => {
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="h-4 w-4" />
-                  <span>{property.city}, {property.region}</span>
-                  {property.landmark && <span>• {property.landmark}</span>}
+                  <span>{property.location}, {property.region}</span>
                 </div>
               </CardContent>
             </Card>
@@ -426,14 +468,16 @@ const PropertyDetails = () => {
             </Card>
 
             {/* Description */}
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Description</h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {property.description}
-                </p>
-              </CardContent>
-            </Card>
+            {property.description && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">Description</h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {property.description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Property Details */}
             <Card>
@@ -442,66 +486,44 @@ const PropertyDetails = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-primary" />
-                    <span>{property.furnishingType}</span>
+                    <span>{property.property_type}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-primary" />
-                    <span>{property.compoundType}</span>
+                    <span>{property.region}, {property.location}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-primary" />
-                    <span>{property.region}, {property.city}</span>
+                    <span>Status: {property.status}</span>
                   </div>
-                  {isRental && (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-primary" />
-                      <span>Rent duration: {property.duration}</span>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
-
-            {/* Tags */}
-            {property.tags.length > 0 && (
-              <Card>
-                <CardContent className="pt-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Tag className="h-5 w-5" />
-                    Tags
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {property.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Amenities */}
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Amenities</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-primary" />
-                      <span>{amenity}</span>
-                    </div>
-                  ))}
+            {property.features?.amenities && property.features.amenities.length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">Amenities</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {property.features.amenities.map((amenity: string, index: number) => (
+                       <div key={index} className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {/* Facilities */}
+            {property.features?.facilities && property.features.facilities.length > 0 && (
             <Card>
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4">Facilities</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {property.facilities.map((facility, index) => (
+                  {property.features.facilities.map((facility: string, index: number) => (
                     <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-5 w-5 text-primary" />
                       <span>{facility}</span>
@@ -510,6 +532,7 @@ const PropertyDetails = () => {
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {/* Location */}
             <Card>
@@ -519,7 +542,7 @@ const PropertyDetails = () => {
                   Location
                 </h2>
                 <p className="text-muted-foreground mb-2">
-                  <span className="font-medium">Coordinates:</span> {property.googleLocation}
+                  <span className="font-medium">Address:</span> {property.location}, {property.region}
                 </p>
                 <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center mt-4">
                   <span className="text-muted-foreground">Map integration coming soon</span>
@@ -707,7 +730,7 @@ const PropertyDetails = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Home className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{property.apartmentType}</span>
+                      <span className="text-muted-foreground">{property.property_type}</span>
                     </div>
                   </div>
                 </div>

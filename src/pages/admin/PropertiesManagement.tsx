@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Eye, Ban, CheckCircle } from "lucide-react";
+import { Eye, Ban, CheckCircle, Pencil } from "lucide-react";
+import { PropertyEditDialog } from "@/components/admin/PropertyEditDialog";
 
 interface Property {
   id: string;
@@ -23,6 +24,8 @@ interface Property {
 export default function PropertiesManagement() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchProperties = async () => {
@@ -137,14 +140,27 @@ export default function PropertiesManagement() {
                           size="sm"
                           variant="ghost"
                           onClick={() => window.open(`/property/${property.id}`, "_blank")}
+                          title="View Property"
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingPropertyId(property.id);
+                            setEditDialogOpen(true);
+                          }}
+                          title="Edit Property"
+                        >
+                          <Pencil className="h-4 w-4" />
                         </Button>
                         {property.status !== "available" && (
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => updatePropertyStatus(property.id, "available")}
+                            title="Approve Property"
                           >
                             <CheckCircle className="h-4 w-4" />
                           </Button>
@@ -154,6 +170,7 @@ export default function PropertiesManagement() {
                             size="sm"
                             variant="ghost"
                             onClick={() => updatePropertyStatus(property.id, "unavailable")}
+                            title="Mark Unavailable"
                           >
                             <Ban className="h-4 w-4" />
                           </Button>
@@ -167,6 +184,13 @@ export default function PropertiesManagement() {
           )}
         </CardContent>
       </Card>
+
+      <PropertyEditDialog
+        propertyId={editingPropertyId}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={fetchProperties}
+      />
     </div>
   );
 }

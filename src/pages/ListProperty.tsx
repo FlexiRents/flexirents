@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, ChevronDown } from "lucide-react";
+import { CheckCircle, ChevronDown, Upload, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { ghanaRegions } from "@/data/ghanaLocations";
 
 const propertyDescriptions = [
   "Newly Renovated",
@@ -179,18 +183,22 @@ const PropertyFeaturesSection = ({ formData, setFormData }: PropertyFeaturesSect
 
 const ListProperty = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState({
+    title: "",
     propertyType: "",
     listingType: "",
-    address: "",
+    region: "",
+    location: "",
     price: "",
     bedrooms: "",
     bathrooms: "",
     sqft: "",
     description: "",
-    ownerName: "",
-    ownerEmail: "",
-    ownerPhone: "",
     features: {
       descriptions: [] as string[],
       amenities: [] as string[],
@@ -198,33 +206,125 @@ const ListProperty = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + selectedImages.length > 10) {
+      toast({
+        title: "Too many images",
+        description: "Maximum 10 images allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedImages([...selectedImages, ...files]);
+    
+    // Create previews
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Property Submitted!",
-      description: "Your property has been submitted for verification. We'll contact you within 24-48 hours.",
-    });
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to list a property",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
 
-    // Reset form
-    setFormData({
-      propertyType: "",
-      listingType: "",
-      address: "",
-      price: "",
-      bedrooms: "",
-      bathrooms: "",
-      sqft: "",
-      description: "",
-      ownerName: "",
-      ownerEmail: "",
-      ownerPhone: "",
-      features: {
-        descriptions: [],
-        amenities: [],
-        facilities: [],
-      },
-    });
+    setSubmitting(true);
+    try {
+      // Upload images to storage
+      const imageUrls: string[] = [];
+      for (const image of selectedImages) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('property-images')
+          .upload(fileName, image);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(fileName);
+        
+        imageUrls.push(publicUrl);
+      }
+
+      // Insert property into database
+      const { error: insertError } = await supabase
+        .from('properties')
+        .insert({
+          owner_id: user.id,
+          title: formData.title,
+          property_type: formData.propertyType,
+          listing_type: formData.listingType,
+          region: formData.region,
+          location: formData.location,
+          price: parseFloat(formData.price),
+          bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+          bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+          sqft: formData.sqft ? parseInt(formData.sqft) : null,
+          description: formData.description,
+          images: imageUrls,
+          features: formData.features,
+          status: 'pending', // Pending admin approval
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Property Submitted!",
+        description: "Your property has been submitted for admin approval. You'll be notified once it's reviewed.",
+      });
+
+      // Reset form
+      setFormData({
+        title: "",
+        propertyType: "",
+        listingType: "",
+        region: "",
+        location: "",
+        price: "",
+        bedrooms: "",
+        bathrooms: "",
+        sqft: "",
+        description: "",
+        features: {
+          descriptions: [],
+          amenities: [],
+          facilities: [],
+        },
+      });
+      setSelectedImages([]);
+      setImagePreviews([]);
+    } catch (error) {
+      console.error("Error submitting property:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit property. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -236,7 +336,7 @@ const ListProperty = () => {
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">List Your Property</h1>
             <p className="text-muted-foreground text-lg">
-              Submit your property for verification and listing approval. We'll review and get back to you within 24-48 hours.
+              Submit your property for admin review and approval. Once approved, it will be visible to potential buyers or renters.
             </p>
           </div>
 
@@ -249,14 +349,24 @@ const ListProperty = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label htmlFor="title">Property Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Modern 3BR Apartment in Accra"
+                    required
+                  />
+                </div>
+
                 {/* Property Type */}
                 <div className="space-y-2">
                   <Label htmlFor="propertyType">Property Type</Label>
                   <Select
                     value={formData.propertyType}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, propertyType: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, propertyType: value })}
                     required
                   >
                     <SelectTrigger>
@@ -277,9 +387,7 @@ const ListProperty = () => {
                   <Label htmlFor="listingType">Listing Type</Label>
                   <Select
                     value={formData.listingType}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, listingType: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, listingType: value })}
                     required
                   >
                     <SelectTrigger>
@@ -292,16 +400,35 @@ const ListProperty = () => {
                   </Select>
                 </div>
 
-                {/* Address */}
+                {/* Region */}
                 <div className="space-y-2">
-                  <Label htmlFor="address">Property Address</Label>
+                  <Label htmlFor="region">Region</Label>
+                  <Select
+                    value={formData.region}
+                    onValueChange={(value) => setFormData({ ...formData, region: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ghanaRegions.map((region) => (
+                        <SelectItem key={region.name} value={region.name}>
+                          {region.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Location */}
+                <div className="space-y-2">
+                  <Label htmlFor="location">Specific Location</Label>
                   <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    placeholder="123 Main Street, City"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="e.g., East Legon, Cantonments"
                     required
                   />
                 </div>
@@ -309,16 +436,14 @@ const ListProperty = () => {
                 {/* Price */}
                 <div className="space-y-2">
                   <Label htmlFor="price">
-                    Price {formData.listingType === "rent" ? "(per month)" : ""}
+                    Price (USD) {formData.listingType === "rent" ? "(per month)" : ""}
                   </Label>
                   <Input
                     id="price"
                     type="number"
                     value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    placeholder="Enter price in dollars"
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="Enter price in USD"
                     required
                   />
                 </div>
@@ -331,9 +456,7 @@ const ListProperty = () => {
                       id="bedrooms"
                       type="number"
                       value={formData.bedrooms}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bedrooms: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                       placeholder="0"
                     />
                   </div>
@@ -346,9 +469,7 @@ const ListProperty = () => {
                       type="number"
                       step="0.5"
                       value={formData.bathrooms}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bathrooms: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
                       placeholder="0"
                     />
                   </div>
@@ -360,9 +481,7 @@ const ListProperty = () => {
                       id="sqft"
                       type="number"
                       value={formData.sqft}
-                      onChange={(e) =>
-                        setFormData({ ...formData, sqft: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, sqft: e.target.value })}
                       placeholder="0"
                     />
                   </div>
@@ -374,13 +493,52 @@ const ListProperty = () => {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe your property's features and amenities"
                     rows={4}
                     required
                   />
+                </div>
+
+                {/* Images Upload (Optional) */}
+                <div className="space-y-2">
+                  <Label>Property Images (Optional - Max 10)</Label>
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload images of your property (optional)
+                    </p>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="max-w-xs mx-auto"
+                    />
+                  </div>
+
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeImage(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Property Features */}
@@ -393,66 +551,24 @@ const ListProperty = () => {
                   />
                 </div>
 
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Owner Contact Information</h3>
-                  
-                  {/* Owner Name */}
-                  <div className="space-y-2 mb-4">
-                    <Label htmlFor="ownerName">Full Name</Label>
-                    <Input
-                      id="ownerName"
-                      value={formData.ownerName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ownerName: e.target.value })
-                      }
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-
-                  {/* Owner Email */}
-                  <div className="space-y-2 mb-4">
-                    <Label htmlFor="ownerEmail">Email</Label>
-                    <Input
-                      id="ownerEmail"
-                      type="email"
-                      value={formData.ownerEmail}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ownerEmail: e.target.value })
-                      }
-                      placeholder="john@example.com"
-                      required
-                    />
-                  </div>
-
-                  {/* Owner Phone */}
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerPhone">Phone Number</Label>
-                    <Input
-                      id="ownerPhone"
-                      type="tel"
-                      value={formData.ownerPhone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, ownerPhone: e.target.value })
-                      }
-                      placeholder="+1 (555) 123-4567"
-                      required
-                    />
-                  </div>
-                </div>
-
                 <div className="bg-secondary/30 p-4 rounded-lg flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-semibold mb-1">Verification Process</p>
+                    <p className="font-semibold mb-1">Admin Review Process</p>
                     <p className="text-muted-foreground">
-                      Our team will verify your property details, ownership documentation, and conduct a physical inspection before approval. This typically takes 24-48 hours.
+                      Your property will be reviewed by our admin team before being published. This ensures quality and accuracy of listings on our platform.
                     </p>
                   </div>
                 </div>
 
-                <Button type="submit" variant="hero" size="lg" className="w-full">
-                  Submit Property for Verification
+                <Button 
+                  type="submit" 
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full"
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Submit Property for Approval"}
                 </Button>
               </form>
             </CardContent>

@@ -333,6 +333,36 @@ const { data: publicData } = supabase.storage
 console.log('Public URL:', publicData.publicUrl)
 ```
 
+### Property Image Upload Example
+```typescript
+// Multiple property images upload
+const imageUrls: string[] = [];
+for (const image of selectedImages) {
+  const fileExt = image.name.split('.').pop();
+  const fileName = `${userId}/${Date.now()}-${Math.random()}.${fileExt}`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from('property-images')
+    .upload(fileName, image);
+
+  if (uploadError) throw uploadError;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('property-images')
+    .getPublicUrl(fileName);
+  
+  imageUrls.push(publicUrl);
+}
+
+// Save property with image URLs
+await supabase.from('properties').insert({
+  title: 'Property Title',
+  images: imageUrls, // Array of image URLs
+  status: 'pending', // Requires admin approval
+  // ... other fields
+});
+```
+
 ### Storage Policies
 ```sql
 -- Public read access for avatars

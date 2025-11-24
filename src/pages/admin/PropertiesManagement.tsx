@@ -169,7 +169,7 @@ export default function PropertiesManagement() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => updatePropertyStatus(property.id, "unavailable")}
+                            onClick={() => updatePropertyStatus(property.id, property.listing_type === "rent" ? "rented" : "sold")}
                             title="Mark Unavailable"
                           >
                             <Ban className="h-4 w-4" />

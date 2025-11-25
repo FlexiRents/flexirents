@@ -19,6 +19,10 @@ interface Property {
   location: string;
   status: string;
   created_at: string;
+  owner_id: string;
+  profiles?: {
+    full_name: string;
+  };
 }
 
 export default function PropertiesManagement() {
@@ -30,13 +34,30 @@ export default function PropertiesManagement() {
 
   const fetchProperties = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: propertiesData, error } = await supabase
         .from("properties")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setProperties(data || []);
+
+      // Fetch owner profiles
+      const enrichedProperties = await Promise.all(
+        (propertiesData || []).map(async (property) => {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", property.owner_id)
+            .maybeSingle();
+
+          return {
+            ...property,
+            profiles: profileData || undefined,
+          };
+        })
+      );
+
+      setProperties(enrichedProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);
       toast({
@@ -101,6 +122,7 @@ export default function PropertiesManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Property</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Status</TableHead>
@@ -116,6 +138,9 @@ export default function PropertiesManagement() {
                         <div className="font-medium">{property.title}</div>
                         <div className="text-sm text-muted-foreground">{property.location}</div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {property.profiles?.full_name || "Unknown"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{property.listing_type}</Badge>

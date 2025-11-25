@@ -194,6 +194,8 @@ const ListProperty = () => {
     listingType: "",
     region: "",
     location: "",
+    majorCity: "",
+    closestLandmark: "",
     price: "",
     bedrooms: "",
     bathrooms: "",
@@ -302,6 +304,8 @@ const ListProperty = () => {
         listingType: "",
         region: "",
         location: "",
+        majorCity: "",
+        closestLandmark: "",
         price: "",
         bedrooms: "",
         bathrooms: "",
@@ -430,6 +434,28 @@ const ListProperty = () => {
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="e.g., East Legon, Cantonments"
                     required
+                  />
+                </div>
+
+                {/* Major City */}
+                <div className="space-y-2">
+                  <Label htmlFor="majorCity">Major City</Label>
+                  <Input
+                    id="majorCity"
+                    value={formData.majorCity}
+                    onChange={(e) => setFormData({ ...formData, majorCity: e.target.value })}
+                    placeholder="e.g., Accra, Kumasi"
+                  />
+                </div>
+
+                {/* Closest Landmark */}
+                <div className="space-y-2">
+                  <Label htmlFor="closestLandmark">Closest Landmark</Label>
+                  <Input
+                    id="closestLandmark"
+                    value={formData.closestLandmark}
+                    onChange={(e) => setFormData({ ...formData, closestLandmark: e.target.value })}
+                    placeholder="e.g., Accra Mall, Airport"
                   />
                 </div>
 

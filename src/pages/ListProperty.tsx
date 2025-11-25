@@ -437,26 +437,28 @@ const ListProperty = () => {
                   />
                 </div>
 
-                {/* Major City */}
-                <div className="space-y-2">
-                  <Label htmlFor="majorCity">Major City</Label>
-                  <Input
-                    id="majorCity"
-                    value={formData.majorCity}
-                    onChange={(e) => setFormData({ ...formData, majorCity: e.target.value })}
-                    placeholder="e.g., Accra, Kumasi"
-                  />
-                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Major City */}
+                  <div className="space-y-2">
+                    <Label htmlFor="majorCity">Major City</Label>
+                    <Input
+                      id="majorCity"
+                      value={formData.majorCity}
+                      onChange={(e) => setFormData({ ...formData, majorCity: e.target.value })}
+                      placeholder="e.g., Accra, Kumasi"
+                    />
+                  </div>
 
-                {/* Closest Landmark */}
-                <div className="space-y-2">
-                  <Label htmlFor="closestLandmark">Closest Landmark</Label>
-                  <Input
-                    id="closestLandmark"
-                    value={formData.closestLandmark}
-                    onChange={(e) => setFormData({ ...formData, closestLandmark: e.target.value })}
-                    placeholder="e.g., Accra Mall, Airport"
-                  />
+                  {/* Closest Landmark */}
+                  <div className="space-y-2">
+                    <Label htmlFor="closestLandmark">Closest Landmark</Label>
+                    <Input
+                      id="closestLandmark"
+                      value={formData.closestLandmark}
+                      onChange={(e) => setFormData({ ...formData, closestLandmark: e.target.value })}
+                      placeholder="e.g., Accra Mall, Airport"
+                    />
+                  </div>
                 </div>
 
                 {/* Price */}

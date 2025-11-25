@@ -43,12 +43,36 @@ export default function RentalBillingHistory() {
   const [payments, setPayments] = useState<RentalPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [upcomingPayments, setUpcomingPayments] = useState<RentalPayment[]>([]);
+  const [nextDueDate, setNextDueDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       fetchPayments();
+      fetchNextDueDate();
     }
   }, [user]);
+
+  const fetchNextDueDate = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("rental_payments")
+        .select("due_date")
+        .eq("tenant_id", user.id)
+        .eq("status", "pending")
+        .order("due_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setNextDueDate(data.due_date);
+      }
+    } catch (error) {
+      console.error("Error fetching next due date:", error);
+    }
+  };
 
   const fetchPayments = async () => {
     if (!user) return;
@@ -232,6 +256,17 @@ export default function RentalBillingHistory() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {/* Next Due Date Alert Banner */}
+      {nextDueDate && (
+        <Alert className="bg-yellow-500/10 border-yellow-500/50">
+          <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <AlertDescription className="text-sm">
+            You have a payment due on <strong>{format(new Date(nextDueDate), "MMMM dd, yyyy")}</strong>. 
+            Please ensure timely payment to avoid any issues with your lease.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Payment Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>

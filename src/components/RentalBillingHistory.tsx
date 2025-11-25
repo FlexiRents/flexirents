@@ -256,17 +256,6 @@ export default function RentalBillingHistory() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {/* Next Due Date Alert Banner */}
-      {nextDueDate && (
-        <Alert className="bg-yellow-500/10 border-yellow-500/50">
-          <AlertCircle className="h-4 w-4 text-yellow-500" />
-          <AlertDescription className="text-sm">
-            You have a payment due on <strong>{format(new Date(nextDueDate), "MMMM dd, yyyy")}</strong>. 
-            Please ensure timely payment to avoid any issues with your lease.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Payment Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -328,6 +317,17 @@ export default function RentalBillingHistory() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Next Due Date Alert Banner */}
+      {nextDueDate && (
+        <Alert className="bg-yellow-500/10 border-yellow-500/50">
+          <AlertCircle className="h-4 w-4 text-yellow-500" />
+          <AlertDescription className="text-sm">
+            You have a payment due on <strong>{format(new Date(nextDueDate), "MMMM dd, yyyy")}</strong>. 
+            Please ensure timely payment to avoid any issues with your lease.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Payment History Table with Integrated Reminders */}
       <Card>

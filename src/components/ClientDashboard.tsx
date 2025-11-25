@@ -331,6 +331,7 @@ export default function ClientDashboard() {
           icon: Award,
           color: activityLevel.color,
           description: activityLevel.label,
+          comingSoon: true,
         }
       );
     } else if (stats?.userRole === 'vendor') {
@@ -362,6 +363,7 @@ export default function ClientDashboard() {
           icon: Award,
           color: activityLevel.color,
           description: activityLevel.label,
+          comingSoon: true,
         }
       );
     } else {
@@ -408,6 +410,7 @@ export default function ClientDashboard() {
           icon: Award,
           color: activityLevel.color,
           description: activityLevel.label,
+          comingSoon: true,
         }
       );
     }
@@ -422,7 +425,10 @@ export default function ClientDashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="hover:shadow-md transition-shadow">
+          <Card 
+            key={stat.title} 
+            className={`hover:shadow-md transition-shadow ${(stat as any).comingSoon ? 'opacity-40' : ''}`}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
@@ -434,7 +440,7 @@ export default function ClientDashboard() {
                 {stat.value}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stat.description}
+                {(stat as any).comingSoon ? 'Coming Soon' : stat.description}
               </p>
             </CardContent>
           </Card>

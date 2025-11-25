@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Plus, Minus, CreditCard, Smartphone } from "lucide-react";
+import { Calculator, Plus, Minus, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -33,12 +34,19 @@ const Checkout = () => {
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [createdPaymentId, setCreatedPaymentId] = useState<string | null>(null);
+  const [nextDueDate, setNextDueDate] = useState<string | null>(null);
   const [calculations, setCalculations] = useState({
     baseAmount: 0,
     commission: 0,
     total: 0,
     securityDeposit: 0,
   });
+
+  useEffect(() => {
+    if (user) {
+      fetchNextDueDate();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (paymentId) {
@@ -129,6 +137,28 @@ const Checkout = () => {
       });
     }
   }, [type, property, service, duration, hours, paymentPlan, paymentId]);
+
+  const fetchNextDueDate = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("rental_payments")
+        .select("due_date")
+        .eq("tenant_id", user.id)
+        .eq("status", "pending")
+        .order("due_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setNextDueDate(data.due_date);
+      }
+    } catch (error) {
+      console.error("Error fetching next due date:", error);
+    }
+  };
 
   // Create payment record immediately when checkout page loads for tracking
   useEffect(() => {
@@ -473,6 +503,17 @@ const Checkout = () => {
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-4xl">
+          {/* Next Due Date Alert Banner */}
+          {nextDueDate && (
+            <Alert className="mb-6 bg-yellow-500/10 border-yellow-500/50">
+              <AlertCircle className="h-4 w-4 text-yellow-500" />
+              <AlertDescription className="text-sm">
+                You have a payment due on <strong>{format(new Date(nextDueDate), "MMMM dd, yyyy")}</strong>. 
+                Please ensure timely payment to avoid any issues with your lease.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Checkout</h1>
             <p className="text-muted-foreground text-lg">

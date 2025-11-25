@@ -726,12 +726,9 @@ const PropertyDetails = () => {
                   <MapPin className="h-5 w-5" />
                   Location
                 </h2>
-                <p className="text-muted-foreground mb-2">
+                <p className="text-muted-foreground">
                   <span className="font-medium">Address:</span> {property.location}, {property.region}
                 </p>
-                <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center mt-4">
-                  <span className="text-muted-foreground">Map integration coming soon</span>
-                </div>
               </CardContent>
             </Card>
 

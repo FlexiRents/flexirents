@@ -291,6 +291,20 @@ export default function ViewingSchedulesManagement() {
                   </Button>
                 </div>
               )}
+
+              {selectedSchedule.status === "confirmed" && (
+                <div className="pt-4">
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      updateScheduleStatus(selectedSchedule.id, "completed")
+                    }
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark as Completed
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

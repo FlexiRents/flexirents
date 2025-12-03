@@ -78,7 +78,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <img src={logo} alt="FlexiRents" className="h-8 mb-4" />
+            <img src={logo} alt="FlexiRents" className="h-12 w-auto object-contain mb-4" />
             <ul className="space-y-2 text-sm opacity-80">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />

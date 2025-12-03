@@ -79,7 +79,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <img src={logo} alt="FlexiRents" className="h-14 w-auto object-contain mb-4" />
-            <ul className="space-y-2 text-sm opacity-80">
+            <ul className="space-y-2 text-base opacity-80">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <span>admin@flexirents.com</span>
@@ -97,8 +97,8 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2 text-sm opacity-80">
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-base opacity-80">
               <li>
                 <Link to="/about" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   About Us
@@ -139,8 +139,8 @@ const Footer = () => {
 
           {/* Services */}
           <div>
-            <h3 className="font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm opacity-80">
+            <h3 className="text-lg font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-base opacity-80">
               <li>
                 <Link to="/rentals" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Property Rentals
@@ -176,7 +176,7 @@ const Footer = () => {
 
           {/* Social Media & Newsletter */}
           <div>
-            <h3 className="font-semibold mb-4">Connect With Us</h3>
+            <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
             <div className="flex gap-4 mb-6">
               <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                 <MessageCircle className="h-6 w-6" />
@@ -201,8 +201,8 @@ const Footer = () => {
             </div>
             
             <div className="mt-6">
-              <h4 className="font-semibold mb-3">Newsletter</h4>
-              <p className="text-sm opacity-80 mb-3">Stay updated with our latest properties and offers</p>
+              <h4 className="text-lg font-semibold mb-3">Newsletter</h4>
+              <p className="text-base opacity-80 mb-3">Stay updated with our latest properties and offers</p>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <Input
                   type="email"
@@ -227,7 +227,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-sm opacity-80">
+        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-base opacity-80">
           <p>&copy; {new Date().getFullYear()} FlexiRents. All rights reserved.</p>
         </div>
       </div>

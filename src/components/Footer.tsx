@@ -7,9 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { scrollToTop } from "@/components/ScrollToTop";
-import { useTheme } from "next-themes";
-import logoFooter from "@/assets/logo-footer.png";
-import logoMain from "@/assets/logo-main.png";
+import logo from "@/assets/logo-footer.png";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }).max(255, { message: "Email must be less than 255 characters" }),
@@ -19,9 +17,6 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { resolvedTheme } = useTheme();
-  
-  const logo = resolvedTheme === "dark" ? logoMain : logoFooter;
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +68,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-primary text-primary-foreground dark:bg-[hsl(220,15%,85%)] dark:text-[hsl(220,20%,20%)] mt-0">
+    <footer className="bg-primary text-primary-foreground dark:bg-[hsl(220,50%,15%)] dark:text-[hsl(220,20%,90%)] mt-0">
       <div className="container mx-auto px-4 pt-5 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -210,7 +205,7 @@ const Footer = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
-                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 dark:bg-[hsl(220,20%,95%)] dark:border-[hsl(220,15%,70%)] dark:text-[hsl(220,20%,20%)] dark:placeholder:text-[hsl(220,15%,50%)]"
+                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 dark:bg-[hsl(220,40%,20%)] dark:border-[hsl(220,40%,30%)] dark:text-[hsl(220,20%,90%)] dark:placeholder:text-[hsl(220,20%,60%)]"
                   maxLength={255}
                   required
                 />
@@ -218,7 +213,7 @@ const Footer = () => {
                   type="submit" 
                   variant="secondary"
                   disabled={isSubmitting}
-                  className="whitespace-nowrap dark:bg-[hsl(200,70%,40%)] dark:text-white dark:hover:bg-[hsl(200,70%,35%)]"
+                  className="whitespace-nowrap dark:bg-[hsl(200,70%,50%)] dark:text-white dark:hover:bg-[hsl(200,70%,45%)]"
                 >
                   {isSubmitting ? "..." : "Subscribe"}
                 </Button>

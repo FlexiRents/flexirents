@@ -72,8 +72,8 @@ const Footer = () => {
       {/* Header section with logo and headings */}
       <div className="bg-background border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+            <div className="flex justify-center md:justify-start">
               <img src={logo} alt="FlexiRents" className="h-14 w-auto object-contain" />
             </div>
             <div>

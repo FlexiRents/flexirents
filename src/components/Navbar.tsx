@@ -67,7 +67,6 @@ const Navbar = () => {
                 <SelectItem value="GHS">GHS (₵)</SelectItem>
                 <SelectItem value="EUR">EUR (€)</SelectItem>
                 <SelectItem value="GBP">GBP (£)</SelectItem>
-                <SelectItem value="NGN">NGN (₦)</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex items-center gap-2">
@@ -174,7 +173,6 @@ const Navbar = () => {
                     <SelectItem value="GHS">GHS (₵)</SelectItem>
                     <SelectItem value="EUR">EUR (€)</SelectItem>
                     <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="NGN">NGN (₦)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

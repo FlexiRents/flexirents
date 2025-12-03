@@ -70,7 +70,7 @@ const Footer = () => {
   return (
     <footer className="mt-0">
       {/* Header section with logo and headings */}
-      <div className="bg-background border-b border-border">
+      <div className="bg-background border-b border-border shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

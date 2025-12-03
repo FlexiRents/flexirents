@@ -791,7 +791,7 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-px bg-secondary/30">
+      <section className="py-0 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-8">Trust & Transparency</h2>
@@ -838,7 +838,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-px bg-[var(--gradient-hero)]">
+      <section className="py-0 bg-[var(--gradient-hero)]">
         <div className="container mx-auto px-4 text-center text-primary-foreground">
           <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">

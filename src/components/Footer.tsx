@@ -210,7 +210,7 @@ const Footer = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
-                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 dark:bg-[hsl(220,20%,95%)] dark:border-[hsl(220,15%,70%)] dark:text-[hsl(220,20%,20%)] dark:placeholder:text-[hsl(220,15%,50%)]"
                   maxLength={255}
                   required
                 />
@@ -218,7 +218,7 @@ const Footer = () => {
                   type="submit" 
                   variant="secondary"
                   disabled={isSubmitting}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap dark:bg-[hsl(200,70%,40%)] dark:text-white dark:hover:bg-[hsl(200,70%,35%)]"
                 >
                   {isSubmitting ? "..." : "Subscribe"}
                 </Button>

@@ -7,7 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { scrollToTop } from "@/components/ScrollToTop";
-import logo from "@/assets/logo-footer.png";
+import { useTheme } from "next-themes";
+import logoFooter from "@/assets/logo-footer.png";
+import logoMain from "@/assets/logo-main.png";
 
 const newsletterSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }).max(255, { message: "Email must be less than 255 characters" }),
@@ -17,6 +19,9 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
+  
+  const logo = resolvedTheme === "dark" ? logoMain : logoFooter;
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

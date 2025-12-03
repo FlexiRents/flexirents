@@ -68,7 +68,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-primary text-primary-foreground mt-0">
+    <footer className="bg-primary text-primary-foreground dark:bg-[hsl(220,15%,85%)] dark:text-[hsl(220,20%,20%)] mt-0">
       <div className="container mx-auto px-4 pt-5 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}

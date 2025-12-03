@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-type Currency = 'USD' | 'GHS' | 'EUR' | 'GBP' | 'NGN';
+type Currency = 'USD' | 'GHS' | 'EUR' | 'GBP';
 
 interface CurrencyContextType {
   currency: Currency;
@@ -19,7 +19,6 @@ const DEFAULT_EXCHANGE_RATES = {
   GHS: 12.5,
   EUR: 0.92,
   GBP: 0.79,
-  NGN: 1580,
 };
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -88,7 +87,6 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     GHS: '₵',
     EUR: '€',
     GBP: '£',
-    NGN: '₦',
   };
 
   const formatPrice = (priceUSD: number): string => {

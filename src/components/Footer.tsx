@@ -91,7 +91,7 @@ const Footer = () => {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="pt-5">
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-base opacity-80">
               <li>
@@ -133,7 +133,7 @@ const Footer = () => {
           </div>
 
           {/* Services */}
-          <div>
+          <div className="pt-5">
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-base opacity-80">
               <li>
@@ -170,7 +170,7 @@ const Footer = () => {
           </div>
 
           {/* Social Media & Newsletter */}
-          <div>
+          <div className="pt-5">
             <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
             <div className="flex gap-4 mb-6">
               <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">

@@ -508,9 +508,9 @@ const Index = () => {
 
 
       {/* Rental Properties Section */}
-      <section className="py-8 bg-secondary/30">
+      <section className="py-10 bg-secondary/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Property Rentals</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               From cozy 1-bedrooms to spacious family apartments. Find your ideal rental property.
@@ -558,9 +558,9 @@ const Index = () => {
       </section>
 
       {/* Sales Properties Section */}
-      <section className="py-8 bg-background">
+      <section className="py-10 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Properties for Sale</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Invest in homes, commercial properties, or land. Build your real estate portfolio.
@@ -608,9 +608,9 @@ const Index = () => {
       </section>
 
       {/* Flexi-Assist Services Section */}
-      <section className="py-8 bg-secondary/30">
+      <section className="py-10 bg-secondary/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Flexi-Assist Services</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Personal assistance from drivers to caregivers. Get help when you need it.
@@ -650,9 +650,9 @@ const Index = () => {
       </section>
 
       {/* Marketplace Section */}
-      <section className="py-8 bg-background">
+      <section className="py-10 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Marketplace</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Connect with verified vendors for electronics, construction materials, and more. Quality products from trusted suppliers.
@@ -691,7 +691,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-8 bg-gradient-to-br from-primary/5 to-accent/5">
+      <section className="py-10 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
@@ -711,7 +711,7 @@ const Index = () => {
       </section>
 
       {/* Success Stories Section */}
-      <section className="py-8 bg-secondary/20">
+      <section className="py-10 bg-secondary/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Success Stories</h2>
@@ -791,7 +791,7 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-8 bg-secondary/30">
+      <section className="py-4 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-8">Trust & Transparency</h2>
@@ -838,10 +838,10 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-8 bg-primary">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-4 text-primary-foreground">Ready to Get Started?</h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
+      <section className="py-6 bg-[var(--gradient-hero)]">
+        <div className="container mx-auto px-4 text-center text-primary-foreground">
+          <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
             Whether you're looking for a property or need assistance services, FlexiRents has you covered.
           </p>
         </div>

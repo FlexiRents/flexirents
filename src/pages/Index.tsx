@@ -403,7 +403,7 @@ const Index = () => {
               Find Your Perfect Space with FlexiRents
             </h1>
             <p className="text-xl mb-8 opacity-90">
-              Discover premium properties for rent or sale, plus personalized assistance services tailored to your needs.
+              Your trusted partner for property rentals, sales, and personalized assistance services.
             </p>
             
             {/* Search Bar */}

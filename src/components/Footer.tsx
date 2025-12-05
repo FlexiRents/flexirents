@@ -76,13 +76,13 @@ const Footer = () => {
             <div>
               <img src={logo} alt="FlexiRents" className="h-14 w-auto object-contain" />
             </div>
-            <div>
+            <div className="flex items-center h-14">
               <h3 className="text-lg font-semibold text-foreground">Quick Links</h3>
             </div>
-            <div>
+            <div className="flex items-center h-14">
               <h3 className="text-lg font-semibold text-foreground">Services</h3>
             </div>
-            <div>
+            <div className="flex items-center h-14">
               <h3 className="text-lg font-semibold text-foreground">Connect With Us</h3>
             </div>
           </div>

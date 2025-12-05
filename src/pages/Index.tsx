@@ -508,7 +508,7 @@ const Index = () => {
 
 
       {/* Rental Properties Section */}
-      <section className="py-10 bg-secondary/30">
+      <section className="py-10 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Property Rentals</h2>
@@ -608,7 +608,7 @@ const Index = () => {
       </section>
 
       {/* Flexi-Assist Services Section */}
-      <section className="py-10 bg-secondary/30">
+      <section className="py-10 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Flexi-Assist Services</h2>
@@ -691,7 +691,7 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-10 bg-gradient-to-br from-primary/5 to-accent/5">
+      <section className="py-10 bg-gradient-to-br from-primary/10 via-background to-accent/10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center bg-card p-8 rounded-xl shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
@@ -711,7 +711,7 @@ const Index = () => {
       </section>
 
       {/* Success Stories Section */}
-      <section className="py-10 bg-secondary/20">
+      <section className="py-10 bg-gradient-to-b from-muted/30 to-muted/60">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Success Stories</h2>
@@ -791,7 +791,7 @@ const Index = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-4 bg-secondary/30">
+      <section className="py-4 bg-card border-y border-border/30">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-8">Trust & Transparency</h2>

@@ -838,7 +838,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-6 bg-[var(--gradient-hero)]">
+      <section className="py-6" style={{ background: 'var(--gradient-hero)' }}>
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-4 text-white">Ready to Get Started?</h2>
           <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">

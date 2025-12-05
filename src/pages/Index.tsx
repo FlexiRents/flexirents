@@ -839,9 +839,9 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="py-6 bg-[var(--gradient-hero)]">
-        <div className="container mx-auto px-4 text-center text-primary-foreground">
-          <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-4 text-white">Ready to Get Started?</h2>
+          <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
             Whether you're looking for a property or need assistance services, FlexiRents has you covered.
           </p>
         </div>

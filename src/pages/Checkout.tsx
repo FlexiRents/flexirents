@@ -91,50 +91,16 @@ const Checkout = () => {
         });
       }
     } else if (type === "sale" && property) {
-      const monthlyPrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
-      
-      // Calculate total sale amount: monthlyPrice × number of months
-      const totalSalePrice = monthlyPrice * duration;
-      
-      // Security deposit is 10% of total sale price
-      const securityDeposit = totalSalePrice * 0.1;
-      
-      if (paymentPlan === "full") {
-        // Full Payment Plan: 100% upfront at 8% commission
-        const commission = totalSalePrice * 0.08;
-        const totalDueNow = totalSalePrice + securityDeposit + commission;
-        
-        setCalculations({
-          baseAmount: totalSalePrice,
-          commission,
-          total: totalDueNow,
-          securityDeposit,
-        });
-      } else if (paymentPlan === "flexi75") {
-        // Flexi75 Plan: 75% upfront at 10% commission
-        const commission = totalSalePrice * 0.10;
-        const upfrontPayment = totalSalePrice * 0.75;
-        const totalDueNow = upfrontPayment + securityDeposit + commission;
-        
-        setCalculations({
-          baseAmount: totalSalePrice,
-          commission,
-          total: totalDueNow,
-          securityDeposit,
-        });
-      } else {
-        // Flexi50 Plan: 50% upfront at 12% commission
-        const commission = totalSalePrice * 0.12;
-        const upfrontPayment = totalSalePrice * 0.50;
-        const totalDueNow = upfrontPayment + securityDeposit + commission;
-        
-        setCalculations({
-          baseAmount: totalSalePrice,
-          commission,
-          total: totalDueNow,
-          securityDeposit,
-        });
-      }
+      const salePrice = parseFloat(property.price.replace(/[^0-9.-]+/g, ""));
+      const commission = salePrice * 0.05; // 5% commission for sales
+      const total = salePrice + commission;
+
+      setCalculations({
+        baseAmount: salePrice,
+        commission,
+        total,
+        securityDeposit: 0,
+      });
     } else if (type === "service" && service) {
       const hourlyRate = parseFloat(service.rate.replace(/[^0-9.-]+/g, ""));
       const baseAmount = hourlyRate * hours;
@@ -226,7 +192,7 @@ const Checkout = () => {
             status: "pending",
             verification_status: "pending_review",
             payment_type: "sale",
-            notes: `${getPaymentPlanLabel()} for sale - Checkout initiated`,
+            notes: `Property sale - Checkout initiated`,
           })
           .select()
           .single();
@@ -415,7 +381,7 @@ const Checkout = () => {
             status: "pending",
             verification_status: "pending_review",
             payment_type: "sale",
-            notes: `${getPaymentPlanLabel()} for property sale. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+            notes: `Property sale. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
           });
 
         if (salePaymentError) throw salePaymentError;
@@ -738,180 +704,26 @@ const Checkout = () => {
                       <h3 className="font-semibold text-lg">{property.title}</h3>
                       <p className="text-muted-foreground text-sm">{property.location}</p>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Payment Duration (Months)</Label>
-                      <div className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDurationChange(false)}
-                          disabled={duration <= 0}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <div className="flex-1 text-center">
-                          <span className="text-2xl font-bold">{duration}</span>
-                          <span className="text-muted-foreground ml-1">months</span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDurationChange(true)}
-                          disabled={duration >= 24}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Label>Payment Plan</Label>
-                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexi75" | "flexi50") => setPaymentPlan(value)}>
-                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "full" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
-                          <RadioGroupItem value="full" id="sale-full" />
-                          <Label htmlFor="sale-full" className="cursor-pointer flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">Full Payment</span>
-                              <span className="text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Best Value</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">Pay 100% upfront at 8% commission - Save 4%</div>
-                          </Label>
-                        </div>
-                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi75" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
-                          <RadioGroupItem value="flexi75" id="sale-flexi75" />
-                          <Label htmlFor="sale-flexi75" className="cursor-pointer flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">Flexi75 Plan</span>
-                              <span className="text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">Balanced</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">Pay 75% upfront at 10% commission - Save 2%</div>
-                          </Label>
-                        </div>
-                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi50" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
-                          <RadioGroupItem value="flexi50" id="sale-flexi50" />
-                          <Label htmlFor="sale-flexi50" className="cursor-pointer flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">Flexi50 Plan</span>
-                              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">Most Flexible</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">Pay 50% upfront at 12% commission</div>
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
 
                     <div className="pt-4 border-t space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Price</span>
-                        <span className="font-semibold">
-                          {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Sale Price ({duration} months)</span>
+                        <span className="text-muted-foreground">Sale Price</span>
                         <span className="font-semibold">
                           {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
-                      
-                      {paymentPlan === "full" && (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Upfront Payment (100%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.baseAmount)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.securityDeposit)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (8%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.commission)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total Due Now</span>
-                            <span className="text-green-600 dark:text-green-400">
-                              {formatPrice(calculations.total)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-green-600 dark:text-green-400 text-right">
-                            You save {formatPrice(calculations.baseAmount * 0.04)} compared to Flexi50!
-                          </div>
-                        </>
-                      )}
-                      
-                      {paymentPlan === "flexi75" && (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Upfront Payment (75%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.baseAmount * 0.75)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.securityDeposit)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (10%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.commission)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total Due Now</span>
-                            <span className="text-blue-600 dark:text-blue-400">
-                              {formatPrice(calculations.total)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground text-right">
-                            Remaining balance: {formatPrice(calculations.baseAmount * 0.25)} (payable later)
-                          </div>
-                        </>
-                      )}
-                      
-                      {paymentPlan === "flexi50" && (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Upfront Payment (50%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.baseAmount * 0.50)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.securityDeposit)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (12%)</span>
-                            <span className="font-semibold">
-                              {formatPrice(calculations.commission)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total Due Now</span>
-                            <span className="text-accent">
-                              {formatPrice(calculations.total)}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground text-right">
-                            Remaining balance: {formatPrice(calculations.baseAmount * 0.50)} (payable later)
-                          </div>
-                        </>
-                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Commission (5%)</span>
+                        <span className="font-semibold">
+                          {formatPrice(calculations.commission)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                        <span>Total Due</span>
+                        <span className="text-primary">
+                          {formatPrice(calculations.total)}
+                        </span>
+                      </div>
                     </div>
                   </>
                 )}

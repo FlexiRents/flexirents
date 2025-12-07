@@ -26,7 +26,7 @@ const Checkout = () => {
 
   const [duration, setDuration] = useState(12);
   const [hours, setHours] = useState(8);
-  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexible">("flexible");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexi75" | "flexi50">("flexi50");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [mobileProvider, setMobileProvider] = useState("");
   const [transactionReference, setTransactionReference] = useState("");
@@ -54,10 +54,22 @@ const Checkout = () => {
       const securityDeposit = monthlyRent;
       
       if (paymentPlan === "full") {
-        // Full payment plan: 10% commission on full rent
+        // Full Payment Plan: 100% upfront at 8% commission
+        const commission = fullRent * 0.08;
+        const upfrontPayment = fullRent; // 100%
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
+        
+        setCalculations({
+          baseAmount: fullRent,
+          commission,
+          total: totalDueNow,
+          securityDeposit,
+        });
+      } else if (paymentPlan === "flexi75") {
+        // Flexi75 Plan: 75% upfront at 10% commission
         const commission = fullRent * 0.10;
-        // Total due now: full rent + security deposit + commission
-        const totalDueNow = fullRent + securityDeposit + commission;
+        const upfrontPayment = fullRent * 0.75; // 75%
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
         
         setCalculations({
           baseAmount: fullRent,
@@ -66,12 +78,10 @@ const Checkout = () => {
           securityDeposit,
         });
       } else {
-        // Flexible payment plan: 12% commission on full rent
+        // Flexi50 Plan: 50% upfront at 12% commission
         const commission = fullRent * 0.12;
-        // Advance payment: 50% of full rent
-        const advancePayment = fullRent * 0.50;
-        // Total due now: 50% of full rent + security deposit + commission
-        const totalDueNow = advancePayment + securityDeposit + commission;
+        const upfrontPayment = fullRent * 0.50; // 50%
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
         
         setCalculations({
           baseAmount: fullRent,
@@ -90,9 +100,8 @@ const Checkout = () => {
       const securityDeposit = totalSalePrice * 0.1;
       
       if (paymentPlan === "full") {
-        // Full payment plan: 10% commission on total sale price
-        const commission = totalSalePrice * 0.10;
-        // Total due now: full price + security deposit + commission
+        // Full Payment Plan: 100% upfront at 8% commission
+        const commission = totalSalePrice * 0.08;
         const totalDueNow = totalSalePrice + securityDeposit + commission;
         
         setCalculations({
@@ -101,13 +110,23 @@ const Checkout = () => {
           total: totalDueNow,
           securityDeposit,
         });
+      } else if (paymentPlan === "flexi75") {
+        // Flexi75 Plan: 75% upfront at 10% commission
+        const commission = totalSalePrice * 0.10;
+        const upfrontPayment = totalSalePrice * 0.75;
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
+        
+        setCalculations({
+          baseAmount: totalSalePrice,
+          commission,
+          total: totalDueNow,
+          securityDeposit,
+        });
       } else {
-        // Flexible payment plan: 12% commission on total sale price
+        // Flexi50 Plan: 50% upfront at 12% commission
         const commission = totalSalePrice * 0.12;
-        // Advance payment: 50% of total sale price
-        const advancePayment = totalSalePrice * 0.50;
-        // Total due now: 50% of price + security deposit + commission
-        const totalDueNow = advancePayment + securityDeposit + commission;
+        const upfrontPayment = totalSalePrice * 0.50;
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
         
         setCalculations({
           baseAmount: totalSalePrice,
@@ -138,6 +157,12 @@ const Checkout = () => {
     }
   }, [calculations.total, user]);
 
+  const getPaymentPlanLabel = () => {
+    if (paymentPlan === "full") return "Full Payment (100%, 8%)";
+    if (paymentPlan === "flexi75") return "Flexi75 (75%, 10%)";
+    return "Flexi50 (50%, 12%)";
+  };
+
   const createInitialPaymentRecord = async () => {
     if (!user) return;
 
@@ -160,7 +185,7 @@ const Checkout = () => {
             rent_expiration_date: rentExpirationDate,
             lease_duration_months: duration,
             monthly_rent: monthlyRent,
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment plan - Checkout initiated`,
+            notes: `${getPaymentPlanLabel()} plan - Checkout initiated`,
             status: "pending",
           })
           .select()
@@ -182,7 +207,7 @@ const Checkout = () => {
             is_first_payment: true,
             installment_number: 1,
             payment_type: "rental",
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment - Checkout initiated`,
+            notes: `${getPaymentPlanLabel()} - Checkout initiated`,
           })
           .select()
           .single();
@@ -201,7 +226,7 @@ const Checkout = () => {
             status: "pending",
             verification_status: "pending_review",
             payment_type: "sale",
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment for sale - Checkout initiated`,
+            notes: `${getPaymentPlanLabel()} for sale - Checkout initiated`,
           })
           .select()
           .single();
@@ -304,7 +329,7 @@ const Checkout = () => {
             transaction_reference: transactionReference,
             status: "pending",
             verification_status: "pending_review",
-            notes: `Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}. ${paymentPlan === "full" ? "Full" : "Flexible"} payment plan.`,
+            notes: `Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}. ${getPaymentPlanLabel()} plan.`,
           })
           .eq("id", targetPaymentId);
 
@@ -338,7 +363,7 @@ const Checkout = () => {
             rent_expiration_date: rentExpirationDate,
             lease_duration_months: duration,
             monthly_rent: monthlyRent,
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment plan selected`,
+            notes: `${getPaymentPlanLabel()} plan selected`,
             status: "pending",
           })
           .select()
@@ -364,7 +389,7 @@ const Checkout = () => {
             is_first_payment: true,
             installment_number: 1,
             payment_type: "rental",
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+            notes: `${getPaymentPlanLabel()}. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
           });
 
         if (paymentError) throw paymentError;
@@ -390,7 +415,7 @@ const Checkout = () => {
             status: "pending",
             verification_status: "pending_review",
             payment_type: "sale",
-            notes: `${paymentPlan === "full" ? "Full" : "Flexible"} payment for property sale. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
+            notes: `${getPaymentPlanLabel()} for property sale. Payment via ${paymentMethod}${paymentMethod === "mobile" ? ` - ${mobileProvider}` : ""}`,
           });
 
         if (salePaymentError) throw salePaymentError;
@@ -560,19 +585,35 @@ const Checkout = () => {
 
                     <div className="space-y-3">
                       <Label>Payment Plan</Label>
-                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexible") => setPaymentPlan(value)}>
-                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
-                          <RadioGroupItem value="flexible" id="flexible" />
-                          <Label htmlFor="flexible" className="cursor-pointer flex-1">
-                            <div className="font-semibold">Flexible Payment (12% commission)</div>
-                            <div className="text-xs text-muted-foreground">Pay 50% advance + security deposit now, remaining balance paid over time</div>
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexi75" | "flexi50") => setPaymentPlan(value)}>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "full" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
                           <RadioGroupItem value="full" id="full" />
                           <Label htmlFor="full" className="cursor-pointer flex-1">
-                            <div className="font-semibold">Full Payment (10% commission)</div>
-                            <div className="text-xs text-muted-foreground">Pay all months + security deposit upfront and save 2%</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Full Payment</span>
+                              <span className="text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Best Value</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 100% upfront at 8% commission - Save 4%</div>
+                          </Label>
+                        </div>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi75" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                          <RadioGroupItem value="flexi75" id="flexi75" />
+                          <Label htmlFor="flexi75" className="cursor-pointer flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Flexi75 Plan</span>
+                              <span className="text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">Balanced</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 75% upfront at 10% commission - Save 2%</div>
+                          </Label>
+                        </div>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi50" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                          <RadioGroupItem value="flexi50" id="flexi50" />
+                          <Label htmlFor="flexi50" className="cursor-pointer flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Flexi50 Plan</span>
+                              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">Most Flexible</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 50% upfront at 12% commission</div>
                           </Label>
                         </div>
                       </RadioGroup>
@@ -585,10 +626,17 @@ const Checkout = () => {
                           {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
                         </span>
                       </div>
-                      {paymentPlan === "full" ? (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Full Rent ({duration} months)</span>
+                        <span className="font-semibold">
+                          {formatPrice(calculations.baseAmount)}
+                        </span>
+                      </div>
+                      
+                      {paymentPlan === "full" && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Full Rent ({duration} months)</span>
+                            <span className="text-muted-foreground">Upfront Payment (100%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.baseAmount)}
                             </span>
@@ -600,28 +648,59 @@ const Checkout = () => {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (10% of base rent)</span>
+                            <span className="text-muted-foreground">Commission (8%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.commission)}
                             </span>
                           </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total (Pay Once)</span>
-                            <span className="text-accent">
+                            <span>Total Due Now</span>
+                            <span className="text-green-600 dark:text-green-400">
                               {formatPrice(calculations.total)}
                             </span>
                           </div>
+                          <div className="text-xs text-green-600 dark:text-green-400 text-right">
+                            You save {formatPrice(calculations.baseAmount * 0.04)} compared to Flexi50!
+                          </div>
                         </>
-                      ) : (
+                      )}
+                      
+                      {paymentPlan === "flexi75" && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Full Rent ({duration} months)</span>
+                            <span className="text-muted-foreground">Upfront Payment (75%)</span>
                             <span className="font-semibold">
-                              {formatPrice(calculations.baseAmount)}
+                              {formatPrice(calculations.baseAmount * 0.75)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Advance Payment (50% of full rent)</span>
+                            <span className="text-muted-foreground">Security Deposit (1 month, refundable)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.securityDeposit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Commission (10%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.commission)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total Due Now</span>
+                            <span className="text-blue-600 dark:text-blue-400">
+                              {formatPrice(calculations.total)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Remaining balance: {formatPrice(calculations.baseAmount * 0.25)} (payable later)
+                          </div>
+                        </>
+                      )}
+                      
+                      {paymentPlan === "flexi50" && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Upfront Payment (50%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.baseAmount * 0.50)}
                             </span>
@@ -639,10 +718,13 @@ const Checkout = () => {
                             </span>
                           </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total (Initial Payment)</span>
+                            <span>Total Due Now</span>
                             <span className="text-accent">
                               {formatPrice(calculations.total)}
                             </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Remaining balance: {formatPrice(calculations.baseAmount * 0.50)} (payable later)
                           </div>
                         </>
                       )}
@@ -687,19 +769,35 @@ const Checkout = () => {
 
                     <div className="space-y-3">
                       <Label>Payment Plan</Label>
-                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexible") => setPaymentPlan(value)}>
-                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
-                          <RadioGroupItem value="flexible" id="sale-flexible" />
-                          <Label htmlFor="sale-flexible" className="cursor-pointer flex-1">
-                            <div className="font-semibold">Flexible Payment (12% commission)</div>
-                            <div className="text-xs text-muted-foreground">Pay 50% advance + security deposit now, remaining balance paid over time</div>
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-secondary/50 transition-colors">
+                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexi75" | "flexi50") => setPaymentPlan(value)}>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "full" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
                           <RadioGroupItem value="full" id="sale-full" />
                           <Label htmlFor="sale-full" className="cursor-pointer flex-1">
-                            <div className="font-semibold">Full Payment (10% commission)</div>
-                            <div className="text-xs text-muted-foreground">Pay all months + security deposit upfront and save 2%</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Full Payment</span>
+                              <span className="text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Best Value</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 100% upfront at 8% commission - Save 4%</div>
+                          </Label>
+                        </div>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi75" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                          <RadioGroupItem value="flexi75" id="sale-flexi75" />
+                          <Label htmlFor="sale-flexi75" className="cursor-pointer flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Flexi75 Plan</span>
+                              <span className="text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">Balanced</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 75% upfront at 10% commission - Save 2%</div>
+                          </Label>
+                        </div>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi50" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                          <RadioGroupItem value="flexi50" id="sale-flexi50" />
+                          <Label htmlFor="sale-flexi50" className="cursor-pointer flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">Flexi50 Plan</span>
+                              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">Most Flexible</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 50% upfront at 12% commission</div>
                           </Label>
                         </div>
                       </RadioGroup>
@@ -718,37 +816,81 @@ const Checkout = () => {
                           {formatPrice(calculations.baseAmount)}
                         </span>
                       </div>
-                      {paymentPlan === "full" ? (
+                      
+                      {paymentPlan === "full" && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Security Deposit (10% of price, refundable)</span>
+                            <span className="text-muted-foreground">Upfront Payment (100%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.baseAmount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.securityDeposit)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Commission (10% of price)</span>
+                            <span className="text-muted-foreground">Commission (8%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.commission)}
                             </span>
                           </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total (Pay Once)</span>
-                            <span className="text-accent">
+                            <span>Total Due Now</span>
+                            <span className="text-green-600 dark:text-green-400">
                               {formatPrice(calculations.total)}
                             </span>
                           </div>
+                          <div className="text-xs text-green-600 dark:text-green-400 text-right">
+                            You save {formatPrice(calculations.baseAmount * 0.04)} compared to Flexi50!
+                          </div>
                         </>
-                      ) : (
+                      )}
+                      
+                      {paymentPlan === "flexi75" && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Advance Payment (50% of price)</span>
+                            <span className="text-muted-foreground">Upfront Payment (75%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.baseAmount * 0.75)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.securityDeposit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Commission (10%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.commission)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total Due Now</span>
+                            <span className="text-blue-600 dark:text-blue-400">
+                              {formatPrice(calculations.total)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Remaining balance: {formatPrice(calculations.baseAmount * 0.25)} (payable later)
+                          </div>
+                        </>
+                      )}
+                      
+                      {paymentPlan === "flexi50" && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Upfront Payment (50%)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.baseAmount * 0.50)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Security Deposit (10% of price, refundable)</span>
+                            <span className="text-muted-foreground">Security Deposit (10%, refundable)</span>
                             <span className="font-semibold">
                               {formatPrice(calculations.securityDeposit)}
                             </span>
@@ -760,10 +902,13 @@ const Checkout = () => {
                             </span>
                           </div>
                           <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                            <span>Total (Initial Payment)</span>
+                            <span>Total Due Now</span>
                             <span className="text-accent">
                               {formatPrice(calculations.total)}
                             </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Remaining balance: {formatPrice(calculations.baseAmount * 0.50)} (payable later)
                           </div>
                         </>
                       )}

@@ -20,7 +20,7 @@ interface PropertyFeatures {
 }
 
 interface PropertyCardProps {
-  id: number;
+  id: string | number;
   image: string;
   title: string;
   price: string | number;

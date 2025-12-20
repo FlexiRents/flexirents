@@ -13,6 +13,7 @@ import {
   DollarSign,
   CheckCircle,
   CalendarCheck,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const menuItems = [
   { title: "Payment Approval", url: "/admin/payment-approval", icon: CheckCircle },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Traction", url: "/admin/traction", icon: TrendingUp },
   { title: "Currency Rates", url: "/admin/currency-rates", icon: DollarSign },
 ];
 

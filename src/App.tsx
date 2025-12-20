@@ -46,6 +46,7 @@ import ViewingSchedulesManagement from "./pages/admin/ViewingSchedulesManagement
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
 import { BackToTop } from "./components/BackToTop";
+import { VisitorTracker } from "./components/VisitorTracker";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
               <ScrollProgressIndicator />
               <ScrollToTop />
               <BackToTop />
+              <VisitorTracker />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/rentals" element={<Rentals />} />

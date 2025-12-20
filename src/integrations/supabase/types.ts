@@ -276,6 +276,42 @@ export type Database = {
         }
         Relationships: []
       }
+      page_visits: {
+        Row: {
+          country: string | null
+          created_at: string
+          device_type: string | null
+          ended_at: string | null
+          id: string
+          page_path: string
+          session_id: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          page_path: string
+          session_id: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          page_path?: string
+          session_id?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       portfolio_images: {
         Row: {
           category: string | null

@@ -18,6 +18,7 @@ import {
 import { format, subDays, subMonths } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useRealtimeVisitors } from "@/hooks/useVisitorTracking";
 
 type MetricKey = "visitors" | "pageviews" | "viewsPerVisit" | "visitDuration" | "bounceRate";
 
@@ -34,6 +35,7 @@ interface ListData {
 const TractionPage = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>("pageviews");
   const [dateRange, setDateRange] = useState("7d");
+  const { currentVisitors } = useRealtimeVisitors();
 
   const getDateRange = () => {
     const end = new Date();
@@ -64,43 +66,16 @@ const TractionPage = () => {
     queryFn: async () => {
       const { start, end } = getDateRange();
       
-      // Fetch viewing schedules as "visits"
-      const { data: viewings, error: viewingsError } = await supabase
-        .from("viewing_schedules")
+      // Fetch real page visits
+      const { data: pageVisits, error: visitsError } = await supabase
+        .from("page_visits")
         .select("*")
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString());
 
-      if (viewingsError) throw viewingsError;
+      if (visitsError) throw visitsError;
 
-      // Fetch properties for page views simulation
-      const { data: properties, error: propertiesError } = await supabase
-        .from("properties")
-        .select("*")
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
-
-      if (propertiesError) throw propertiesError;
-
-      // Fetch bookings
-      const { data: bookings, error: bookingsError } = await supabase
-        .from("bookings")
-        .select("*")
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
-
-      if (bookingsError) throw bookingsError;
-
-      // Fetch booking requests
-      const { data: bookingRequests, error: requestsError } = await supabase
-        .from("booking_requests")
-        .select("*")
-        .gte("created_at", start.toISOString())
-        .lte("created_at", end.toISOString());
-
-      if (requestsError) throw requestsError;
-
-      // Generate time series data
+      // Generate time series data from real visits
       const days: TimeSeriesData[] = [];
       const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       
@@ -108,60 +83,97 @@ const TractionPage = () => {
         const date = subDays(end, daysDiff - i);
         const dateStr = format(date, "yyyy-MM-dd");
         
-        const dayViewings = viewings?.filter(v => 
+        const dayVisits = pageVisits?.filter(v => 
           format(new Date(v.created_at), "yyyy-MM-dd") === dateStr
-        ).length || 0;
+        ) || [];
+        
+        // Count unique sessions for visitors
+        const uniqueSessions = new Set(dayVisits.map(v => v.session_id));
         
         days.push({
           date: format(date, "d MMM"),
-          value: dayViewings,
+          value: uniqueSessions.size,
         });
       }
 
-      // Calculate metrics
-      const totalVisitors = viewings?.length || 0;
-      const totalPageviews = (viewings?.length || 0) + (properties?.length || 0) + (bookings?.length || 0);
+      // Calculate metrics from real data
+      const uniqueSessions = new Set(pageVisits?.map(v => v.session_id) || []);
+      const totalVisitors = uniqueSessions.size;
+      const totalPageviews = pageVisits?.length || 0;
       const viewsPerVisit = totalVisitors > 0 ? (totalPageviews / totalVisitors).toFixed(2) : "0";
-      const avgDuration = Math.floor(Math.random() * 120) + 30; // Simulated
-      const bounceRate = totalVisitors > 0 ? Math.floor((1 - (bookings?.length || 0) / totalVisitors) * 100) : 0;
+      
+      // Calculate average session duration (if we have ended_at timestamps)
+      const sessionsWithDuration = pageVisits?.filter(v => v.ended_at) || [];
+      let avgDuration = 0;
+      if (sessionsWithDuration.length > 0) {
+        const totalDuration = sessionsWithDuration.reduce((sum, v) => {
+          const start = new Date(v.created_at).getTime();
+          const end = new Date(v.ended_at!).getTime();
+          return sum + (end - start) / 1000;
+        }, 0);
+        avgDuration = Math.floor(totalDuration / sessionsWithDuration.length);
+      }
 
-      // Generate list data
-      const regionCounts: Record<string, number> = {};
-      const typeCounts: Record<string, number> = {};
-      const statusCounts: Record<string, number> = {};
+      // Calculate bounce rate (single page visits)
+      const sessionPageCounts: Record<string, number> = {};
+      pageVisits?.forEach(v => {
+        sessionPageCounts[v.session_id] = (sessionPageCounts[v.session_id] || 0) + 1;
+      });
+      const singlePageSessions = Object.values(sessionPageCounts).filter(count => count === 1).length;
+      const bounceRate = totalVisitors > 0 ? Math.floor((singlePageSessions / totalVisitors) * 100) : 0;
 
-      viewings?.forEach(v => {
-        // Use property regions from viewing schedules
+      // Generate list data from real visits
+      const sourceCounts: Record<string, number> = {};
+      const pageCounts: Record<string, number> = {};
+      const deviceCounts: Record<string, number> = {};
+      const countryCounts: Record<string, number> = {};
+
+      pageVisits?.forEach(v => {
+        const source = v.source || "direct";
+        sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+        
+        pageCounts[v.page_path] = (pageCounts[v.page_path] || 0) + 1;
+        
+        const device = v.device_type || "unknown";
+        deviceCounts[device] = (deviceCounts[device] || 0) + 1;
+        
+        const country = v.country || "Unknown";
+        countryCounts[country] = (countryCounts[country] || 0) + 1;
       });
 
-      properties?.forEach(p => {
-        regionCounts[p.region] = (regionCounts[p.region] || 0) + 1;
-        typeCounts[p.property_type] = (typeCounts[p.property_type] || 0) + 1;
-        statusCounts[p.listing_type] = (statusCounts[p.listing_type] || 0) + 1;
-      });
+      const sources: ListData[] = Object.entries(sourceCounts)
+        .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))
+        .sort((a, b) => b.value - a.value);
 
-      const sources: ListData[] = [
-        { label: "Direct", value: Math.ceil(totalVisitors * 0.6) },
-        { label: "Referral", value: Math.ceil(totalVisitors * 0.25) },
-        { label: "Social", value: Math.ceil(totalVisitors * 0.15) },
-      ].filter(s => s.value > 0);
+      const pages: ListData[] = Object.entries(pageCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
 
-      const pages: ListData[] = [
-        { label: "/", value: Math.ceil(totalPageviews * 0.4) },
-        { label: "/rentals", value: Math.ceil(totalPageviews * 0.25) },
-        { label: "/sales", value: Math.ceil(totalPageviews * 0.2) },
-        { label: "/flexi-assist", value: Math.ceil(totalPageviews * 0.15) },
-      ].filter(p => p.value > 0);
-
-      const regions: ListData[] = Object.entries(regionCounts)
+      const countries: ListData[] = Object.entries(countryCounts)
         .map(([label, value]) => ({ label, value }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
 
-      const devices: ListData[] = [
-        { label: "Mobile", value: Math.ceil(totalVisitors * 0.65) },
-        { label: "Desktop", value: Math.ceil(totalVisitors * 0.35) },
-      ].filter(d => d.value > 0);
+      const devices: ListData[] = Object.entries(deviceCounts)
+        .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))
+        .sort((a, b) => b.value - a.value);
+
+      // Generate pageviews time series
+      const pageviewDays = [];
+      for (let i = 0; i <= daysDiff; i++) {
+        const date = subDays(end, daysDiff - i);
+        const dateStr = format(date, "yyyy-MM-dd");
+        
+        const dayPageviews = pageVisits?.filter(v => 
+          format(new Date(v.created_at), "yyyy-MM-dd") === dateStr
+        ).length || 0;
+        
+        pageviewDays.push({
+          date: format(date, "d MMM"),
+          value: dayPageviews,
+        });
+      }
 
       return {
         metrics: {
@@ -173,15 +185,18 @@ const TractionPage = () => {
         },
         timeSeries: {
           visitors: days,
-          pageviews: days.map(d => ({ ...d, value: d.value + Math.floor(Math.random() * 3) })),
-          viewsPerVisit: days.map(d => ({ ...d, value: d.value > 0 ? parseFloat((d.value * 1.5).toFixed(2)) : 0 })),
-          visitDuration: days.map(d => ({ ...d, value: d.value > 0 ? Math.floor(Math.random() * 120) + 30 : 0 })),
-          bounceRate: days.map(d => ({ ...d, value: d.value > 0 ? Math.floor(Math.random() * 40) + 30 : 0 })),
+          pageviews: pageviewDays,
+          viewsPerVisit: days.map((d, i) => ({ 
+            ...d, 
+            value: d.value > 0 ? parseFloat((pageviewDays[i].value / d.value).toFixed(2)) : 0 
+          })),
+          visitDuration: days.map(d => ({ ...d, value: d.value > 0 ? avgDuration : 0 })),
+          bounceRate: days.map(d => ({ ...d, value: d.value > 0 ? bounceRate : 0 })),
         },
         lists: {
           sources,
           pages,
-          regions,
+          countries,
           devices,
         },
       };
@@ -203,14 +218,9 @@ const TractionPage = () => {
     { value: "90d", label: "Last 90 days" },
   ];
 
-  const getMaxValue = (data: TimeSeriesData[]) => {
-    const max = Math.max(...data.map(d => d.value));
-    return max > 0 ? max : 1;
-  };
-
   const renderBarList = (title: string, data: ListData[], showPercentage = false) => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
-    const maxValue = Math.max(...data.map(d => d.value));
+    const maxValue = Math.max(...data.map(d => d.value), 1);
     
     return (
       <Card className="bg-card border-border">
@@ -255,8 +265,8 @@ const TractionPage = () => {
         <h1 className="text-2xl font-bold text-foreground">Traction</h1>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="w-2 h-2 rounded-full bg-muted-foreground" />
-            0 current visitors
+            <span className={`w-2 h-2 rounded-full ${currentVisitors > 0 ? "bg-green-500 animate-pulse" : "bg-muted-foreground"}`} />
+            {currentVisitors} current visitor{currentVisitors !== 1 ? "s" : ""}
           </span>
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[140px]">
@@ -359,7 +369,7 @@ const TractionPage = () => {
         {renderBarList("Page", tractionData?.lists.pages || [])}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {renderBarList("Region", tractionData?.lists.regions || [])}
+        {renderBarList("Country", tractionData?.lists.countries || [])}
         {renderBarList("Device", tractionData?.lists.devices || [], true)}
       </div>
     </div>

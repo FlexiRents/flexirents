@@ -864,10 +864,12 @@ export default function AnalyticsPage() {
                     <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))',
+                        backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))',
                       }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Legend />
                     <Area 
@@ -905,10 +907,12 @@ export default function AnalyticsPage() {
                     <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))',
+                        backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))',
                       }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Legend />
                     <Bar dataKey="bookings" fill="hsl(var(--primary))" name="Total Bookings" radius={[8, 8, 0, 0]} />
@@ -939,10 +943,12 @@ export default function AnalyticsPage() {
                     <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))',
+                        backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))',
                       }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
                     />
                     <Legend />
                     <Line 
@@ -1000,10 +1006,12 @@ export default function AnalyticsPage() {
                       </Pie>
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'hsl(var(--background))',
+                          backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
                         }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1040,10 +1048,12 @@ export default function AnalyticsPage() {
                       </Pie>
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'hsl(var(--background))',
+                          backgroundColor: 'hsl(var(--card))',
                           border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
+                          borderRadius: '8px',
+                          color: 'hsl(var(--foreground))',
                         }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>

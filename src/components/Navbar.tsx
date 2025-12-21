@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, Heart, User, FileText } from "lucide-react";
+import { Menu, Heart, User } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -78,11 +78,6 @@ const Navbar = () => {
                   </span>
                 )}
               </Link>
-              {user && (
-                <Link to="/documents" className="text-foreground hover:text-accent transition-colors" onClick={scrollToTop} title="Documents">
-                  <FileText className="h-5 w-5" />
-                </Link>
-              )}
               {user && <NotificationPanel />}
               {user ? (
                 <Link to="/profile" state={{ activePanel: "dashboard" }} onClick={scrollToTop}>
@@ -193,16 +188,6 @@ const Navbar = () => {
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
                 Wishlist {wishlist.length > 0 && `(${wishlist.length})`}
               </Link>
-              {user && (
-                <Link
-                  to="/documents"
-                  className="text-foreground hover:text-accent transition-colors flex items-center gap-2"
-                  onClick={() => { setIsOpen(false); scrollToTop(); }}
-                >
-                  <FileText className="h-5 w-5" />
-                  Documents
-                </Link>
-              )}
               {user && (
                 <div className="py-2">
                   <NotificationPanel />

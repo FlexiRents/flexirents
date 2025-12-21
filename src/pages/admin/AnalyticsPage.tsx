@@ -994,11 +994,16 @@ export default function AnalyticsPage() {
                         data={serviceCategories}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
+                        labelLine={true}
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={120}
+                        outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
+                        style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 600,
+                          fill: 'hsl(var(--foreground))'
+                        }}
                       >
                         {serviceCategories.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -1012,6 +1017,10 @@ export default function AnalyticsPage() {
                           color: 'hsl(var(--foreground))',
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: 'hsl(var(--foreground))' }}
+                        formatter={(value) => <span className="text-foreground font-medium">{value}</span>}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1036,11 +1045,16 @@ export default function AnalyticsPage() {
                         data={propertyTypes}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
+                        labelLine={true}
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={120}
+                        outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
+                        style={{ 
+                          fontSize: '12px', 
+                          fontWeight: 600,
+                          fill: 'hsl(var(--foreground))'
+                        }}
                       >
                         {propertyTypes.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -1054,6 +1068,10 @@ export default function AnalyticsPage() {
                           color: 'hsl(var(--foreground))',
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: 'hsl(var(--foreground))' }}
+                        formatter={(value) => <span className="text-foreground font-medium">{value}</span>}
                       />
                     </PieChart>
                   </ResponsiveContainer>

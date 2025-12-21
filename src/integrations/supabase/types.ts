@@ -247,6 +247,62 @@ export type Database = {
         }
         Relationships: []
       }
+      document_shares: {
+        Row: {
+          access_count: number
+          accessed_at: string | null
+          created_at: string
+          document_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          permission: string
+          share_token: string
+          share_type: string
+          shared_by: string
+          shared_with_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_count?: number
+          accessed_at?: string | null
+          created_at?: string
+          document_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          permission?: string
+          share_token?: string
+          share_type?: string
+          shared_by: string
+          shared_with_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_count?: number
+          accessed_at?: string | null
+          created_at?: string
+          document_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          permission?: string
+          share_token?: string
+          share_type?: string
+          shared_by?: string
+          shared_with_email?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X, CheckSquare, Square, FolderInput } from "lucide-react";
+import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X, CheckSquare, Square, FolderInput, Share2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import {
@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ShareDocumentDialog } from "./ShareDocumentDialog";
 
 interface Document {
   id: string;
@@ -120,6 +121,7 @@ export function DocumentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
+  const [shareDocument, setShareDocument] = useState<Document | null>(null);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["documents", user?.id],
@@ -951,8 +953,16 @@ export function DocumentManagement() {
                             {doc.folder === folder && " (current)"}
                           </DropdownMenuItem>
                         ))}
-                      </DropdownMenuContent>
+                        </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShareDocument(doc)}
+                      title="Share"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1005,6 +1015,13 @@ export function DocumentManagement() {
           })}
         </div>
       )}
+
+      {/* Share Document Dialog */}
+      <ShareDocumentDialog
+        open={!!shareDocument}
+        onOpenChange={(open) => !open && setShareDocument(null)}
+        document={shareDocument}
+      />
     </div>
   );
 }

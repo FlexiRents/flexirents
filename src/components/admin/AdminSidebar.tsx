@@ -14,6 +14,7 @@ import {
   CheckCircle,
   CalendarCheck,
   FileText,
+  FileBarChart,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const menuItems = [
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },
   { title: "Viewing Schedules", url: "/admin/viewing-schedules", icon: CalendarCheck },
   { title: "Payment Approval", url: "/admin/payment-approval", icon: CheckCircle },
+  { title: "Financial Reports", url: "/admin/financial-reports", icon: FileBarChart },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Currency Rates", url: "/admin/currency-rates", icon: DollarSign },

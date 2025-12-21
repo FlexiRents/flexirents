@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X, CheckSquare, Square, FolderInput, Share2 } from "lucide-react";
+import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X, CheckSquare, Square, FolderInput, Share2, History } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import {
@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ShareDocumentDialog } from "./ShareDocumentDialog";
+import { DocumentVersionHistory } from "./DocumentVersionHistory";
 
 interface Document {
   id: string;
@@ -122,6 +123,7 @@ export function DocumentManagement() {
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
   const [shareDocument, setShareDocument] = useState<Document | null>(null);
+  const [versionHistoryDocument, setVersionHistoryDocument] = useState<Document | null>(null);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["documents", user?.id],
@@ -966,6 +968,14 @@ export function DocumentManagement() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setVersionHistoryDocument(doc)}
+                      title="Version History"
+                    >
+                      <History className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handlePreview(doc)}
                       title="Preview"
                     >
@@ -1021,6 +1031,13 @@ export function DocumentManagement() {
         open={!!shareDocument}
         onOpenChange={(open) => !open && setShareDocument(null)}
         document={shareDocument}
+      />
+
+      {/* Version History Dialog */}
+      <DocumentVersionHistory
+        open={!!versionHistoryDocument}
+        onOpenChange={(open) => !open && setVersionHistoryDocument(null)}
+        document={versionHistoryDocument}
       />
     </div>
   );

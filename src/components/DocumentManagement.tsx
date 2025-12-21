@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil } from "lucide-react";
+import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X } from "lucide-react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -116,6 +116,7 @@ export function DocumentManagement() {
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderColor, setNewFolderColor] = useState("#6366f1");
   const [editingFolder, setEditingFolder] = useState<DocumentFolder | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["documents", user?.id],
@@ -356,7 +357,10 @@ export function DocumentManagement() {
   const filteredDocuments = documents?.filter(doc => {
     const matchesType = filterType === "all" || doc.document_type === filterType;
     const matchesFolder = activeFolder === null || doc.folder === activeFolder;
-    return matchesType && matchesFolder;
+    const matchesSearch = searchQuery === "" || 
+      doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesType && matchesFolder && matchesSearch;
   });
 
   const getDocumentTypeLabel = (type: string) => {
@@ -656,21 +660,43 @@ export function DocumentManagement() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex items-center gap-4">
-        <Label>Filter by type:</Label>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Documents</SelectItem>
-            {DOCUMENT_TYPES.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="relative flex-1 w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search documents by name or description..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="whitespace-nowrap">Filter by type:</Label>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Documents</SelectItem>
+              {DOCUMENT_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (

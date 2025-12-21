@@ -13,6 +13,7 @@ import {
   DollarSign,
   CheckCircle,
   CalendarCheck,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ const menuItems = [
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
   { title: "Properties", url: "/admin/properties", icon: Home },
+  { title: "Documents", url: "/documents", icon: FileText },
   { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
   { title: "Vendors", url: "/admin/vendors", icon: Store },
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },

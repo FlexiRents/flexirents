@@ -35,18 +35,18 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
-  { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
   { title: "Properties", url: "/admin/properties", icon: Home },
-  { title: "Documents", url: "/documents", icon: FileText },
-  { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
-  { title: "Vendors", url: "/admin/vendors", icon: Store },
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },
-  { title: "Viewing Schedules", url: "/admin/viewing-schedules", icon: CalendarCheck },
   { title: "Payment Approval", url: "/admin/payment-approval", icon: CheckCircle },
   { title: "Financial Reports", url: "/admin/financial-reports", icon: FileBarChart },
+  { title: "Viewing Schedules", url: "/admin/viewing-schedules", icon: CalendarCheck },
+  { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
+  { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
+  { title: "Vendors", url: "/admin/vendors", icon: Store },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
+  { title: "Documents", url: "/documents", icon: FileText },
   { title: "Currency Rates", url: "/admin/currency-rates", icon: DollarSign },
 ];
 

@@ -217,6 +217,36 @@ export type Database = {
         }
         Relationships: []
       }
+      document_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -225,6 +255,7 @@ export type Database = {
           file_name: string
           file_size: number | null
           file_url: string
+          folder: string | null
           id: string
           lease_id: string | null
           owner_id: string
@@ -239,6 +270,7 @@ export type Database = {
           file_name: string
           file_size?: number | null
           file_url: string
+          folder?: string | null
           id?: string
           lease_id?: string | null
           owner_id: string
@@ -253,6 +285,7 @@ export type Database = {
           file_name?: string
           file_size?: number | null
           file_url?: string
+          folder?: string | null
           id?: string
           lease_id?: string | null
           owner_id?: string

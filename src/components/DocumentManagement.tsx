@@ -332,13 +332,9 @@ export function DocumentManagement() {
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No documents yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Upload your first document to get started.
+            <p className="text-muted-foreground">
+              Upload your first document using the button above to get started.
             </p>
-            <Button onClick={() => setIsUploadOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Document
-            </Button>
           </CardContent>
         </Card>
       ) : (

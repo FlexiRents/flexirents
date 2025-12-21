@@ -28,6 +28,7 @@ import MyBookings from "./pages/MyBookings";
 import ClientProfile from "./pages/ClientProfile";
 import VendorProfile from "./pages/VendorProfile";
 import PropertyDetails from "./pages/PropertyDetails";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="/profile" element={<ClientProfile />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
+                <Route path="/documents" element={<Documents />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

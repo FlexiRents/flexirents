@@ -30,6 +30,7 @@ import VendorProfile from "./pages/VendorProfile";
 import PropertyDetails from "./pages/PropertyDetails";
 import Documents from "./pages/Documents";
 import Install from "./pages/Install";
+import SharedDocument from "./pages/SharedDocument";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -89,6 +90,7 @@ const App = () => (
                 <Route path="/property/:id" element={<PropertyDetails />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/install" element={<Install />} />
+                <Route path="/shared/:shareToken" element={<SharedDocument />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

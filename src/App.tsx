@@ -40,7 +40,6 @@ import VendorsManagement from "./pages/admin/VendorsManagement";
 import BookingsManagement from "./pages/admin/BookingsManagement";
 import ReviewsManagement from "./pages/admin/ReviewsManagement";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
-import TractionPage from "./pages/admin/TractionPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
 import CurrencyManagement from "./pages/admin/CurrencyManagement";
 import PaymentApprovalManagement from "./pages/admin/PaymentApprovalManagement";
@@ -104,7 +103,6 @@ const App = () => (
                   <Route path="payment-approval" element={<PaymentApprovalManagement />} />
                   <Route path="reviews" element={<ReviewsManagement />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
-                  <Route path="traction" element={<TractionPage />} />
                   <Route path="currency-rates" element={<CurrencyManagement />} />
                 </Route>
                 

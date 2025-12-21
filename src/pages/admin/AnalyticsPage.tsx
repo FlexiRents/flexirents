@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, Users, Home, Calendar, DollarSign, Download, FileText } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Home, Calendar, DollarSign, Download, FileText, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   LineChart,
   Line,
@@ -30,11 +37,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useRealtimeVisitors } from "@/hooks/useVisitorTracking";
 
 interface MonthlyData {
   month: string;
@@ -46,6 +55,18 @@ interface MonthlyData {
 
 interface CategoryData {
   name: string;
+  value: number;
+}
+
+type TractionMetricKey = "visitors" | "pageviews" | "viewsPerVisit" | "visitDuration" | "bounceRate";
+
+interface TractionTimeSeriesData {
+  date: string;
+  value: number;
+}
+
+interface TractionListData {
+  label: string;
   value: number;
 }
 
@@ -64,12 +85,231 @@ export default function AnalyticsPage() {
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
 
+  // Traction state
+  const [selectedTractionMetric, setSelectedTractionMetric] = useState<TractionMetricKey>("pageviews");
+  const [tractionDateRange, setTractionDateRange] = useState("7d");
+  const { currentVisitors } = useRealtimeVisitors();
+
   const revenueChartRef = useRef<HTMLDivElement>(null);
   const bookingsChartRef = useRef<HTMLDivElement>(null);
   const growthChartRef = useRef<HTMLDivElement>(null);
   const distributionChartRef = useRef<HTMLDivElement>(null);
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658'];
+
+  const getTractionDateRange = () => {
+    const end = new Date();
+    let start: Date;
+    
+    switch (tractionDateRange) {
+      case "24h":
+        start = subDays(end, 1);
+        break;
+      case "7d":
+        start = subDays(end, 7);
+        break;
+      case "30d":
+        start = subMonths(end, 1);
+        break;
+      case "90d":
+        start = subMonths(end, 3);
+        break;
+      default:
+        start = subDays(end, 7);
+    }
+    
+    return { start, end };
+  };
+
+  const { data: tractionData, isLoading: tractionLoading } = useQuery({
+    queryKey: ["traction", tractionDateRange],
+    queryFn: async () => {
+      const { start, end } = getTractionDateRange();
+      
+      const { data: pageVisits, error: visitsError } = await supabase
+        .from("page_visits")
+        .select("*")
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString());
+
+      if (visitsError) throw visitsError;
+
+      const days: TractionTimeSeriesData[] = [];
+      const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      
+      for (let i = 0; i <= daysDiff; i++) {
+        const date = subDays(end, daysDiff - i);
+        const dateStr = format(date, "yyyy-MM-dd");
+        
+        const dayVisits = pageVisits?.filter(v => 
+          format(new Date(v.created_at), "yyyy-MM-dd") === dateStr
+        ) || [];
+        
+        const uniqueSessions = new Set(dayVisits.map(v => v.session_id));
+        
+        days.push({
+          date: format(date, "d MMM"),
+          value: uniqueSessions.size,
+        });
+      }
+
+      const uniqueSessions = new Set(pageVisits?.map(v => v.session_id) || []);
+      const totalVisitors = uniqueSessions.size;
+      const totalPageviews = pageVisits?.length || 0;
+      const viewsPerVisit = totalVisitors > 0 ? (totalPageviews / totalVisitors).toFixed(2) : "0";
+      
+      const sessionsWithDuration = pageVisits?.filter(v => v.ended_at) || [];
+      let avgDuration = 0;
+      if (sessionsWithDuration.length > 0) {
+        const totalDuration = sessionsWithDuration.reduce((sum, v) => {
+          const start = new Date(v.created_at).getTime();
+          const end = new Date(v.ended_at!).getTime();
+          return sum + (end - start) / 1000;
+        }, 0);
+        avgDuration = Math.floor(totalDuration / sessionsWithDuration.length);
+      }
+
+      const sessionPageCounts: Record<string, number> = {};
+      pageVisits?.forEach(v => {
+        sessionPageCounts[v.session_id] = (sessionPageCounts[v.session_id] || 0) + 1;
+      });
+      const singlePageSessions = Object.values(sessionPageCounts).filter(count => count === 1).length;
+      const bounceRate = totalVisitors > 0 ? Math.floor((singlePageSessions / totalVisitors) * 100) : 0;
+
+      const sourceCounts: Record<string, number> = {};
+      const pageCounts: Record<string, number> = {};
+      const deviceCounts: Record<string, number> = {};
+      const countryCounts: Record<string, number> = {};
+
+      pageVisits?.forEach(v => {
+        const source = v.source || "direct";
+        sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+        
+        pageCounts[v.page_path] = (pageCounts[v.page_path] || 0) + 1;
+        
+        const device = v.device_type || "unknown";
+        deviceCounts[device] = (deviceCounts[device] || 0) + 1;
+        
+        const country = v.country || "Unknown";
+        countryCounts[country] = (countryCounts[country] || 0) + 1;
+      });
+
+      const sources: TractionListData[] = Object.entries(sourceCounts)
+        .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))
+        .sort((a, b) => b.value - a.value);
+
+      const pages: TractionListData[] = Object.entries(pageCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+
+      const countries: TractionListData[] = Object.entries(countryCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
+      const devices: TractionListData[] = Object.entries(deviceCounts)
+        .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))
+        .sort((a, b) => b.value - a.value);
+
+      const pageviewDays = [];
+      for (let i = 0; i <= daysDiff; i++) {
+        const date = subDays(end, daysDiff - i);
+        const dateStr = format(date, "yyyy-MM-dd");
+        
+        const dayPageviews = pageVisits?.filter(v => 
+          format(new Date(v.created_at), "yyyy-MM-dd") === dateStr
+        ).length || 0;
+        
+        pageviewDays.push({
+          date: format(date, "d MMM"),
+          value: dayPageviews,
+        });
+      }
+
+      return {
+        metrics: {
+          visitors: totalVisitors,
+          pageviews: totalPageviews,
+          viewsPerVisit: parseFloat(viewsPerVisit),
+          visitDuration: avgDuration,
+          bounceRate: Math.min(bounceRate, 100),
+        },
+        timeSeries: {
+          visitors: days,
+          pageviews: pageviewDays,
+          viewsPerVisit: days.map((d, i) => ({ 
+            ...d, 
+            value: d.value > 0 ? parseFloat((pageviewDays[i].value / d.value).toFixed(2)) : 0 
+          })),
+          visitDuration: days.map(d => ({ ...d, value: d.value > 0 ? avgDuration : 0 })),
+          bounceRate: days.map(d => ({ ...d, value: d.value > 0 ? bounceRate : 0 })),
+        },
+        lists: {
+          sources,
+          pages,
+          countries,
+          devices,
+        },
+      };
+    },
+  });
+
+  const tractionMetrics = [
+    { key: "visitors" as TractionMetricKey, label: "Visitors", value: tractionData?.metrics.visitors || 0 },
+    { key: "pageviews" as TractionMetricKey, label: "Pageviews", value: tractionData?.metrics.pageviews || 0 },
+    { key: "viewsPerVisit" as TractionMetricKey, label: "Views/Visit", value: tractionData?.metrics.viewsPerVisit || 0 },
+    { key: "visitDuration" as TractionMetricKey, label: "Duration", value: `${tractionData?.metrics.visitDuration || 0}s` },
+    { key: "bounceRate" as TractionMetricKey, label: "Bounce", value: `${tractionData?.metrics.bounceRate || 0}%` },
+  ];
+
+  const dateRangeOptions = [
+    { value: "24h", label: "24h" },
+    { value: "7d", label: "7d" },
+    { value: "30d", label: "30d" },
+    { value: "90d", label: "90d" },
+  ];
+
+  const renderBarList = (title: string, data: TractionListData[], showPercentage = false) => {
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    const maxValue = Math.max(...data.map(d => d.value), 1);
+    
+    return (
+      <Card className="bg-card border-border">
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <span className="font-semibold text-foreground">{title}</span>
+            <span className="text-sm text-muted-foreground">
+              {showPercentage ? "%" : "Visitors"}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {data.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No data available</p>
+            ) : (
+              data.map((item, index) => (
+                <div key={index} className="relative">
+                  <div
+                    className="absolute inset-y-0 left-0 bg-primary/20 rounded"
+                    style={{ width: `${(item.value / maxValue) * 100}%` }}
+                  />
+                  <div className="relative flex justify-between items-center py-2 px-3">
+                    <span className="text-sm text-foreground">{item.label}</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {showPercentage 
+                        ? `${total > 0 ? ((item.value / total) * 100).toFixed(1) : 0}%`
+                        : item.value
+                      }
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -475,13 +715,128 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Section */}
-      <Tabs defaultValue="revenue" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="revenue">Revenue Trends</TabsTrigger>
-          <TabsTrigger value="bookings">Booking Patterns</TabsTrigger>
-          <TabsTrigger value="growth">User Growth</TabsTrigger>
+      <Tabs defaultValue="traction" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="traction">Traction</TabsTrigger>
+          <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          <TabsTrigger value="growth">Growth</TabsTrigger>
           <TabsTrigger value="distribution">Distribution</TabsTrigger>
         </TabsList>
+
+        {/* Traction Tab */}
+        <TabsContent value="traction" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className={`w-2 h-2 rounded-full ${currentVisitors > 0 ? "bg-green-500 animate-pulse" : "bg-muted-foreground"}`} />
+                {currentVisitors} current visitor{currentVisitors !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <Select value={tractionDateRange} onValueChange={setTractionDateRange}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {dateRangeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Traction Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {tractionMetrics.map((metric) => (
+              <Card
+                key={metric.key}
+                className={`cursor-pointer transition-all duration-200 ${
+                  selectedTractionMetric === metric.key
+                    ? "border-primary ring-1 ring-primary"
+                    : "border-border hover:border-muted-foreground"
+                }`}
+                onClick={() => setSelectedTractionMetric(metric.key)}
+              >
+                <CardContent className="p-4">
+                  <p className={`text-sm ${
+                    selectedTractionMetric === metric.key ? "text-primary" : "text-muted-foreground"
+                  }`}>
+                    {metric.label}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
+                    {metric.value}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Traction Chart */}
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              {tractionLoading ? (
+                <div className="h-[300px] flex items-center justify-center">
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart
+                    data={tractionData?.timeSeries[selectedTractionMetric] || []}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorTractionValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                      dx={-10}
+                      domain={[0, (dataMax: number) => Math.max(dataMax, 1)]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fill="url(#colorTractionValue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Traction Lists */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderBarList("Source", tractionData?.lists.sources || [])}
+            {renderBarList("Page", tractionData?.lists.pages || [])}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderBarList("Country", tractionData?.lists.countries || [])}
+            {renderBarList("Device", tractionData?.lists.devices || [], true)}
+          </div>
+        </TabsContent>
 
         {/* Revenue Trends */}
         <TabsContent value="revenue" className="space-y-4">

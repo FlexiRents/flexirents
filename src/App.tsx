@@ -29,6 +29,7 @@ import ClientProfile from "./pages/ClientProfile";
 import VendorProfile from "./pages/VendorProfile";
 import PropertyDetails from "./pages/PropertyDetails";
 import Documents from "./pages/Documents";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -88,6 +89,7 @@ const App = () => (
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
                 <Route path="/documents" element={<Documents />} />
+                <Route path="/install" element={<Install />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X } from "lucide-react";
+import { FileText, Upload, Trash2, Download, Eye, Loader2, File, FileImage, FileArchive, FolderPlus, Folder, FolderOpen, MoreVertical, Pencil, Search, X, CheckSquare, Square, FolderInput } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -117,6 +118,8 @@ export function DocumentManagement() {
   const [newFolderColor, setNewFolderColor] = useState("#6366f1");
   const [editingFolder, setEditingFolder] = useState<DocumentFolder | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
+  const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["documents", user?.id],
@@ -292,6 +295,57 @@ export function DocumentManagement() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (documentIds: string[]) => {
+      const docsToDelete = documents?.filter(d => documentIds.includes(d.id)) || [];
+      
+      // Delete from storage
+      const fileUrls = docsToDelete.map(d => d.file_url);
+      if (fileUrls.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("documents")
+          .remove(fileUrls);
+        if (storageError) throw storageError;
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from("documents")
+        .delete()
+        .in("id", documentIds);
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setSelectedDocuments(new Set());
+      toast.success("Documents deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete documents: " + error.message);
+    },
+  });
+
+  const bulkMoveMutation = useMutation({
+    mutationFn: async ({ documentIds, folder }: { documentIds: string[]; folder: string }) => {
+      const { error } = await supabase
+        .from("documents")
+        .update({ folder })
+        .in("id", documentIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setSelectedDocuments(new Set());
+      setIsBulkMoveOpen(false);
+      toast.success("Documents moved successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to move documents: " + error.message);
+    },
+  });
+
   const handleUpload = async () => {
     if (!selectedFile || !documentType) {
       toast.error("Please select a file and document type");
@@ -346,6 +400,24 @@ export function DocumentManagement() {
     updateFolderMutation.mutate({ id: editingFolder.id, name: newFolderName.trim(), color: newFolderColor });
   };
 
+  const handleSelectDocument = (docId: string, checked: boolean) => {
+    const newSelected = new Set(selectedDocuments);
+    if (checked) {
+      newSelected.add(docId);
+    } else {
+      newSelected.delete(docId);
+    }
+    setSelectedDocuments(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && filteredDocuments) {
+      setSelectedDocuments(new Set(filteredDocuments.map(d => d.id)));
+    } else {
+      setSelectedDocuments(new Set());
+    }
+  };
+
   // Get all unique folders from documents and custom folders
   const allFolders = [
     "General",
@@ -362,6 +434,11 @@ export function DocumentManagement() {
       (doc.description && doc.description.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesType && matchesFolder && matchesSearch;
   });
+
+  const isAllSelected = filteredDocuments && filteredDocuments.length > 0 && 
+    filteredDocuments.every(d => selectedDocuments.has(d.id));
+
+  const isSomeSelected = selectedDocuments.size > 0;
 
   const getDocumentTypeLabel = (type: string) => {
     return DOCUMENT_TYPES.find(t => t.value === type)?.label || type;
@@ -699,6 +776,90 @@ export function DocumentManagement() {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {isSomeSelected && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="flex items-center justify-between p-3">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm font-medium">
+                {selectedDocuments.size} document{selectedDocuments.size > 1 ? 's' : ''} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Dialog open={isBulkMoveOpen} onOpenChange={setIsBulkMoveOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FolderInput className="h-4 w-4 mr-2" />
+                    Move to Folder
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Move Documents to Folder</DialogTitle>
+                    <DialogDescription>
+                      Select a folder to move {selectedDocuments.size} document{selectedDocuments.size > 1 ? 's' : ''} to.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-2 pt-4">
+                    {uniqueFolders.map((folder) => (
+                      <Button
+                        key={folder}
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => bulkMoveMutation.mutate({ 
+                          documentIds: Array.from(selectedDocuments), 
+                          folder 
+                        })}
+                        disabled={bulkMoveMutation.isPending}
+                      >
+                        <Folder className="h-4 w-4 mr-2" style={{ color: getFolderColor(folder) }} />
+                        {folder}
+                      </Button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Documents</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {selectedDocuments.size} document{selectedDocuments.size > 1 ? 's' : ''}? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => bulkDeleteMutation.mutate(Array.from(selectedDocuments))}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setSelectedDocuments(new Set())}
+              >
+                Clear Selection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -715,12 +876,29 @@ export function DocumentManagement() {
         </Card>
       ) : (
         <div className="grid gap-4">
+          {/* Select All Header when documents exist */}
+          {filteredDocuments && filteredDocuments.length > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 border-b">
+              <Checkbox
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">
+                Select all ({filteredDocuments.length})
+              </span>
+            </div>
+          )}
           {filteredDocuments?.map((doc) => {
             const FileIcon = getFileIcon(doc.file_name);
+            const isSelected = selectedDocuments.has(doc.id);
             return (
-              <Card key={doc.id}>
+              <Card key={doc.id} className={isSelected ? "ring-2 ring-primary" : ""}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
+                    />
                     <div className="p-3 bg-muted rounded-lg">
                       <FileIcon className="h-6 w-6 text-primary" />
                     </div>

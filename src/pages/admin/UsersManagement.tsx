@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,8 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, X, Users, UserCheck, Shield, TrendingUp, UserPlus } from "lucide-react";
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, AreaChart, Area } from "recharts";
 
 type AppRole = "admin" | "moderator" | "service_provider" | "user" | "vendor";
 
@@ -20,6 +21,14 @@ interface UserData {
   created_at: string;
   roles: string[];
 }
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: "hsl(0, 84%, 60%)",
+  moderator: "hsl(262, 83%, 58%)",
+  service_provider: "hsl(142, 71%, 45%)",
+  vendor: "hsl(38, 92%, 50%)",
+  user: "hsl(221, 83%, 53%)",
+};
 
 export default function UsersManagement() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -66,6 +75,70 @@ export default function UsersManagement() {
     fetchUsers();
   }, []);
 
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const now = new Date();
+    const thisMonth = { start: startOfMonth(now), end: endOfMonth(now) };
+    const lastMonth = { start: startOfMonth(subMonths(now, 1)), end: endOfMonth(subMonths(now, 1)) };
+
+    const thisMonthUsers = users.filter(u => 
+      isWithinInterval(new Date(u.created_at), thisMonth)
+    ).length;
+
+    const lastMonthUsers = users.filter(u => 
+      isWithinInterval(new Date(u.created_at), lastMonth)
+    ).length;
+
+    const growthRate = lastMonthUsers > 0 
+      ? ((thisMonthUsers - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
+      : thisMonthUsers > 0 ? "100" : "0";
+
+    // Role distribution
+    const roleCounts: Record<string, number> = {};
+    users.forEach(user => {
+      user.roles.forEach(role => {
+        roleCounts[role] = (roleCounts[role] || 0) + 1;
+      });
+    });
+
+    const roleDistribution = Object.entries(roleCounts).map(([name, value]) => ({
+      name: name.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()),
+      value,
+      color: ROLE_COLORS[name] || "hsl(var(--muted))",
+    }));
+
+    // Monthly signups for last 6 months
+    const monthlySignups = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = subMonths(now, i);
+      const monthStart = startOfMonth(month);
+      const monthEnd = endOfMonth(month);
+      const count = users.filter(u => 
+        isWithinInterval(new Date(u.created_at), { start: monthStart, end: monthEnd })
+      ).length;
+      monthlySignups.push({
+        month: format(month, "MMM"),
+        users: count,
+      });
+    }
+
+    // Users with multiple roles
+    const multiRoleUsers = users.filter(u => u.roles.length > 1).length;
+
+    // Admin count
+    const adminCount = users.filter(u => u.roles.includes("admin")).length;
+
+    return {
+      total: users.length,
+      thisMonth: thisMonthUsers,
+      growthRate,
+      roleDistribution,
+      monthlySignups,
+      multiRoleUsers,
+      adminCount,
+    };
+  }, [users]);
+
   const handleAddRole = async (userId: string, role: string) => {
     if (!role) {
       toast.error("Please select a role");
@@ -89,7 +162,6 @@ export default function UsersManagement() {
       toast.success("Role added successfully");
       setSelectedRole(prev => ({ ...prev, [userId]: "" }));
       
-      // Refresh users
       const updatedUsers = users.map(user => 
         user.id === userId 
           ? { ...user, roles: [...user.roles, role] }
@@ -119,7 +191,6 @@ export default function UsersManagement() {
 
       toast.success("Role removed successfully");
       
-      // Refresh users
       const updatedUsers = users.map(user => 
         user.id === userId 
           ? { ...user, roles: user.roles.filter(r => r !== role) }
@@ -132,97 +203,255 @@ export default function UsersManagement() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Users Management</h2>
+          <p className="text-muted-foreground mt-2">Manage all registered users</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-foreground">Users Management</h2>
-        <p className="text-muted-foreground mt-2">Manage all registered users</p>
+        <p className="text-muted-foreground mt-2">Manage all registered users and view analytics</p>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.total}</div>
+            <p className="text-xs text-muted-foreground">
+              Registered accounts
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">New This Month</CardTitle>
+            <UserPlus className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.thisMonth}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <TrendingUp className="h-3 w-3 text-green-500" />
+              <span className="text-green-500">{metrics.growthRate}%</span> from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Admins</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.adminCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Users with admin access
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Multi-Role Users</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.multiRoleUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              Users with multiple roles
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* User Growth Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Growth</CardTitle>
+            <CardDescription>New user signups over the last 6 months</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={metrics.monthlySignups}>
+                  <defs>
+                    <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                    labelStyle={{ color: "hsl(var(--foreground))" }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="users" 
+                    stroke="hsl(221, 83%, 53%)" 
+                    fill="url(#userGradient)" 
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Role Distribution Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Role Distribution</CardTitle>
+            <CardDescription>Breakdown of users by role</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.roleDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
+                  >
+                    {metrics.roleDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+              {metrics.roleDistribution.map((role) => (
+                <div key={role.name} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: role.color }}
+                  />
+                  <span className="text-sm text-muted-foreground">{role.name}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Users Table */}
       <Card>
         <CardHeader>
           <CardTitle>All Users ({users.length})</CardTitle>
+          <CardDescription>View and manage user roles</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Roles</TableHead>
-                  <TableHead>Manage Roles</TableHead>
-                  <TableHead>Joined</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Roles</TableHead>
+                <TableHead>Manage Roles</TableHead>
+                <TableHead>Joined</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={user.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {user.full_name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{user.full_name || "Anonymous"}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2 flex-wrap">
+                      {user.roles.map((role) => (
+                        <Badge key={role} variant="secondary" className="flex items-center gap-1">
+                          {role}
+                          {role !== "user" && (
+                            <X
+                              className="h-3 w-3 cursor-pointer hover:text-destructive"
+                              onClick={() => handleRemoveRole(user.id, role)}
+                            />
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={selectedRole[user.id] || ""}
+                        onValueChange={(value) => setSelectedRole(prev => ({ ...prev, [user.id]: value }))}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="moderator">Moderator</SelectItem>
+                          <SelectItem value="service_provider">Service Provider</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddRole(user.id, selectedRole[user.id])}
+                        disabled={!selectedRole[user.id]}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {format(new Date(user.created_at), "MMM dd, yyyy")}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={user.avatar_url || undefined} />
-                          <AvatarFallback>
-                            {user.full_name?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{user.full_name || "Anonymous"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 flex-wrap">
-                        {user.roles.map((role) => (
-                          <Badge key={role} variant="secondary" className="flex items-center gap-1">
-                            {role}
-                            {role !== "user" && (
-                              <X
-                                className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                onClick={() => handleRemoveRole(user.id, role)}
-                              />
-                            )}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Select
-                          value={selectedRole[user.id] || ""}
-                          onValueChange={(value) => setSelectedRole(prev => ({ ...prev, [user.id]: value }))}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="moderator">Moderator</SelectItem>
-                            <SelectItem value="service_provider">Service Provider</SelectItem>
-                            <SelectItem value="vendor">Vendor</SelectItem>
-                            <SelectItem value="user">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddRole(user.id, selectedRole[user.id])}
-                          disabled={!selectedRole[user.id]}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(user.created_at), "MMM dd, yyyy")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

@@ -6,6 +6,7 @@ import * as z from "zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,8 +29,13 @@ const signupSchema = loginSchema.extend({
   path: ["confirmPassword"],
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -38,6 +44,8 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
   
   // Get the return URL from state, default to home for property exploration
   const returnUrl = (location.state as any)?.returnUrl || "/";
@@ -57,6 +65,13 @@ const Auth = () => {
       password: "",
       confirmPassword: "",
       fullName: "",
+    },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -152,6 +167,38 @@ const Auth = () => {
     }
   };
 
+  const onForgotPassword = async (data: ForgotPasswordFormData) => {
+    setIsResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) {
+        toast({
+          title: "Reset Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check Your Email",
+          description: "We've sent you a password reset link. Please check your inbox.",
+        });
+        setShowForgotPassword(false);
+        forgotPasswordForm.reset();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -241,8 +288,65 @@ const Auth = () => {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Logging in..." : "Login"}
                     </Button>
+
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full text-sm text-muted-foreground"
+                      onClick={() => setShowForgotPassword(true)}
+                    >
+                      Forgot your password?
+                    </Button>
                   </form>
                 </Form>
+
+                {/* Forgot Password Form */}
+                {showForgotPassword && (
+                  <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <Card className="w-full max-w-md">
+                      <CardHeader>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-fit mb-2"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            forgotPasswordForm.reset();
+                          }}
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-2" />
+                          Back to Login
+                        </Button>
+                        <CardTitle className="text-xl">Reset Password</CardTitle>
+                        <CardDescription>
+                          Enter your email address and we'll send you a link to reset your password.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Form {...forgotPasswordForm}>
+                          <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="space-y-4">
+                            <FormField
+                              control={forgotPasswordForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Email</FormLabel>
+                                  <FormControl>
+                                    <Input type="email" placeholder="your@email.com" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button type="submit" className="w-full" disabled={isResetLoading}>
+                              {isResetLoading ? "Sending..." : "Send Reset Link"}
+                            </Button>
+                          </form>
+                        </Form>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="signup">

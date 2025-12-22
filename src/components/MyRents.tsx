@@ -193,8 +193,124 @@ export function MyRents() {
     );
   }
 
+  // Get leases eligible for renewal or approaching eligibility
+  const getEligibleLeases = () => {
+    return leases.filter(lease => {
+      if (lease.status !== "active") return false;
+      const daysRemaining = getDaysRemaining(lease.rent_expiration_date);
+      return daysRemaining > 0; // All active, non-expired leases
+    });
+  };
+
+  const eligibleLeases = getEligibleLeases();
+  const renewableNow = eligibleLeases.filter(l => isEligibleForRenewal(l.rent_expiration_date, l.status));
+
   return (
     <div className="space-y-6">
+      {/* Lease Renewal Banner - Standalone Card */}
+      {eligibleLeases.length > 0 && (
+        <Card className="overflow-hidden border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 shadow-lg">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/20">
+                  <RefreshCw className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Lease Renewal</CardTitle>
+                  <CardDescription className="text-sm">
+                    {renewableNow.length > 0 
+                      ? `${renewableNow.length} lease${renewableNow.length > 1 ? 's' : ''} eligible for renewal now!`
+                      : "Your renewal window will open 3 months before lease expiry"
+                    }
+                  </CardDescription>
+                </div>
+              </div>
+              {renewableNow.length > 0 && (
+                <Badge className="bg-primary text-primary-foreground px-4 py-1 text-sm animate-pulse">
+                  Action Required
+                </Badge>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {eligibleLeases.map(lease => {
+              const daysRemaining = getDaysRemaining(lease.rent_expiration_date);
+              const canRenew = isEligibleForRenewal(lease.rent_expiration_date, lease.status);
+              const daysUntilEligible = daysRemaining - 90;
+              
+              return (
+                <div 
+                  key={`renewal-${lease.id}`}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    canRenew 
+                      ? "bg-primary/10 border-primary/40 shadow-md" 
+                      : "bg-card border-border"
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {lease.properties?.images?.[0] ? (
+                          <img 
+                            src={lease.properties.images[0]} 
+                            alt={lease.properties?.title || "Property"} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Home className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold line-clamp-1">
+                          {lease.properties?.title || "Property"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {canRenew ? (
+                            <span className="text-primary font-medium">
+                              Expires in {daysRemaining} days - Renewal available!
+                            </span>
+                          ) : (
+                            <span>
+                              Renewal available in {daysUntilEligible} days
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 sm:flex-shrink-0">
+                      {canRenew ? (
+                        <Button 
+                          onClick={() => handleRenewalRequest(lease)}
+                          className="w-full sm:w-auto"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Request Renewal
+                        </Button>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground px-3 py-1.5">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {daysUntilEligible} days until eligible
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  {canRenew && (
+                    <div className="mt-3 pt-3 border-t border-primary/20">
+                      <p className="text-sm text-primary/80">
+                        ✨ <strong>Good news!</strong> No security deposit required for renewals. Request now to secure your home!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
@@ -330,44 +446,6 @@ export function MyRents() {
                     )}
                   </div>
                 </div>
-
-                {/* Renewal Section - Always visible for active leases */}
-                {lease.status === "active" && !isExpired && (
-                  <div className={`p-3 rounded-lg border space-y-2 ${
-                    canRenew 
-                      ? "bg-primary/5 border-primary/20" 
-                      : "bg-muted/50 border-muted-foreground/20"
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <RefreshCw className={`h-4 w-4 ${canRenew ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className={`text-sm font-medium ${canRenew ? "text-primary" : "text-muted-foreground"}`}>
-                          {canRenew ? "Eligible for Renewal" : "Lease Renewal"}
-                        </span>
-                      </div>
-                      {!canRenew && (
-                        <Badge variant="outline" className="text-xs">
-                          Available in {daysRemaining - 90} days
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {canRenew 
-                        ? `Your lease expires in ${daysRemaining} days. Request a renewal now - no security deposit required!`
-                        : "Renewal requests become available 3 months before your lease expires. No security deposit required for renewals."
-                      }
-                    </p>
-                    <Button 
-                      size="sm" 
-                      className="w-full"
-                      disabled={!canRenew}
-                      onClick={() => handleRenewalRequest(lease)}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      {canRenew ? "Request Renewal" : "Renewal Not Available Yet"}
-                    </Button>
-                  </div>
-                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">

@@ -331,23 +331,40 @@ export function MyRents() {
                   </div>
                 </div>
 
-                {/* Renewal Banner */}
-                {canRenew && (
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <RefreshCw className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium text-primary">Eligible for Renewal</span>
+                {/* Renewal Section - Always visible for active leases */}
+                {lease.status === "active" && !isExpired && (
+                  <div className={`p-3 rounded-lg border space-y-2 ${
+                    canRenew 
+                      ? "bg-primary/5 border-primary/20" 
+                      : "bg-muted/50 border-muted-foreground/20"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className={`h-4 w-4 ${canRenew ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className={`text-sm font-medium ${canRenew ? "text-primary" : "text-muted-foreground"}`}>
+                          {canRenew ? "Eligible for Renewal" : "Lease Renewal"}
+                        </span>
+                      </div>
+                      {!canRenew && (
+                        <Badge variant="outline" className="text-xs">
+                          Available in {daysRemaining - 90} days
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Your lease expires in {daysRemaining} days. Request a renewal now - no security deposit required!
+                      {canRenew 
+                        ? `Your lease expires in ${daysRemaining} days. Request a renewal now - no security deposit required!`
+                        : "Renewal requests become available 3 months before your lease expires. No security deposit required for renewals."
+                      }
                     </p>
                     <Button 
                       size="sm" 
                       className="w-full"
+                      disabled={!canRenew}
                       onClick={() => handleRenewalRequest(lease)}
                     >
                       <RefreshCw className="h-4 w-4 mr-2" />
-                      Request Renewal
+                      {canRenew ? "Request Renewal" : "Renewal Not Available Yet"}
                     </Button>
                   </div>
                 )}

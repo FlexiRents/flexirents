@@ -21,6 +21,7 @@ import Marketplace from "./pages/Marketplace";
 import VendorRegistration from "./pages/VendorRegistration";
 import ServiceProviderRegistration from "./pages/ServiceProviderRegistration";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import ServiceProviderProfile from "./pages/ServiceProviderProfile";
 import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import VendorDashboard from "./pages/VendorDashboard";
@@ -82,6 +83,7 @@ const App = () => (
                 <Route path="/vendor-registration" element={<VendorRegistration />} />
                 <Route path="/service-provider-registration" element={<ServiceProviderRegistration />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/service-provider/:id" element={<ServiceProviderProfile />} />
                 <Route path="/service-provider-dashboard" element={<ServiceProviderDashboard />} />
                 <Route path="/vendor-dashboard" element={<VendorDashboard />} />

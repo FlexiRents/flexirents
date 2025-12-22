@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus, X, Users, UserCheck, Shield, TrendingUp, UserPlus } from "lucide-react";
+import { Plus, X, Users, UserCheck, Shield, TrendingUp, UserPlus, Search, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, AreaChart, Area } from "recharts";
 
@@ -34,6 +35,11 @@ export default function UsersManagement() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<Record<string, string>>({});
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -138,6 +144,52 @@ export default function UsersManagement() {
       adminCount,
     };
   }, [users]);
+
+  // Filtered users based on search and filters
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      // Search filter
+      const matchesSearch = searchQuery === "" || 
+        (user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Role filter
+      const matchesRole = roleFilter === "all" || user.roles.includes(roleFilter);
+      
+      // Date filter
+      let matchesDate = true;
+      if (dateFilter !== "all") {
+        const userDate = new Date(user.created_at);
+        const now = new Date();
+        switch (dateFilter) {
+          case "today":
+            matchesDate = format(userDate, "yyyy-MM-dd") === format(now, "yyyy-MM-dd");
+            break;
+          case "this_week":
+            const weekAgo = subMonths(now, 0);
+            weekAgo.setDate(now.getDate() - 7);
+            matchesDate = userDate >= weekAgo;
+            break;
+          case "this_month":
+            matchesDate = isWithinInterval(userDate, { 
+              start: startOfMonth(now), 
+              end: endOfMonth(now) 
+            });
+            break;
+          case "last_month":
+            matchesDate = isWithinInterval(userDate, { 
+              start: startOfMonth(subMonths(now, 1)), 
+              end: endOfMonth(subMonths(now, 1)) 
+            });
+            break;
+          case "last_3_months":
+            matchesDate = userDate >= subMonths(now, 3);
+            break;
+        }
+      }
+      
+      return matchesSearch && matchesRole && matchesDate;
+    });
+  }, [users, searchQuery, roleFilter, dateFilter]);
 
   const handleAddRole = async (userId: string, role: string) => {
     if (!role) {
@@ -377,10 +429,49 @@ export default function UsersManagement() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Users ({users.length})</CardTitle>
+          <CardTitle>All Users ({filteredUsers.length} of {users.length})</CardTitle>
           <CardDescription>View and manage user roles</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="service_provider">Service Provider</SelectItem>
+                <SelectItem value="vendor">Vendor</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Filter by date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="this_week">This Week</SelectItem>
+                <SelectItem value="this_month">This Month</SelectItem>
+                <SelectItem value="last_month">Last Month</SelectItem>
+                <SelectItem value="last_3_months">Last 3 Months</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -391,7 +482,14 @@ export default function UsersManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {filteredUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    No users found matching your filters
+                  </TableCell>
+                </TableRow>
+              )}
+              {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">

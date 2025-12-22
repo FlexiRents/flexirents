@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
@@ -957,59 +957,17 @@ export default function ClientProfile() {
                         <CardTitle>Security Settings</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <form onSubmit={handleChangePassword} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="oldPassword">
-                              <Lock className="inline h-4 w-4 mr-2" />
-                              Current Password
-                            </Label>
-                            <Input
-                              id="oldPassword"
-                              type="password"
-                              value={oldPassword}
-                              onChange={(e) => setOldPassword(e.target.value)}
-                              placeholder="Enter current password"
-                              required
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="newPassword">
-                              <Lock className="inline h-4 w-4 mr-2" />
-                              New Password
-                            </Label>
-                            <Input
-                              id="newPassword"
-                              type="password"
-                              value={newPassword}
-                              onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="Enter new password"
-                              required
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">
-                              <Lock className="inline h-4 w-4 mr-2" />
-                              Confirm New Password
-                            </Label>
-                            <Input
-                              id="confirmPassword"
-                              type="password"
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              placeholder="Confirm new password"
-                            />
-                          </div>
-
-                          <Button 
-                            type="submit" 
-                            className="w-full"
-                            disabled={changingPassword || !newPassword || !confirmPassword}
-                          >
-                            {changingPassword ? "Changing..." : "Change Password"}
+                        <div className="text-center py-4">
+                          <Shield className="h-12 w-12 mx-auto text-primary mb-4" />
+                          <h3 className="font-semibold mb-2">Manage Your Security</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Change your password, enable two-factor authentication, and manage connected accounts.
+                          </p>
+                          <Button onClick={() => navigate("/security-settings")}>
+                            <Lock className="h-4 w-4 mr-2" />
+                            Go to Security Settings
                           </Button>
-                        </form>
+                        </div>
 
                         <Separator />
 

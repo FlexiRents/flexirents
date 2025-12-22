@@ -27,6 +27,7 @@ import ServiceProviderDashboard from "./pages/ServiceProviderDashboard";
 import VendorDashboard from "./pages/VendorDashboard";
 import MyBookings from "./pages/MyBookings";
 import ClientProfile from "./pages/ClientProfile";
+import SecuritySettings from "./pages/SecuritySettings";
 import VendorProfile from "./pages/VendorProfile";
 import PropertyDetails from "./pages/PropertyDetails";
 import Documents from "./pages/Documents";
@@ -89,6 +90,7 @@ const App = () => (
                 <Route path="/vendor-dashboard" element={<VendorDashboard />} />
                 <Route path="/my-bookings" element={<MyBookings />} />
                 <Route path="/profile" element={<ClientProfile />} />
+                <Route path="/security-settings" element={<SecuritySettings />} />
                 <Route path="/vendor/:id" element={<VendorProfile />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
                 <Route path="/documents" element={<Documents />} />

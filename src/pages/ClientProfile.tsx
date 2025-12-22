@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MyProperties } from "@/components/MyProperties";
+import { MyRents } from "@/components/MyRents";
 import {
   Sidebar,
   SidebarContent,
@@ -51,11 +51,11 @@ interface VerificationStatus {
   status: string;
 }
 
-type ActivePanel = "dashboard" | "properties" | "billing" | "verification" | "preferences" | "settings";
+type ActivePanel = "dashboard" | "rents" | "billing" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
-  { id: "properties" as ActivePanel, title: "My Properties", icon: HomeIcon },
+  { id: "rents" as ActivePanel, title: "My Rents", icon: HomeIcon },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
   { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
@@ -769,8 +769,8 @@ export default function ClientProfile() {
               <ClientDashboard />
             )}
 
-            {activePanel === "properties" && (
-              <MyProperties />
+            {activePanel === "rents" && (
+              <MyRents />
             )}
 
             {activePanel === "billing" && (

@@ -8,10 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format, differenceInDays, isPast } from "date-fns";
-import { Home, Calendar, MapPin, CreditCard, Clock, AlertCircle, CheckCircle2, FileText } from "lucide-react";
+import { Home, Calendar, MapPin, CreditCard, Clock, AlertCircle, CheckCircle2, FileText, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
-
+import { LeaseRenewalModal } from "./LeaseRenewalModal";
 interface RentalLease {
   id: string;
   property_id: string;
@@ -41,10 +41,27 @@ export function MyRents() {
   const [leases, setLeases] = useState<RentalLease[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentSummaries, setPaymentSummaries] = useState<Record<string, PaymentSummary>>({});
+  const [renewalModalOpen, setRenewalModalOpen] = useState(false);
+  const [selectedLeaseForRenewal, setSelectedLeaseForRenewal] = useState<RentalLease | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+
+  // Check if lease is eligible for renewal (within 3 months of expiry)
+  const isEligibleForRenewal = (endDate: string, status: string) => {
+    if (status !== "active") return false;
+    const end = new Date(endDate);
+    const now = new Date();
+    const daysRemaining = differenceInDays(end, now);
+    // Eligible if within 90 days (3 months) of expiry and not expired
+    return daysRemaining <= 90 && daysRemaining > 0;
+  };
+
+  const handleRenewalRequest = (lease: RentalLease) => {
+    setSelectedLeaseForRenewal(lease);
+    setRenewalModalOpen(true);
+  };
 
   const fetchLeases = async () => {
     if (!user) return;
@@ -235,6 +252,7 @@ export function MyRents() {
           const progress = getLeaseProgress(lease.lease_start_date, lease.rent_expiration_date);
           const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
           const isExpired = daysRemaining <= 0;
+          const canRenew = isEligibleForRenewal(lease.rent_expiration_date, lease.status);
 
           return (
             <Card key={lease.id} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -313,6 +331,27 @@ export function MyRents() {
                   </div>
                 </div>
 
+                {/* Renewal Banner */}
+                {canRenew && (
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-primary">Eligible for Renewal</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Your lease expires in {daysRemaining} days. Request a renewal now - no security deposit required!
+                    </p>
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleRenewalRequest(lease)}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Request Renewal
+                    </Button>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
                   <Button 
@@ -338,6 +377,16 @@ export function MyRents() {
           );
         })}
       </div>
+
+      {/* Lease Renewal Modal */}
+      {selectedLeaseForRenewal && (
+        <LeaseRenewalModal
+          open={renewalModalOpen}
+          onOpenChange={setRenewalModalOpen}
+          lease={selectedLeaseForRenewal}
+          onSuccess={fetchLeases}
+        />
+      )}
     </div>
   );
 }

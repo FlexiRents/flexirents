@@ -220,9 +220,50 @@ export default function VerificationForm() {
                 <Input
                   id="id_number"
                   value={verification.id_number || ""}
-                  onChange={(e) => setVerification({ ...verification, id_number: e.target.value })}
-                  placeholder="Enter your ID number"
+                  onChange={(e) => {
+                    let value = e.target.value.toUpperCase();
+                    
+                    // Only apply Ghana Card formatting when Ghana Card is selected
+                    if (verification.id_type === "ghana_card") {
+                      // Remove any non-alphanumeric characters except hyphens
+                      value = value.replace(/[^A-Z0-9-]/g, "");
+                      
+                      // Auto-format as GHA-XXXXXXXXX-X
+                      if (!value.startsWith("GHA-") && value.length > 0) {
+                        if (value.startsWith("GHA")) {
+                          value = "GHA-" + value.slice(3);
+                        } else {
+                          value = "GHA-" + value;
+                        }
+                      }
+                      
+                      // Ensure proper hyphen placement
+                      const parts = value.split("-");
+                      if (parts.length >= 2) {
+                        const middlePart = parts[1]?.replace(/-/g, "").slice(0, 9) || "";
+                        const lastPart = parts[2]?.slice(0, 1) || "";
+                        
+                        if (middlePart.length === 9 && parts.length < 3) {
+                          value = `GHA-${middlePart}-`;
+                        } else if (middlePart.length >= 9) {
+                          value = `GHA-${middlePart.slice(0, 9)}-${lastPart}`;
+                        } else {
+                          value = `GHA-${middlePart}`;
+                        }
+                      }
+                      
+                      // Limit total length to GHA-XXXXXXXXX-X (15 characters)
+                      value = value.slice(0, 15);
+                    }
+                    
+                    setVerification({ ...verification, id_number: value });
+                  }}
+                  placeholder={verification.id_type === "ghana_card" ? "GHA-XXXXXXXXX-X" : "Enter your ID number"}
+                  maxLength={verification.id_type === "ghana_card" ? 15 : undefined}
                 />
+                {verification.id_type === "ghana_card" && (
+                  <p className="text-xs text-muted-foreground">Format: GHA-XXXXXXXXX-X</p>
+                )}
               </div>
             </div>
 

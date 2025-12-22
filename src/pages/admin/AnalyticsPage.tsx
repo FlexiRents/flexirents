@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
   const growthChartRef = useRef<HTMLDivElement>(null);
   const distributionChartRef = useRef<HTMLDivElement>(null);
 
-  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', '#82ca9d', '#ffc658', '#ff8042'];
+  const COLORS = ['#3b82f6', '#14b8a6', '#f59e0b', '#8b5cf6', '#ec4899', '#22c55e', '#06b6d4', '#f97316'];
 
   const getTractionDateRange = () => {
     const end = new Date();

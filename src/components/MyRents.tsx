@@ -144,15 +144,28 @@ export function MyRents() {
     }
   };
 
-  const getLeaseProgress = (startDate: string, endDate: string) => {
+  const getLeaseProgress = (startDate: string, endDate: string, durationMonths: number) => {
     const start = new Date(startDate);
-    const end = new Date(endDate);
     const now = new Date();
     
-    const totalDays = differenceInDays(end, start);
-    const elapsedDays = differenceInDays(now, start);
+    // Calculate months elapsed
+    const monthsElapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
     
-    return Math.min(Math.max((elapsedDays / totalDays) * 100, 0), 100);
+    // Include partial month progress
+    const dayOfMonth = now.getDate();
+    const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const partialMonth = dayOfMonth / daysInCurrentMonth;
+    
+    const totalProgress = monthsElapsed + partialMonth;
+    
+    return Math.min(Math.max((totalProgress / durationMonths) * 100, 0), 100);
+  };
+  
+  const getMonthsElapsed = (startDate: string) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+    return Math.max(0, months);
   };
 
   const getDaysRemaining = (endDate: string) => {
@@ -365,7 +378,8 @@ export function MyRents() {
         {leases.map((lease) => {
           const summary = paymentSummaries[lease.id];
           const daysRemaining = getDaysRemaining(lease.rent_expiration_date);
-          const progress = getLeaseProgress(lease.lease_start_date, lease.rent_expiration_date);
+          const progress = getLeaseProgress(lease.lease_start_date, lease.rent_expiration_date, lease.lease_duration_months);
+          const monthsElapsed = getMonthsElapsed(lease.lease_start_date);
           const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
           const isExpired = daysRemaining <= 0;
           const canRenew = isEligibleForRenewal(lease.rent_expiration_date, lease.status);
@@ -417,13 +431,16 @@ export function MyRents() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Lease Progress</span>
                     <span className="font-medium">
-                      {isExpired ? "Expired" : `${daysRemaining} days left`}
+                      {isExpired 
+                        ? "Expired" 
+                        : `${Math.min(monthsElapsed, lease.lease_duration_months)} of ${lease.lease_duration_months} months`
+                      }
                     </span>
                   </div>
                   <Progress value={progress} className="h-2" />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{format(new Date(lease.lease_start_date), "MMM dd, yyyy")}</span>
-                    <span>{format(new Date(lease.rent_expiration_date), "MMM dd, yyyy")}</span>
+                    <span>{format(new Date(lease.lease_start_date), "MMM yyyy")}</span>
+                    <span>{format(new Date(lease.rent_expiration_date), "MMM yyyy")}</span>
                   </div>
                 </div>
 

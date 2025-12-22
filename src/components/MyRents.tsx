@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { format, differenceInDays, isPast } from "date-fns";
-import { Home, Calendar, MapPin, CreditCard, Clock, AlertCircle, CheckCircle2, FileText, RefreshCw } from "lucide-react";
+import { Home, Calendar, MapPin, CreditCard, Clock, AlertCircle, CheckCircle2, FileText, RefreshCw, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { LeaseRenewalModal } from "./LeaseRenewalModal";
@@ -56,6 +56,15 @@ export function MyRents() {
     const daysRemaining = differenceInDays(end, now);
     // Eligible if within 90 days (3 months) of expiry and not expired
     return daysRemaining <= 90 && daysRemaining > 0;
+  };
+
+  // Get days until renewal becomes eligible
+  const getDaysUntilRenewalEligible = (endDate: string) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const daysRemaining = differenceInDays(end, now);
+    // Renewal is eligible when daysRemaining <= 90
+    return Math.max(0, daysRemaining - 90);
   };
 
   const handleRenewalRequest = (lease: RentalLease) => {
@@ -383,6 +392,7 @@ export function MyRents() {
           const isExpiringSoon = daysRemaining <= 30 && daysRemaining > 0;
           const isExpired = daysRemaining <= 0;
           const canRenew = isEligibleForRenewal(lease.rent_expiration_date, lease.status);
+          const daysUntilRenewalEligible = getDaysUntilRenewalEligible(lease.rent_expiration_date);
 
           return (
             <Card key={lease.id} className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -413,17 +423,48 @@ export function MyRents() {
               </div>
 
               <CardContent className="p-5 space-y-4">
-                {/* Property Info */}
-                <div>
-                  <h3 className="font-semibold text-lg line-clamp-1">
-                    {lease.properties?.title || "Property"}
-                  </h3>
-                  <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span className="line-clamp-1">
-                      {lease.properties?.location}, {lease.properties?.region}
-                    </span>
+                {/* Property Info with Renewal Button */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg line-clamp-1">
+                      {lease.properties?.title || "Property"}
+                    </h3>
+                    <div className="flex items-center gap-1 text-muted-foreground text-sm mt-1">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="line-clamp-1">
+                        {lease.properties?.location}, {lease.properties?.region}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {/* Renewal Button - Right Side */}
+                  {lease.status === "active" && (
+                    <div className="flex-shrink-0">
+                      {canRenew ? (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedLeaseForRenewal(lease);
+                            setRenewalModalOpen(true);
+                          }}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Renew
+                        </Button>
+                      ) : (
+                        <div className="text-right">
+                          <Button size="sm" variant="outline" disabled className="opacity-60">
+                            <RotateCcw className="h-4 w-4 mr-1" />
+                            Renew
+                          </Button>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            In {daysUntilRenewalEligible} days
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Lease Duration Progress */}

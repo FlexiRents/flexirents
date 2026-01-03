@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Package, Filter, MapPin, Building2 } from "lucide-react";
+import { Search, Package, Filter, MapPin, Building2, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RatingStars from "@/components/RatingStars";
@@ -99,6 +99,26 @@ const Marketplace = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 pt-24">
+        {/* Subscription CTA Banner */}
+        <div className="mb-8 p-6 rounded-xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 border border-primary/20">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/20">
+                <Crown className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Grow Your Business</h3>
+                <p className="text-muted-foreground text-sm">
+                  Subscribe to get priority visibility & unlimited enquiries. First month FREE!
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => navigate("/pricing")} className="whitespace-nowrap">
+              View Subscription Plans
+            </Button>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">

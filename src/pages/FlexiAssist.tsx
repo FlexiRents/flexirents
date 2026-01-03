@@ -5,11 +5,12 @@ import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, UserPlus, MapPin, Star, User } from "lucide-react";
+import { Search, UserPlus, MapPin, Star, User, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import RatingStars from "@/components/RatingStars";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { Badge } from "@/components/ui/badge";
 
 const FlexiAssist = () => {
   const navigate = useNavigate();
@@ -79,6 +80,26 @@ const FlexiAssist = () => {
       
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
+          {/* Subscription CTA Banner */}
+          <div className="mb-8 p-6 rounded-xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 border border-primary/20">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/20">
+                  <Crown className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Boost Your Visibility</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Subscribe to get priority placement & more enquiries. First month FREE!
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => navigate("/pricing")} className="whitespace-nowrap">
+                View Subscription Plans
+              </Button>
+            </div>
+          </div>
+
           <div className="mb-12">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
               <div className="flex-1">

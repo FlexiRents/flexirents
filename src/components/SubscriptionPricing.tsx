@@ -215,9 +215,18 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
 
               <CardContent className="flex-1 space-y-4">
                 <div className="text-center pb-4 border-b">
-                  <span className="text-4xl font-bold">GHS {plan.price_ghs}</span>
-                  <span className="text-muted-foreground">/month</span>
-                  <p className="text-sm text-green-600 mt-1">First month FREE</p>
+                  {plan.slug === 'enterprise' ? (
+                    <>
+                      <span className="text-4xl font-bold">Custom</span>
+                      <p className="text-sm text-muted-foreground mt-1">Based on your needs</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold">GHS {plan.price_ghs}</span>
+                      <span className="text-muted-foreground">/month</span>
+                      <p className="text-sm text-green-600 mt-1">First month FREE</p>
+                    </>
+                  )}
                 </div>
 
                 <ul className="space-y-3">
@@ -238,12 +247,17 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
                   )}
                   variant={isPopular ? "default" : "outline"}
                   disabled={isCurrentPlan || subscribing === plan.id}
-                  onClick={() => handleSubscribe(plan)}
+                  onClick={() => plan.slug === 'enterprise' 
+                    ? toast.info("Our team will contact you to discuss your specific needs") 
+                    : handleSubscribe(plan)
+                  }
                 >
                   {subscribing === plan.id ? (
                     "Processing..."
                   ) : isCurrentPlan ? (
                     "Current Plan"
+                  ) : plan.slug === 'enterprise' ? (
+                    "Contact Us"
                   ) : (
                     "Start Free Trial"
                   )}

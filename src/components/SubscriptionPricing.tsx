@@ -3,6 +3,8 @@ import { Check, Sparkles, Building2, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -37,12 +39,15 @@ const planColors = {
   enterprise: "from-purple-500 to-pink-500",
 };
 
+const ANNUAL_DISCOUNT = 0.10; // 10% discount
+
 export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe }: SubscriptionPricingProps) {
   const { user } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [currentSubscription, setCurrentSubscription] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -160,6 +165,22 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
     );
   }
 
+  const getPrice = (plan: SubscriptionPlan) => {
+    if (plan.slug === 'enterprise') return null;
+    const monthlyPrice = plan.price_ghs;
+    if (isAnnual) {
+      const annualTotal = monthlyPrice * 12;
+      const discountedTotal = annualTotal * (1 - ANNUAL_DISCOUNT);
+      return Math.round(discountedTotal / 12); // Show as monthly equivalent
+    }
+    return monthlyPrice;
+  };
+
+  const getAnnualSavings = (plan: SubscriptionPlan) => {
+    if (plan.slug === 'enterprise') return 0;
+    return Math.round(plan.price_ghs * 12 * ANNUAL_DISCOUNT);
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
@@ -170,6 +191,26 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Boost your visibility and grow your business with our subscription plans
         </p>
+      </div>
+
+      {/* Billing Toggle */}
+      <div className="flex items-center justify-center gap-4">
+        <Label htmlFor="billing-toggle" className={cn(!isAnnual && "font-semibold")}>
+          Monthly
+        </Label>
+        <Switch
+          id="billing-toggle"
+          checked={isAnnual}
+          onCheckedChange={setIsAnnual}
+        />
+        <div className="flex items-center gap-2">
+          <Label htmlFor="billing-toggle" className={cn(isAnnual && "font-semibold")}>
+            Annual
+          </Label>
+          <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+            Save 10%
+          </Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -222,9 +263,22 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
                     </>
                   ) : (
                     <>
-                      <span className="text-4xl font-bold">GHS {plan.price_ghs}</span>
-                      <span className="text-muted-foreground">/month</span>
-                      <p className="text-sm text-green-600 mt-1">First month FREE</p>
+                      <div className="flex items-baseline justify-center gap-1">
+                        {isAnnual && (
+                          <span className="text-lg text-muted-foreground line-through">
+                            GHS {plan.price_ghs}
+                          </span>
+                        )}
+                        <span className="text-4xl font-bold">GHS {getPrice(plan)}</span>
+                        <span className="text-muted-foreground">/month</span>
+                      </div>
+                      {isAnnual ? (
+                        <p className="text-sm text-green-600 mt-1">
+                          Save GHS {getAnnualSavings(plan)}/year
+                        </p>
+                      ) : (
+                        <p className="text-sm text-green-600 mt-1">First month FREE</p>
+                      )}
                     </>
                   )}
                 </div>

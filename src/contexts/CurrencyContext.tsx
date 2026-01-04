@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-type Currency = 'USD' | 'GHS' | 'EUR' | 'GBP';
+type Currency = 'USD' | 'GHS';
 
 interface CurrencyContextType {
   currency: Currency;
@@ -14,17 +14,19 @@ interface CurrencyContextType {
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 // Default exchange rates (fallback if database fetch fails)
-const DEFAULT_EXCHANGE_RATES = {
+const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
   USD: 1,
   GHS: 12.5,
-  EUR: 0.92,
-  GBP: 0.79,
 };
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currency, setCurrency] = useState<Currency>(() => {
     const saved = localStorage.getItem('preferred-currency');
-    return (saved as Currency) || 'USD';
+    // Default to GHS, only accept valid currencies
+    if (saved === 'USD' || saved === 'GHS') {
+      return saved;
+    }
+    return 'GHS';
   });
   const [exchangeRates, setExchangeRates] = useState<Record<Currency, number>>(DEFAULT_EXCHANGE_RATES);
 
@@ -85,8 +87,6 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const currencySymbols: Record<Currency, string> = {
     USD: '$',
     GHS: '₵',
-    EUR: '€',
-    GBP: '£',
   };
 
   const formatPrice = (priceUSD: number): string => {

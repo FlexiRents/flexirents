@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Menu, Heart, User } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import CurrencySelector from "@/components/CurrencySelector";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { scrollToTop } from "@/components/ScrollToTop";
@@ -16,7 +16,7 @@ import logo from "@/assets/logo-main.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { wishlist } = useWishlist();
-  const { currency, setCurrency } = useCurrency();
+  
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdminRole();
   const { isServiceProvider, isVendor } = useUserRole();
@@ -58,17 +58,7 @@ const Navbar = () => {
                 Vendor Panel
               </Link>
             )}
-            <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
-              <SelectTrigger className="w-[110px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD ($)</SelectItem>
-                <SelectItem value="GHS">GHS (₵)</SelectItem>
-                <SelectItem value="EUR">EUR (€)</SelectItem>
-                <SelectItem value="GBP">GBP (£)</SelectItem>
-              </SelectContent>
-            </Select>
+            <CurrencySelector />
             <div className="flex items-center gap-2">
               <Link to="/wishlist" className="relative text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
                 <Heart className="h-5 w-5" fill={wishlist.length > 0 ? "currentColor" : "none"} />
@@ -164,17 +154,7 @@ const Navbar = () => {
                 </Link>
               )}
               <div className="py-2">
-                <Select value={currency} onValueChange={(value: any) => setCurrency(value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="GHS">GHS (₵)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <CurrencySelector />
               </div>
               <div className="py-2 flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Theme:</span>

@@ -48,7 +48,6 @@ import VerificationManagement from "./pages/admin/VerificationManagement";
 import CurrencyManagement from "./pages/admin/CurrencyManagement";
 import FinancialReportsPage from "./pages/admin/FinancialReportsPage";
 import PaymentApprovalManagement from "./pages/admin/PaymentApprovalManagement";
-import ViewingSchedulesManagement from "./pages/admin/ViewingSchedulesManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
 import { BackToTop } from "./components/BackToTop";
@@ -108,7 +107,6 @@ const App = () => (
                   <Route path="service-providers" element={<ServiceProvidersManagement />} />
                   <Route path="vendors" element={<VendorsManagement />} />
                   <Route path="bookings" element={<BookingsManagement />} />
-                  <Route path="viewing-schedules" element={<ViewingSchedulesManagement />} />
                   <Route path="payment-approval" element={<PaymentApprovalManagement />} />
                   <Route path="financial-reports" element={<FinancialReportsPage />} />
                   <Route path="reviews" element={<ReviewsManagement />} />

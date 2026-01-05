@@ -12,7 +12,6 @@ import {
   LogOut,
   DollarSign,
   CheckCircle,
-  CalendarCheck,
   FileText,
   FileBarChart,
 } from "lucide-react";
@@ -39,7 +38,6 @@ const menuItems = [
   { title: "Bookings", url: "/admin/bookings", icon: Calendar },
   { title: "Payment Approval", url: "/admin/payment-approval", icon: CheckCircle },
   { title: "Financial Reports", url: "/admin/financial-reports", icon: FileBarChart },
-  { title: "Viewing Schedules", url: "/admin/viewing-schedules", icon: CalendarCheck },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
   { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },

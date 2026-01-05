@@ -71,7 +71,15 @@ export function SubscriptionPricing({ userType, providerOrVendorId, onSubscribe 
         features: Array.isArray(plan.features) ? plan.features : JSON.parse(plan.features as string || '[]')
       })) || [];
       
-      setPlans(formattedPlans);
+      // Sort plans: Pro, Business, Enterprise (left to right)
+      const planOrder = ['pro', 'business', 'enterprise'];
+      const sortedPlans = formattedPlans.sort((a, b) => {
+        const orderA = planOrder.indexOf(a.slug);
+        const orderB = planOrder.indexOf(b.slug);
+        return orderA - orderB;
+      });
+      
+      setPlans(sortedPlans);
     } catch (error) {
       console.error('Error fetching plans:', error);
       toast.error('Failed to load subscription plans');

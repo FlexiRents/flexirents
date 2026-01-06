@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { format } from "date-fns";
-import { Check, X, Eye, CheckCircle, XCircle } from "lucide-react";
+import { Check, X, Eye, CheckCircle, XCircle, Filter } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -62,7 +63,22 @@ export default function BookingsManagement() {
   const [loadingSchedules, setLoadingSchedules] = useState(true);
   const [selectedSchedule, setSelectedSchedule] = useState<ViewingSchedule | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<string>("all");
+  const [viewingStatusFilter, setViewingStatusFilter] = useState<string>("all");
   const { toast } = useToast();
+
+  const bookingStatuses = ["pending", "approved", "rejected", "confirmed", "completed"];
+  const viewingStatuses = ["pending", "confirmed", "completed", "cancelled"];
+
+  const filteredBookings = useMemo(() => {
+    if (bookingStatusFilter === "all") return bookings;
+    return bookings.filter((booking) => booking.status === bookingStatusFilter);
+  }, [bookings, bookingStatusFilter]);
+
+  const filteredSchedules = useMemo(() => {
+    if (viewingStatusFilter === "all") return schedules;
+    return schedules.filter((schedule) => schedule.status === viewingStatusFilter);
+  }, [schedules, viewingStatusFilter]);
 
   useEffect(() => {
     fetchBookings();
@@ -237,9 +253,27 @@ export default function BookingsManagement() {
 
         <TabsContent value="service-bookings" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>All Booking Requests</CardTitle>
-              <CardDescription>View and manage service booking requests</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>All Booking Requests</CardTitle>
+                <CardDescription>View and manage service booking requests</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={bookingStatusFilter} onValueChange={setBookingStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {bookingStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingBookings ? (
@@ -248,9 +282,9 @@ export default function BookingsManagement() {
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
-              ) : bookings.length === 0 ? (
+              ) : filteredBookings.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No booking requests found
+                  {bookingStatusFilter === "all" ? "No booking requests found" : `No ${bookingStatusFilter} booking requests found`}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -269,7 +303,7 @@ export default function BookingsManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bookings.map((booking) => (
+                      {filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell className="font-medium">
                             {booking.profiles?.full_name || "Unknown User"}
@@ -339,9 +373,27 @@ export default function BookingsManagement() {
 
         <TabsContent value="viewing-schedules" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>All Viewing Schedules</CardTitle>
-              <CardDescription>View and manage property viewing appointments</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>All Viewing Schedules</CardTitle>
+                <CardDescription>View and manage property viewing appointments</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={viewingStatusFilter} onValueChange={setViewingStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {viewingStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingSchedules ? (
@@ -350,9 +402,9 @@ export default function BookingsManagement() {
                     <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
-              ) : schedules.length === 0 ? (
+              ) : filteredSchedules.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No viewing schedules found
+                  {viewingStatusFilter === "all" ? "No viewing schedules found" : `No ${viewingStatusFilter} viewing schedules found`}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -368,7 +420,7 @@ export default function BookingsManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {schedules.map((schedule) => (
+                      {filteredSchedules.map((schedule) => (
                         <TableRow key={schedule.id}>
                           <TableCell>
                             <div>

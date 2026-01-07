@@ -2,11 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck, Bell } from "lucide-react";
+import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck, Bell, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Stats {
   users: number;
@@ -63,6 +66,15 @@ interface RecentActivity {
   status?: string;
 }
 
+interface Notification {
+  id: string;
+  type: "booking" | "payment" | "user" | "viewing";
+  title: string;
+  description: string;
+  time: Date;
+  read: boolean;
+}
+
 const COMMISSION_RATE = 0.10;
 
 export default function AdminDashboard() {
@@ -72,7 +84,28 @@ export default function AdminDashboard() {
   const [regionData, setRegionData] = useState<RegionData[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [propertyTypeData, setPropertyTypeData] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
+  const addNotification = useCallback((notification: Omit<Notification, "id" | "read" | "time">) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: crypto.randomUUID(),
+      time: new Date(),
+      read: false,
+    };
+    setNotifications(prev => [newNotification, ...prev].slice(0, 50)); // Keep max 50 notifications
+  }, []);
+
+  const markAllAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }, []);
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -277,9 +310,15 @@ export default function AdminDashboard() {
         },
         (payload) => {
           console.log('New booking request:', payload);
+          const description = `A new ${payload.new.service_type || 'service'} booking has been submitted`;
           toast.info("New Booking Request", {
-            description: `A new ${payload.new.service_type || 'service'} booking has been submitted`,
+            description,
             icon: <Calendar className="h-4 w-4" />,
+          });
+          addNotification({
+            type: "booking",
+            title: "New Booking Request",
+            description,
           });
           // Update stats
           setStats(prev => prev ? {
@@ -304,9 +343,15 @@ export default function AdminDashboard() {
         (payload) => {
           console.log('New payment:', payload);
           const amount = payload.new.amount || 0;
+          const description = `Payment of $${amount.toLocaleString()} has been recorded`;
           toast.success("New Payment Received", {
-            description: `Payment of $${amount.toLocaleString()} has been recorded`,
+            description,
             icon: <DollarSign className="h-4 w-4" />,
+          });
+          addNotification({
+            type: "payment",
+            title: "New Payment Received",
+            description,
           });
           // Update pending payments if unverified
           if (payload.new.verification_status === 'unverified') {
@@ -331,9 +376,15 @@ export default function AdminDashboard() {
         },
         (payload) => {
           console.log('New user registered:', payload);
+          const description = `${payload.new.full_name || 'A new user'} has joined the platform`;
           toast.info("New User Registration", {
-            description: `${payload.new.full_name || 'A new user'} has joined the platform`,
+            description,
             icon: <Users className="h-4 w-4" />,
+          });
+          addNotification({
+            type: "user",
+            title: "New User Registration",
+            description,
           });
           // Update stats
           setStats(prev => prev ? {
@@ -357,9 +408,15 @@ export default function AdminDashboard() {
         },
         (payload) => {
           console.log('New viewing scheduled:', payload);
+          const description = `A property viewing has been scheduled for ${format(new Date(payload.new.scheduled_date), 'MMM dd, yyyy')}`;
           toast.info("New Viewing Scheduled", {
-            description: `A property viewing has been scheduled for ${format(new Date(payload.new.scheduled_date), 'MMM dd, yyyy')}`,
+            description,
             icon: <Eye className="h-4 w-4" />,
+          });
+          addNotification({
+            type: "viewing",
+            title: "New Viewing Scheduled",
+            description,
           });
           // Update stats
           setStats(prev => prev ? {
@@ -377,7 +434,28 @@ export default function AdminDashboard() {
       supabase.removeChannel(usersChannel);
       supabase.removeChannel(viewingsChannel);
     };
-  }, []);
+  }, [addNotification]);
+
+  const getNotificationIcon = (type: Notification["type"]) => {
+    switch (type) {
+      case "booking": return <Calendar className="h-4 w-4 text-blue-500" />;
+      case "payment": return <DollarSign className="h-4 w-4 text-green-500" />;
+      case "user": return <Users className="h-4 w-4 text-purple-500" />;
+      case "viewing": return <Eye className="h-4 w-4 text-amber-500" />;
+    }
+  };
+
+  const formatNotificationTime = (time: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - time.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return format(time, "MMM dd, HH:mm");
+  };
 
   const userGrowth = stats?.newUsersLastMonth && stats.newUsersLastMonth > 0
     ? ((stats.newUsersThisMonth - stats.newUsersLastMonth) / stats.newUsersLastMonth) * 100
@@ -393,9 +471,78 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">Business Dashboard</h2>
-        <p className="text-muted-foreground mt-2">Real-time overview of your platform performance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Business Dashboard</h2>
+          <p className="text-muted-foreground mt-2">Real-time overview of your platform performance</p>
+        </div>
+        
+        {/* Notification Bell */}
+        <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="end">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h4 className="font-semibold">Notifications</h4>
+              <div className="flex gap-2">
+                {notifications.length > 0 && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs h-7">
+                      Mark all read
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={clearNotifications} className="text-xs h-7">
+                      Clear all
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            <ScrollArea className="h-[300px]">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                  <Bell className="h-10 w-10 mb-2 opacity-20" />
+                  <p className="text-sm">No notifications yet</p>
+                  <p className="text-xs">Real-time updates will appear here</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 hover:bg-muted/50 transition-colors ${!notification.read ? "bg-muted/30" : ""}`}
+                    >
+                      <div className="flex gap-3">
+                        <div className="mt-0.5">{getNotificationIcon(notification.type)}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${!notification.read ? "font-medium" : ""}`}>
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {notification.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatNotificationTime(notification.time)}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <div className="h-2 w-2 rounded-full bg-primary mt-1" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Financial Overview */}

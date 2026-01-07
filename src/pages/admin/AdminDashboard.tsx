@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck } from "lucide-react";
+import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { toast } from "sonner";
 
 interface Stats {
   users: number;
@@ -260,6 +261,122 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
+  }, []);
+
+  // Real-time subscriptions for notifications
+  useEffect(() => {
+    // Subscribe to new booking requests
+    const bookingsChannel = supabase
+      .channel('admin-bookings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'booking_requests'
+        },
+        (payload) => {
+          console.log('New booking request:', payload);
+          toast.info("New Booking Request", {
+            description: `A new ${payload.new.service_type || 'service'} booking has been submitted`,
+            icon: <Calendar className="h-4 w-4" />,
+          });
+          // Update stats
+          setStats(prev => prev ? {
+            ...prev,
+            bookingRequests: prev.bookingRequests + 1,
+            pendingBookings: prev.pendingBookings + 1
+          } : prev);
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new payments
+    const paymentsChannel = supabase
+      .channel('admin-payments')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'rental_payments'
+        },
+        (payload) => {
+          console.log('New payment:', payload);
+          const amount = payload.new.amount || 0;
+          toast.success("New Payment Received", {
+            description: `Payment of $${amount.toLocaleString()} has been recorded`,
+            icon: <DollarSign className="h-4 w-4" />,
+          });
+          // Update pending payments if unverified
+          if (payload.new.verification_status === 'unverified') {
+            setStats(prev => prev ? {
+              ...prev,
+              pendingPayments: prev.pendingPayments + amount
+            } : prev);
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new user registrations
+    const usersChannel = supabase
+      .channel('admin-users')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('New user registered:', payload);
+          toast.info("New User Registration", {
+            description: `${payload.new.full_name || 'A new user'} has joined the platform`,
+            icon: <Users className="h-4 w-4" />,
+          });
+          // Update stats
+          setStats(prev => prev ? {
+            ...prev,
+            users: prev.users + 1,
+            newUsersThisMonth: prev.newUsersThisMonth + 1
+          } : prev);
+        }
+      )
+      .subscribe();
+
+    // Subscribe to new viewing schedules
+    const viewingsChannel = supabase
+      .channel('admin-viewings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'viewing_schedules'
+        },
+        (payload) => {
+          console.log('New viewing scheduled:', payload);
+          toast.info("New Viewing Scheduled", {
+            description: `A property viewing has been scheduled for ${format(new Date(payload.new.scheduled_date), 'MMM dd, yyyy')}`,
+            icon: <Eye className="h-4 w-4" />,
+          });
+          // Update stats
+          setStats(prev => prev ? {
+            ...prev,
+            viewingSchedules: prev.viewingSchedules + 1,
+            pendingViewings: prev.pendingViewings + 1
+          } : prev);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(paymentsChannel);
+      supabase.removeChannel(usersChannel);
+      supabase.removeChannel(viewingsChannel);
+    };
   }, []);
 
   const userGrowth = stats?.newUsersLastMonth && stats.newUsersLastMonth > 0

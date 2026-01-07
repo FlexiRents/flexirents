@@ -1,11 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar, Award, Heart, FileText, DollarSign, Star, Package } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Activity, Bell, ShieldCheck, Home, TrendingUp, Calendar, Award, Heart, FileText, DollarSign, Star, Package, CreditCard, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+
+interface PaymentRecord {
+  id: string;
+  amount: number;
+  due_date: string;
+  payment_date: string | null;
+  status: string;
+}
+
+interface CreditScore {
+  score: number;
+  rating: "Excellent" | "Good" | "Fair" | "Poor" | "No History";
+  onTimePayments: number;
+  latePayments: number;
+  missedPayments: number;
+  totalPayments: number;
+  paymentHistory: PaymentRecord[];
+}
 
 interface DashboardStats {
   verificationStatus: string;
@@ -27,6 +47,7 @@ interface DashboardStats {
   bookingRequests: number;
   productsListed: number;
   userRole: string | null;
+  creditScore: CreditScore | null;
 }
 
 export default function ClientDashboard() {
@@ -54,6 +75,7 @@ export default function ClientDashboard() {
         leasesData,
         paymentsData,
         userRoleData,
+        paymentHistoryData,
       ] = await Promise.all([
         supabase
           .from("user_verification")
@@ -97,6 +119,13 @@ export default function ClientDashboard() {
           .select("role")
           .eq("user_id", user.id)
           .maybeSingle(),
+        // Fetch payment history for credit scoring
+        supabase
+          .from("rental_payments")
+          .select("id, amount, due_date, payment_date, status")
+          .eq("tenant_id", user.id)
+          .order("due_date", { ascending: false })
+          .limit(50),
       ]);
 
       const userRole = userRoleData.data?.role || null;
@@ -171,6 +200,79 @@ export default function ClientDashboard() {
       const bookingScore = Math.min((bookingsData.count || 0) * 10, 30);
       const activityScore = wishlistScore + leaseScore + profileScore + bookingScore;
 
+      // Calculate credit score based on payment history
+      const paymentHistory = paymentHistoryData.data || [];
+      let creditScore: CreditScore | null = null;
+
+      if (paymentHistory.length > 0) {
+        let onTimePayments = 0;
+        let latePayments = 0;
+        let missedPayments = 0;
+
+        paymentHistory.forEach((payment) => {
+          if (payment.status === 'paid' || payment.status === 'verified') {
+            if (payment.payment_date && payment.due_date) {
+              const daysLate = differenceInDays(new Date(payment.payment_date), new Date(payment.due_date));
+              if (daysLate <= 0) {
+                onTimePayments++;
+              } else if (daysLate <= 30) {
+                latePayments++;
+              } else {
+                missedPayments++;
+              }
+            } else {
+              onTimePayments++;
+            }
+          } else if (payment.status === 'overdue') {
+            const daysOverdue = differenceInDays(new Date(), new Date(payment.due_date));
+            if (daysOverdue > 30) {
+              missedPayments++;
+            } else {
+              latePayments++;
+            }
+          }
+        });
+
+        const totalPayments = onTimePayments + latePayments + missedPayments;
+        
+        // Credit score calculation (300-850 scale, similar to FICO)
+        // Base score: 550
+        // On-time payments: +10 points each (max +150)
+        // Late payments: -15 points each
+        // Missed payments: -30 points each
+        let score = 550;
+        score += Math.min(onTimePayments * 10, 150);
+        score -= latePayments * 15;
+        score -= missedPayments * 30;
+        score = Math.max(300, Math.min(850, score));
+
+        let rating: CreditScore["rating"];
+        if (score >= 750) rating = "Excellent";
+        else if (score >= 670) rating = "Good";
+        else if (score >= 580) rating = "Fair";
+        else rating = "Poor";
+
+        creditScore = {
+          score,
+          rating,
+          onTimePayments,
+          latePayments,
+          missedPayments,
+          totalPayments,
+          paymentHistory: paymentHistory as PaymentRecord[],
+        };
+      } else {
+        creditScore = {
+          score: 0,
+          rating: "No History",
+          onTimePayments: 0,
+          latePayments: 0,
+          missedPayments: 0,
+          totalPayments: 0,
+          paymentHistory: [],
+        };
+      }
+
       setStats({
         verificationStatus: verificationData.data?.status || "not_verified",
         propertyAlertsEnabled: preferencesData.data?.is_enabled || false,
@@ -187,6 +289,7 @@ export default function ClientDashboard() {
         bookingRequests,
         productsListed,
         userRole,
+        creditScore,
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -420,8 +523,107 @@ export default function ClientDashboard() {
 
   const statCards = getStatCards();
 
+  const getCreditScoreColor = (rating: CreditScore["rating"]) => {
+    switch (rating) {
+      case "Excellent": return "text-green-500";
+      case "Good": return "text-blue-500";
+      case "Fair": return "text-yellow-500";
+      case "Poor": return "text-red-500";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getCreditScoreProgress = (score: number) => {
+    if (score === 0) return 0;
+    return ((score - 300) / 550) * 100; // 300-850 range mapped to 0-100
+  };
+
   return (
     <div className="space-y-6">
+      {/* Credit Score Card - Prominent placement */}
+      {stats?.creditScore && (
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Credit Score
+            </CardTitle>
+            <CardDescription>
+              Based on your rental payment history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Score Display */}
+              <div className="flex flex-col items-center justify-center p-6 bg-background rounded-lg border">
+                {stats.creditScore.rating === "No History" ? (
+                  <div className="text-center">
+                    <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-lg font-medium text-muted-foreground">No Payment History</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Make rental payments to build your credit score
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className={`text-5xl font-bold ${getCreditScoreColor(stats.creditScore.rating)}`}>
+                      {stats.creditScore.score}
+                    </div>
+                    <Badge 
+                      variant="secondary" 
+                      className={`mt-2 ${getCreditScoreColor(stats.creditScore.rating)}`}
+                    >
+                      {stats.creditScore.rating}
+                    </Badge>
+                    <div className="w-full mt-4">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>300</span>
+                        <span>850</span>
+                      </div>
+                      <Progress 
+                        value={getCreditScoreProgress(stats.creditScore.score)} 
+                        className="h-2"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Payment Breakdown */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm">Payment History Breakdown</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">On-Time Payments</span>
+                    </div>
+                    <span className="font-bold text-green-500">{stats.creditScore.onTimePayments}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm">Late Payments (1-30 days)</span>
+                    </div>
+                    <span className="font-bold text-yellow-500">{stats.creditScore.latePayments}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-red-500/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-red-500" />
+                      <span className="text-sm">Missed Payments (30+ days)</span>
+                    </div>
+                    <span className="font-bold text-red-500">{stats.creditScore.missedPayments}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total tracked payments: {stats.creditScore.totalPayments}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (

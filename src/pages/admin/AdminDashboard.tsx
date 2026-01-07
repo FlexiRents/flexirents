@@ -1,15 +1,24 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck, Bell, X } from "lucide-react";
+import { Users, Home, Briefcase, Store, Calendar, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Eye, Clock, CheckCircle, XCircle, AlertCircle, MapPin, FileCheck, UserCheck, Bell, X, CalendarDays } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+
+type DateRangePreset = "today" | "this_week" | "this_month" | "last_30_days" | "last_90_days" | "custom";
+
+interface DateRange {
+  from: Date;
+  to: Date;
+}
 
 interface Stats {
   users: number;
@@ -86,6 +95,45 @@ export default function AdminDashboard() {
   const [propertyTypeData, setPropertyTypeData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  
+  // Date range filtering
+  const [dateRangePreset, setDateRangePreset] = useState<DateRangePreset>("this_month");
+  const [customDateRange, setCustomDateRange] = useState<DateRange>({
+    from: startOfMonth(new Date()),
+    to: new Date()
+  });
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+
+  const dateRange = useMemo((): DateRange => {
+    const now = new Date();
+    switch (dateRangePreset) {
+      case "today":
+        return { from: new Date(now.setHours(0, 0, 0, 0)), to: new Date() };
+      case "this_week":
+        return { from: startOfWeek(now, { weekStartsOn: 1 }), to: endOfWeek(now, { weekStartsOn: 1 }) };
+      case "this_month":
+        return { from: startOfMonth(now), to: endOfMonth(now) };
+      case "last_30_days":
+        return { from: subDays(now, 30), to: now };
+      case "last_90_days":
+        return { from: subDays(now, 90), to: now };
+      case "custom":
+        return customDateRange;
+      default:
+        return { from: startOfMonth(now), to: endOfMonth(now) };
+    }
+  }, [dateRangePreset, customDateRange]);
+
+  const dateRangeLabel = useMemo(() => {
+    switch (dateRangePreset) {
+      case "today": return "Today";
+      case "this_week": return "This Week";
+      case "this_month": return "This Month";
+      case "last_30_days": return "Last 30 Days";
+      case "last_90_days": return "Last 90 Days";
+      case "custom": return `${format(customDateRange.from, "MMM dd")} - ${format(customDateRange.to, "MMM dd, yyyy")}`;
+    }
+  }, [dateRangePreset, customDateRange]);
 
   const addNotification = useCallback((notification: Omit<Notification, "id" | "read" | "time">) => {
     const newNotification: Notification = {
@@ -471,11 +519,76 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-foreground">Business Dashboard</h2>
           <p className="text-muted-foreground mt-2">Real-time overview of your platform performance</p>
         </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Date Range Filter */}
+          <Popover open={showCustomPicker} onOpenChange={setShowCustomPicker}>
+            <div className="flex items-center gap-2">
+              <Select
+                value={dateRangePreset}
+                onValueChange={(value: DateRangePreset) => {
+                  setDateRangePreset(value);
+                  if (value === "custom") {
+                    setShowCustomPicker(true);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="this_week">This Week</SelectItem>
+                  <SelectItem value="this_month">This Month</SelectItem>
+                  <SelectItem value="last_30_days">Last 30 Days</SelectItem>
+                  <SelectItem value="last_90_days">Last 90 Days</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {dateRangePreset === "custom" && (
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {format(customDateRange.from, "MMM dd")} - {format(customDateRange.to, "MMM dd")}
+                  </Button>
+                </PopoverTrigger>
+              )}
+            </div>
+            
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">From</p>
+                  <CalendarComponent
+                    mode="single"
+                    selected={customDateRange.from}
+                    onSelect={(date) => date && setCustomDateRange(prev => ({ ...prev, from: date }))}
+                    initialFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">To</p>
+                  <CalendarComponent
+                    mode="single"
+                    selected={customDateRange.to}
+                    onSelect={(date) => date && setCustomDateRange(prev => ({ ...prev, to: date }))}
+                  />
+                </div>
+                <Button 
+                  className="w-full" 
+                  onClick={() => setShowCustomPicker(false)}
+                >
+                  Apply Range
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         
         {/* Notification Bell */}
         <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
@@ -543,6 +656,7 @@ export default function AdminDashboard() {
             </ScrollArea>
           </PopoverContent>
         </Popover>
+        </div>
       </div>
 
       {/* Financial Overview */}

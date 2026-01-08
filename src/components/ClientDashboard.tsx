@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CreditScoreHistoryChart } from "@/components/CreditScoreHistoryChart";
 import { CreditScoreImprovementTips } from "@/components/CreditScoreImprovementTips";
+import { PaymentReminderSettings } from "@/components/PaymentReminderSettings";
+import { usePaymentReminders } from "@/hooks/usePaymentReminders";
 
 interface PaymentRecord {
   id: string;
@@ -56,6 +58,9 @@ export default function ClientDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Initialize payment reminders
+  usePaymentReminders();
 
   useEffect(() => {
     if (user) {
@@ -642,6 +647,11 @@ export default function ClientDashboard() {
           totalPayments={stats.creditScore.totalPayments}
           paymentHistory={stats.creditScore.paymentHistory}
         />
+      )}
+
+      {/* Payment Reminder Settings */}
+      {stats?.creditScore && stats.creditScore.totalPayments > 0 && (
+        <PaymentReminderSettings />
       )}
 
       {/* Stats Grid */}

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { CreditScoreHistoryChart } from "@/components/CreditScoreHistoryChart";
 
 interface PaymentRecord {
   id: string;
@@ -622,6 +623,11 @@ export default function ClientDashboard() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Credit Score History Chart */}
+      {stats?.creditScore && stats.creditScore.paymentHistory.length > 0 && (
+        <CreditScoreHistoryChart paymentHistory={stats.creditScore.paymentHistory} />
       )}
 
       {/* Stats Grid */}

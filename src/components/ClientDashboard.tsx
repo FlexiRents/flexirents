@@ -9,6 +9,7 @@ import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CreditScoreHistoryChart } from "@/components/CreditScoreHistoryChart";
+import { CreditScoreImprovementTips } from "@/components/CreditScoreImprovementTips";
 
 interface PaymentRecord {
   id: string;
@@ -628,6 +629,19 @@ export default function ClientDashboard() {
       {/* Credit Score History Chart */}
       {stats?.creditScore && stats.creditScore.paymentHistory.length > 0 && (
         <CreditScoreHistoryChart paymentHistory={stats.creditScore.paymentHistory} />
+      )}
+
+      {/* Credit Score Improvement Tips */}
+      {stats?.creditScore && (
+        <CreditScoreImprovementTips
+          score={stats.creditScore.score}
+          rating={stats.creditScore.rating}
+          onTimePayments={stats.creditScore.onTimePayments}
+          latePayments={stats.creditScore.latePayments}
+          missedPayments={stats.creditScore.missedPayments}
+          totalPayments={stats.creditScore.totalPayments}
+          paymentHistory={stats.creditScore.paymentHistory}
+        />
       )}
 
       {/* Stats Grid */}

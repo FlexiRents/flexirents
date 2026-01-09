@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditScoreHistoryChart } from "@/components/CreditScoreHistoryChart";
 import { CreditScoreImprovementTips } from "@/components/CreditScoreImprovementTips";
 import { PaymentReminderSettings } from "@/components/PaymentReminderSettings";
+import { PaymentCalendar } from "@/components/PaymentCalendar";
 import { usePaymentReminders } from "@/hooks/usePaymentReminders";
 
 interface PaymentRecord {
@@ -647,6 +648,11 @@ export default function ClientDashboard() {
           totalPayments={stats.creditScore.totalPayments}
           paymentHistory={stats.creditScore.paymentHistory}
         />
+      )}
+
+      {/* Payment Calendar */}
+      {stats?.creditScore && stats.creditScore.paymentHistory.length > 0 && (
+        <PaymentCalendar payments={stats.creditScore.paymentHistory} />
       )}
 
       {/* Payment Reminder Settings */}

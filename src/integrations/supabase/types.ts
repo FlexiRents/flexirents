@@ -508,6 +508,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          account_type: string | null
+          bank_name: string
+          created_at: string
+          id: string
+          is_primary: boolean | null
+          is_verified: boolean | null
+          paystack_authorization_code: string | null
+          paystack_recipient_code: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          account_type?: string | null
+          bank_name: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          paystack_authorization_code?: string | null
+          paystack_recipient_code?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          account_type?: string | null
+          bank_name?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          paystack_authorization_code?: string | null
+          paystack_recipient_code?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       portfolio_images: {
         Row: {
           category: string | null
@@ -723,6 +768,81 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recurring_payment_schedules: {
+        Row: {
+          amount: number
+          created_at: string
+          day_of_month: number | null
+          end_date: string | null
+          frequency: string | null
+          id: string
+          last_payment_date: string | null
+          last_payment_status: string | null
+          lease_id: string | null
+          next_payment_date: string
+          notes: string | null
+          payment_account_id: string | null
+          start_date: string
+          status: string | null
+          total_payments_made: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          day_of_month?: number | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_status?: string | null
+          lease_id?: string | null
+          next_payment_date: string
+          notes?: string | null
+          payment_account_id?: string | null
+          start_date: string
+          status?: string | null
+          total_payments_made?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          day_of_month?: number | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_status?: string | null
+          lease_id?: string | null
+          next_payment_date?: string
+          notes?: string | null
+          payment_account_id?: string | null
+          start_date?: string
+          status?: string | null
+          total_payments_made?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_payment_schedules_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "rental_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_payment_schedules_payment_account_id_fkey"
+            columns: ["payment_account_id"]
+            isOneToOne: false
+            referencedRelation: "payment_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rental_leases: {
         Row: {

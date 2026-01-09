@@ -12,6 +12,8 @@ import { CreditScoreHistoryChart } from "@/components/CreditScoreHistoryChart";
 import { CreditScoreImprovementTips } from "@/components/CreditScoreImprovementTips";
 import { PaymentReminderSettings } from "@/components/PaymentReminderSettings";
 import { PaymentCalendar } from "@/components/PaymentCalendar";
+import { PaymentAccountManager } from "@/components/PaymentAccountManager";
+import { RecurringPaymentScheduler } from "@/components/RecurringPaymentScheduler";
 import { usePaymentReminders } from "@/hooks/usePaymentReminders";
 
 interface PaymentRecord {
@@ -659,6 +661,12 @@ export default function ClientDashboard() {
       {stats?.creditScore && stats.creditScore.totalPayments > 0 && (
         <PaymentReminderSettings />
       )}
+
+      {/* Payment Account Manager */}
+      <PaymentAccountManager />
+
+      {/* Recurring Payment Scheduler */}
+      <RecurringPaymentScheduler />
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -14,6 +14,7 @@ import { PaymentReminderSettings } from "@/components/PaymentReminderSettings";
 import { PaymentCalendar } from "@/components/PaymentCalendar";
 import { PaymentAccountManager } from "@/components/PaymentAccountManager";
 import { RecurringPaymentScheduler } from "@/components/RecurringPaymentScheduler";
+import { PaymentHistoryExport } from "@/components/PaymentHistoryExport";
 import { usePaymentReminders } from "@/hooks/usePaymentReminders";
 
 interface PaymentRecord {
@@ -692,6 +693,9 @@ export default function ClientDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Payment History Export */}
+      <PaymentHistoryExport />
 
       <Card>
         <CardHeader>

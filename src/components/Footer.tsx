@@ -132,9 +132,9 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Resources */}
           <div className="pt-5">
-            <h3 className="text-lg font-semibold mb-4">Services</h3>
+            <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2 text-base opacity-80">
               <li>
                 <Link to="/rentals" className="hover:text-accent transition-colors" onClick={scrollToTop}>
@@ -152,18 +152,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/project-management" className="hover:text-accent transition-colors" onClick={scrollToTop}>
-                  Project Management
-                </Link>
-              </li>
-              <li>
                 <Link to="/marketplace" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Market Place
-                </Link>
-              </li>
-              <li>
-                <Link to="/projects" className="hover:text-accent transition-colors" onClick={scrollToTop}>
-                  Projects
                 </Link>
               </li>
             </ul>

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format, addMonths } from 'date-fns';
-import { Plus, Calendar, Pause, Play, Trash2, RefreshCw, Clock, Banknote, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, Pause, Play, Trash2, RefreshCw, Clock, Banknote, AlertTriangle, Loader2, Zap } from 'lucide-react';
 
 interface PaymentAccount {
   id: string;
@@ -19,6 +19,8 @@ interface PaymentAccount {
   bank_name: string;
   account_number: string;
   is_primary: boolean;
+  is_verified: boolean;
+  paystack_authorization_code: string | null;
 }
 
 interface RentalLease {
@@ -51,6 +53,24 @@ interface RecurringSchedule {
   rental_leases?: RentalLease;
 }
 
+// Mock process automatic payment (will use Paystack charge_authorization when API is added)
+const mockProcessAutomaticPayment = async (
+  _recipientCode: string,
+  amount: number,
+  _scheduleId: string
+): Promise<{ success: boolean; reference: string; message: string }> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // In production: This would call Paystack's transfer endpoint
+  // POST /transfer with recipient_code and amount
+  return {
+    success: true,
+    reference: `PAY_${Date.now()}`,
+    message: `Payment of GH₵ ${amount.toLocaleString()} processed successfully`,
+  };
+};
+
 export const RecurringPaymentScheduler = () => {
   const { user } = useAuth();
   const [schedules, setSchedules] = useState<RecurringSchedule[]>([]);
@@ -58,6 +78,7 @@ export const RecurringPaymentScheduler = () => {
   const [leases, setLeases] = useState<RentalLease[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     lease_id: '',
     payment_account_id: '',
@@ -80,7 +101,7 @@ export const RecurringPaymentScheduler = () => {
         .from('recurring_payment_schedules')
         .select(`
           *,
-          payment_accounts (id, account_name, bank_name, account_number, is_primary),
+          payment_accounts (id, account_name, bank_name, account_number, is_primary, is_verified, paystack_authorization_code),
           rental_leases (id, monthly_rent, lease_start_date, rent_expiration_date)
         `)
         .eq('user_id', user?.id)
@@ -88,11 +109,12 @@ export const RecurringPaymentScheduler = () => {
 
       if (schedulesError) throw schedulesError;
 
-      // Fetch payment accounts
+      // Fetch verified payment accounts only
       const { data: accountsData, error: accountsError } = await supabase
         .from('payment_accounts')
         .select('*')
-        .eq('user_id', user?.id);
+        .eq('user_id', user?.id)
+        .eq('is_verified', true);
 
       if (accountsError) throw accountsError;
 
@@ -198,6 +220,51 @@ export const RecurringPaymentScheduler = () => {
     } catch (error) {
       console.error('Error deleting schedule:', error);
       toast.error('Failed to delete schedule');
+    }
+  };
+
+  const handleProcessPaymentNow = async (schedule: RecurringSchedule) => {
+    if (!schedule.payment_accounts) {
+      toast.error('No payment account linked to this schedule');
+      return;
+    }
+
+    try {
+      setProcessingPayment(schedule.id);
+      
+      // Process payment via Paystack (mock for now)
+      const result = await mockProcessAutomaticPayment(
+        schedule.payment_accounts.account_number, // Will use recipient_code when API is added
+        schedule.amount,
+        schedule.id
+      );
+
+      if (result.success) {
+        // Update schedule with payment info
+        const nextPaymentDate = addMonths(new Date(schedule.next_payment_date), 
+          schedule.frequency === 'monthly' ? 1 : schedule.frequency === 'quarterly' ? 3 : 0.5
+        );
+
+        await supabase
+          .from('recurring_payment_schedules')
+          .update({
+            last_payment_date: new Date().toISOString().split('T')[0],
+            last_payment_status: 'success',
+            next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+            total_payments_made: (schedule.total_payments_made || 0) + 1,
+          })
+          .eq('id', schedule.id);
+
+        toast.success(result.message);
+        fetchData();
+      } else {
+        toast.error('Payment failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Payment processing failed');
+    } finally {
+      setProcessingPayment(null);
     }
   };
 
@@ -387,8 +454,8 @@ export const RecurringPaymentScheduler = () => {
         {accounts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No payment accounts found</p>
-            <p className="text-sm">Add a payment account first to create recurring schedules</p>
+            <p>No verified payment accounts found</p>
+            <p className="text-sm">Add and verify a payment account first to create recurring schedules</p>
           </div>
         ) : schedules.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -440,6 +507,26 @@ export const RecurringPaymentScheduler = () => {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {schedule.status === 'active' && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleProcessPaymentNow(schedule)}
+                        disabled={processingPayment === schedule.id}
+                      >
+                        {processingPayment === schedule.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="h-4 w-4 mr-1" />
+                            Pay Now
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"

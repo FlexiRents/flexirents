@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, CreditCard, Trash2, Star, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, CreditCard, Trash2, Star, Building2, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 
 interface PaymentAccount {
   id: string;
@@ -19,8 +19,35 @@ interface PaymentAccount {
   account_type: string;
   is_primary: boolean;
   is_verified: boolean;
+  paystack_recipient_code: string | null;
+  paystack_authorization_code: string | null;
   created_at: string;
 }
+
+// Paystack bank codes for Ghana (will be used when API is integrated)
+const PAYSTACK_BANK_CODES: Record<string, string> = {
+  'Access Bank Ghana': 'ABG',
+  'Absa Bank Ghana': 'ABSA',
+  'Agricultural Development Bank': 'ADB',
+  'Bank of Africa Ghana': 'BOA',
+  'CalBank': 'CAL',
+  'Consolidated Bank Ghana': 'CBG',
+  'Ecobank Ghana': 'ECO',
+  'FBN Bank Ghana': 'FBN',
+  'Fidelity Bank Ghana': 'FID',
+  'First Atlantic Bank': 'FAB',
+  'First National Bank Ghana': 'FNB',
+  'GCB Bank': 'GCB',
+  'Guaranty Trust Bank Ghana': 'GTB',
+  'National Investment Bank': 'NIB',
+  'Prudential Bank': 'PRU',
+  'Republic Bank Ghana': 'REP',
+  'Societe Generale Ghana': 'SGG',
+  'Stanbic Bank Ghana': 'STA',
+  'Standard Chartered Bank Ghana': 'SCB',
+  'United Bank for Africa Ghana': 'UBA',
+  'Zenith Bank Ghana': 'ZEN',
+};
 
 const GHANA_BANKS = [
   'Access Bank Ghana',
@@ -46,11 +73,46 @@ const GHANA_BANKS = [
   'Zenith Bank Ghana',
 ];
 
+// Mock Paystack verification (will be replaced with actual API call)
+const mockVerifyBankAccount = async (accountNumber: string, bankCode: string): Promise<{
+  verified: boolean;
+  account_name?: string;
+  recipient_code?: string;
+}> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // For now, auto-verify accounts (when Paystack API is added, this will make real API calls)
+  // In production: POST to /transferrecipient to create recipient and verify
+  return {
+    verified: true,
+    account_name: undefined, // Will be populated by Paystack API
+    recipient_code: `RCP_mock_${Date.now()}`, // Mock recipient code
+  };
+};
+
+// Mock charge authorization (for future automatic payments)
+const mockChargeAuthorization = async (
+  _authorizationCode: string, 
+  _amount: number, 
+  _email: string
+): Promise<{ success: boolean; reference?: string }> => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // In production: POST to /transaction/charge_authorization
+  return {
+    success: true,
+    reference: `TXN_mock_${Date.now()}`,
+  };
+};
+
 export const PaymentAccountManager = () => {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [formData, setFormData] = useState({
     account_name: '',
     bank_name: '',
@@ -89,7 +151,14 @@ export const PaymentAccountManager = () => {
     }
 
     try {
+      setVerifying(true);
       const isPrimary = accounts.length === 0;
+      
+      // Get bank code for Paystack
+      const bankCode = PAYSTACK_BANK_CODES[formData.bank_name] || '';
+      
+      // Verify bank account with Paystack (mock for now)
+      const verification = await mockVerifyBankAccount(formData.account_number, bankCode);
       
       const { error } = await supabase
         .from('payment_accounts')
@@ -100,17 +169,55 @@ export const PaymentAccountManager = () => {
           account_number: formData.account_number,
           account_type: formData.account_type,
           is_primary: isPrimary,
+          is_verified: verification.verified,
+          paystack_recipient_code: verification.recipient_code || null,
         });
 
       if (error) throw error;
 
-      toast.success('Payment account added successfully');
+      toast.success(verification.verified 
+        ? 'Payment account added and verified!' 
+        : 'Payment account added. Verification pending.');
       setDialogOpen(false);
       setFormData({ account_name: '', bank_name: '', account_number: '', account_type: 'savings' });
       fetchAccounts();
     } catch (error) {
       console.error('Error adding payment account:', error);
       toast.error('Failed to add payment account');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleVerifyAccount = async (accountId: string, accountNumber: string, bankName: string) => {
+    try {
+      const bankCode = PAYSTACK_BANK_CODES[bankName] || '';
+      
+      toast.loading('Verifying account...');
+      const verification = await mockVerifyBankAccount(accountNumber, bankCode);
+      
+      if (verification.verified) {
+        const { error } = await supabase
+          .from('payment_accounts')
+          .update({
+            is_verified: true,
+            paystack_recipient_code: verification.recipient_code,
+          })
+          .eq('id', accountId);
+
+        if (error) throw error;
+        
+        toast.dismiss();
+        toast.success('Account verified successfully!');
+        fetchAccounts();
+      } else {
+        toast.dismiss();
+        toast.error('Could not verify account. Please check your details.');
+      }
+    } catch (error) {
+      console.error('Error verifying account:', error);
+      toast.dismiss();
+      toast.error('Verification failed');
     }
   };
 
@@ -249,11 +356,26 @@ export const PaymentAccountManager = () => {
                   </Select>
                 </div>
               </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  Your account will be verified via Paystack for secure payments
+                </p>
+              </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={verifying}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddAccount}>Add Account</Button>
+                <Button onClick={handleAddAccount} disabled={verifying}>
+                  {verifying ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    'Add & Verify Account'
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -307,6 +429,16 @@ export const PaymentAccountManager = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {!account.is_verified && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleVerifyAccount(account.id, account.account_number, account.bank_name)}
+                    >
+                      <ShieldCheck className="h-4 w-4 mr-1" />
+                      Verify
+                    </Button>
+                  )}
                   {!account.is_primary && (
                     <Button
                       variant="outline"

@@ -539,6 +539,7 @@ const Index = () => {
                       location={property.location}
                       type="rent"
                       features={property.features}
+                      leaseDurationMonths={property.lease_duration_months}
                       onSelect={() => navigate("/rentals")}
                     />
                   );

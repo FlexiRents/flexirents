@@ -115,6 +115,7 @@ const Rentals = () => {
                     location={property.location}
                     type="rent"
                     features={property.features || { descriptions: [], amenities: [], facilities: [] }}
+                    leaseDurationMonths={property.lease_duration_months as number[] | null}
                     onSelect={() => handleSelectProperty(property.id)}
                   />
                 ))}

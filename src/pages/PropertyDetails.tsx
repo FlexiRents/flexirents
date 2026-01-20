@@ -16,7 +16,7 @@ import RatingStars from "@/components/RatingStars";
 import { 
   MapPin, Home, Bed, Bath, Maximize, Calendar, 
   Tag, CheckCircle, ArrowLeft, Heart, Star, Ruler, 
-  TreePine, Building2, ParkingCircle, ChevronLeft, ChevronRight
+  TreePine, Building2, ParkingCircle, ChevronLeft, ChevronRight, Clock
 } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -682,6 +682,30 @@ const PropertyDetails = () => {
                     <span>Status: {property.status}</span>
                   </div>
                 </div>
+
+                {/* Rental Duration Options */}
+                {isRental && (
+                  <div className="mt-6 pt-4 border-t">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold">Available Lease Durations</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
+                        6 Months
+                      </Badge>
+                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
+                        12 Months
+                      </Badge>
+                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
+                        24 Months
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Flexible payment plans available for all durations
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

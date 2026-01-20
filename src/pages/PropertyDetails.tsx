@@ -623,7 +623,17 @@ const PropertyDetails = () => {
             {/* Title and Price */}
             <Card>
               <CardContent className="pt-6">
-                <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
+                <h1 className="text-3xl font-bold mb-4">
+                  {property.title}
+                  {isRental && property.lease_duration_months && property.lease_duration_months.length > 0 && (
+                    <span className="text-primary">
+                      {" / "}
+                      {property.lease_duration_months.map((m: number) => 
+                        m === 6 ? "6 months" : m === 12 ? "1 year" : m === 24 ? "2 years" : `${m} months`
+                      ).join(" or ")}
+                    </span>
+                  )}
+                </h1>
                 <div className="text-3xl font-bold text-primary mb-4">
                   {isRental ? `${formatPrice(property.price)}/month` : formatPrice(property.price)}
                 </div>

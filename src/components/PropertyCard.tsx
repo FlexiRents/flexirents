@@ -31,7 +31,14 @@ interface PropertyCardProps {
   type: "rent" | "sale";
   features?: PropertyFeatures;
   onSelect?: () => void;
+  leaseDurationMonths?: number[] | null;
 }
+
+const formatLeaseDuration = (months: number[]): string => {
+  return months.map((m) => 
+    m === 6 ? "6 months" : m === 12 ? "1 year" : m === 24 ? "2 years" : `${m} months`
+  ).join(" or ");
+};
 
 const PropertyCard = ({
   id,
@@ -45,6 +52,7 @@ const PropertyCard = ({
   type,
   features,
   onSelect,
+  leaseDurationMonths,
 }: PropertyCardProps) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { toast } = useToast();
@@ -144,6 +152,9 @@ const PropertyCard = ({
           onClick={handleNavigateToDetails}
         >
           {title}
+          {type === "rent" && leaseDurationMonths && leaseDurationMonths.length > 0 && (
+            <span className="text-primary font-medium"> / {formatLeaseDuration(leaseDurationMonths)}</span>
+          )}
         </h3>
         <p className="text-muted-foreground text-sm mb-3">{location}</p>
         <div className="flex items-center gap-4 text-sm text-muted-foreground">

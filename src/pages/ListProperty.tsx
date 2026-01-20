@@ -192,6 +192,7 @@ const ListProperty = () => {
     title: "",
     propertyType: "",
     listingType: "",
+    leaseDuration: "" as string, // Single duration: "6", "12", or "24"
     region: "",
     location: "",
     majorCity: "",
@@ -278,6 +279,9 @@ const ListProperty = () => {
           title: formData.title,
           property_type: formData.propertyType,
           listing_type: formData.listingType,
+          lease_duration_months: formData.listingType === 'rent' && formData.leaseDuration 
+            ? [parseInt(formData.leaseDuration)] 
+            : null,
           region: formData.region,
           location: formData.location,
           price: parseFloat(formData.price),
@@ -302,6 +306,7 @@ const ListProperty = () => {
         title: "",
         propertyType: "",
         listingType: "",
+        leaseDuration: "",
         region: "",
         location: "",
         majorCity: "",
@@ -403,6 +408,27 @@ const ListProperty = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Lease Duration - Only show for rentals */}
+                {formData.listingType === "rent" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="leaseDuration">Lease Duration</Label>
+                    <Select
+                      value={formData.leaseDuration}
+                      onValueChange={(value) => setFormData({ ...formData, leaseDuration: value })}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lease duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6 Months</SelectItem>
+                        <SelectItem value="12">12 Months (1 Year)</SelectItem>
+                        <SelectItem value="24">24 Months (2 Years)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {/* Region */}
                 <div className="space-y-2">

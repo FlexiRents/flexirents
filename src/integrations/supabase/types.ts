@@ -640,6 +640,7 @@ export type Database = {
           features: Json | null
           id: string
           images: string[] | null
+          lease_duration_months: number[] | null
           listing_type: string
           location: string
           owner_id: string
@@ -659,6 +660,7 @@ export type Database = {
           features?: Json | null
           id?: string
           images?: string[] | null
+          lease_duration_months?: number[] | null
           listing_type: string
           location: string
           owner_id: string
@@ -678,6 +680,7 @@ export type Database = {
           features?: Json | null
           id?: string
           images?: string[] | null
+          lease_duration_months?: number[] | null
           listing_type?: string
           location?: string
           owner_id?: string

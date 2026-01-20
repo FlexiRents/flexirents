@@ -39,6 +39,7 @@ interface PropertyData {
   images: string[] | null;
   features: any;
   status: string;
+  lease_duration_months: number[] | null;
 }
 
 const PropertyDetails = () => {
@@ -683,26 +684,28 @@ const PropertyDetails = () => {
                   </div>
                 </div>
 
-                {/* Rental Duration Options */}
-                {isRental && (
+                {/* Rental Duration */}
+                {isRental && property.lease_duration_months && property.lease_duration_months.length > 0 && (
                   <div className="mt-6 pt-4 border-t">
                     <div className="flex items-center gap-2 mb-3">
                       <Clock className="h-5 w-5 text-primary" />
-                      <h3 className="font-semibold">Available Lease Durations</h3>
+                      <h3 className="font-semibold">Lease Duration</h3>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
-                        6 Months
-                      </Badge>
-                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
-                        12 Months
-                      </Badge>
-                      <Badge variant="outline" className="px-4 py-2 text-sm bg-primary/5 border-primary/20">
-                        24 Months
-                      </Badge>
+                      {property.lease_duration_months.map((duration: number) => (
+                        <Badge 
+                          key={duration} 
+                          variant="outline" 
+                          className="px-4 py-2 text-sm bg-primary/5 border-primary/20"
+                        >
+                          {duration} {duration === 1 ? 'Month' : 'Months'}
+                          {duration === 12 && ' (1 Year)'}
+                          {duration === 24 && ' (2 Years)'}
+                        </Badge>
+                      ))}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Flexible payment plans available for all durations
+                      Flexible payment plans available
                     </p>
                   </div>
                 )}

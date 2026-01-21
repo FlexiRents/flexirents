@@ -18,6 +18,7 @@ export interface PropertyFiltersState {
   selectedCity: string;
   sortBy: string;
   amenities: string[];
+  leaseDuration: string;
 }
 
 interface PropertyFiltersProps {
@@ -67,6 +68,7 @@ const PropertyFilters = ({ filters, onFiltersChange, listingType }: PropertyFilt
       selectedCity: "all",
       sortBy: "newest",
       amenities: [],
+      leaseDuration: "all",
     });
   };
 
@@ -80,6 +82,7 @@ const PropertyFilters = ({ filters, onFiltersChange, listingType }: PropertyFilt
     filters.maxSqft,
     filters.selectedRegion !== "all" ? filters.selectedRegion : "",
     filters.selectedCity !== "all" ? filters.selectedCity : "",
+    filters.leaseDuration !== "all" ? filters.leaseDuration : "",
     ...filters.amenities,
   ].filter(Boolean).length;
 
@@ -298,6 +301,24 @@ const PropertyFilters = ({ filters, onFiltersChange, listingType }: PropertyFilt
               </div>
             )}
           </div>
+
+          {/* Lease Duration - only for rentals */}
+          {listingType === "rent" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Lease Duration</label>
+              <Select value={filters.leaseDuration} onValueChange={(v) => updateFilter("leaseDuration", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Durations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Durations</SelectItem>
+                  <SelectItem value="6">6 Months</SelectItem>
+                  <SelectItem value="12">1 Year</SelectItem>
+                  <SelectItem value="24">2 Years</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Amenities */}
           <div className="space-y-3">

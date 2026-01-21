@@ -13,6 +13,7 @@ export const initialFiltersState: PropertyFiltersState = {
   selectedCity: "all",
   sortBy: "newest",
   amenities: [],
+  leaseDuration: "all",
 };
 
 interface Property {
@@ -28,6 +29,7 @@ interface Property {
   features?: { amenities?: string[]; descriptions?: string[]; facilities?: string[] } | null;
   created_at: string;
   images?: string[] | null;
+  lease_duration_months?: number[] | null;
   [key: string]: unknown;
 }
 
@@ -91,6 +93,13 @@ export const usePropertyFilters = (properties: Property[], searchQuery: string) 
           propertyAmenities.some((pa) => pa.toLowerCase().includes(amenity.toLowerCase()))
         );
         if (!hasAllAmenities) return false;
+      }
+
+      // Lease duration filter
+      if (filters.leaseDuration !== "all") {
+        const targetDuration = parseInt(filters.leaseDuration);
+        const propertyDurations = property.lease_duration_months || [];
+        if (!propertyDurations.includes(targetDuration)) return false;
       }
 
       return true;

@@ -31,6 +31,7 @@ export function PropertyEditDialog({ propertyId, open, onOpenChange, onSuccess }
     sqft: "",
     description: "",
     status: "",
+    lease_duration_months: "" as string,
   });
 
   useEffect(() => {
@@ -51,6 +52,11 @@ export function PropertyEditDialog({ propertyId, open, onOpenChange, onSuccess }
 
       if (error) throw error;
 
+      // Get the first lease duration value for the select
+      const leaseDuration = data.lease_duration_months && data.lease_duration_months.length > 0
+        ? data.lease_duration_months[0].toString()
+        : "";
+      
       setFormData({
         title: data.title || "",
         property_type: data.property_type || "",
@@ -63,6 +69,7 @@ export function PropertyEditDialog({ propertyId, open, onOpenChange, onSuccess }
         sqft: data.sqft?.toString() || "",
         description: data.description || "",
         status: data.status || "",
+        lease_duration_months: leaseDuration,
       });
     } catch (error) {
       console.error("Error fetching property:", error);
@@ -94,6 +101,9 @@ export function PropertyEditDialog({ propertyId, open, onOpenChange, onSuccess }
           sqft: formData.sqft ? parseInt(formData.sqft) : null,
           description: formData.description,
           status: formData.status,
+          lease_duration_months: formData.lease_duration_months 
+            ? [parseInt(formData.lease_duration_months)] 
+            : null,
         })
         .eq("id", propertyId);
 
@@ -258,21 +268,42 @@ export function PropertyEditDialog({ propertyId, open, onOpenChange, onSuccess }
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => setFormData({ ...formData, status: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="unavailable">Unavailable</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="unavailable">Unavailable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.listing_type === "rent" && (
+              <div className="space-y-2">
+                <Label htmlFor="lease_duration">Lease Duration</Label>
+                <Select
+                  value={formData.lease_duration_months}
+                  onValueChange={(value) => setFormData({ ...formData, lease_duration_months: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="6">6 Months</SelectItem>
+                    <SelectItem value="12">1 Year</SelectItem>
+                    <SelectItem value="24">2 Years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 justify-end">

@@ -20,10 +20,20 @@ interface Property {
   status: string;
   created_at: string;
   owner_id: string;
+  lease_duration_months?: number[];
   profiles?: {
     full_name: string;
   };
 }
+
+const formatLeaseDuration = (months: number[] | undefined | null): string => {
+  if (!months || months.length === 0) return "-";
+  const duration = months[0];
+  if (duration === 6) return "6 Months";
+  if (duration === 12) return "1 Year";
+  if (duration === 24) return "2 Years";
+  return `${duration} Months`;
+};
 
 export default function PropertiesManagement() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -124,6 +134,7 @@ export default function PropertiesManagement() {
                   <TableHead>Property</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Duration</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Listed</TableHead>
@@ -144,6 +155,11 @@ export default function PropertiesManagement() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{property.listing_type}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {property.listing_type === "rent" 
+                        ? formatLeaseDuration(property.lease_duration_months)
+                        : "-"}
                     </TableCell>
                     <TableCell className="font-medium">${property.price.toLocaleString()}</TableCell>
                     <TableCell>

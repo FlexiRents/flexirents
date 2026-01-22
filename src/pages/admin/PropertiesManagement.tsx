@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Eye, Ban, CheckCircle, Pencil, Trash2 } from "lucide-react";
+import { Eye, Ban, CheckCircle, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { PropertyEditDialog } from "@/components/admin/PropertyEditDialog";
 
 interface Property {
@@ -36,6 +38,8 @@ const formatLeaseDuration = (months: number[] | undefined | null): string => {
   return `${duration} Months`;
 };
 
+const ITEMS_PER_PAGE = 10;
+
 export default function PropertiesManagement() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +47,15 @@ export default function PropertiesManagement() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  
   const { toast } = useToast();
 
   const fetchProperties = async () => {
@@ -87,6 +100,42 @@ export default function PropertiesManagement() {
     fetchProperties();
   }, []);
 
+  // Filter and search properties
+  const filteredProperties = useMemo(() => {
+    return properties.filter((property) => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = searchQuery === "" ||
+        property.title.toLowerCase().includes(searchLower) ||
+        property.location.toLowerCase().includes(searchLower) ||
+        (property.profiles?.full_name?.toLowerCase().includes(searchLower) ?? false);
+
+      // Status filter
+      const matchesStatus = statusFilter === "all" || property.status === statusFilter;
+
+      // Type filter
+      const matchesType = typeFilter === "all" || property.listing_type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [properties, searchQuery, statusFilter, typeFilter]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedProperties = filteredProperties.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, typeFilter]);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [searchQuery, statusFilter, typeFilter, currentPage]);
+
   const updatePropertyStatus = async (id: string, status: string) => {
     try {
       const { error } = await supabase
@@ -113,10 +162,10 @@ export default function PropertiesManagement() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === properties.length) {
+    if (selectedIds.size === paginatedProperties.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(properties.map((p) => p.id)));
+      setSelectedIds(new Set(paginatedProperties.map((p) => p.id)));
     }
   };
 
@@ -196,8 +245,16 @@ export default function PropertiesManagement() {
     }
   };
 
-  const isAllSelected = properties.length > 0 && selectedIds.size === properties.length;
-  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < properties.length;
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setTypeFilter("all");
+  };
+
+  const hasActiveFilters = searchQuery !== "" || statusFilter !== "all" || typeFilter !== "all";
+
+  const isAllSelected = paginatedProperties.length > 0 && selectedIds.size === paginatedProperties.length;
+  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < paginatedProperties.length;
 
   return (
     <div className="space-y-6">
@@ -205,6 +262,56 @@ export default function PropertiesManagement() {
         <h2 className="text-3xl font-bold text-foreground">Properties Management</h2>
         <p className="text-muted-foreground mt-2">Manage all property listings</p>
       </div>
+
+      {/* Search and Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, location, or owner..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="rented">Rented</SelectItem>
+                <SelectItem value="sold">Sold</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="rent">For Rent</SelectItem>
+                <SelectItem value="sale">For Sale</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="icon" onClick={clearFilters} title="Clear filters">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {hasActiveFilters && (
+            <p className="text-sm text-muted-foreground mt-3">
+              Showing {filteredProperties.length} of {properties.length} properties
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Bulk Actions Bar */}
       {selectedIds.size > 0 && (
@@ -266,7 +373,7 @@ export default function PropertiesManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Properties ({properties.length})</CardTitle>
+          <CardTitle>All Properties ({filteredProperties.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -275,123 +382,189 @@ export default function PropertiesManagement() {
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
+          ) : paginatedProperties.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              {hasActiveFilters ? (
+                <>
+                  <p>No properties match your filters.</p>
+                  <Button variant="link" onClick={clearFilters} className="mt-2">
+                    Clear filters
+                  </Button>
+                </>
+              ) : (
+                <p>No properties found.</p>
+              )}
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={isAllSelected}
-                      ref={(ref) => {
-                        if (ref) {
-                          (ref as unknown as HTMLInputElement).indeterminate = isSomeSelected;
-                        }
-                      }}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Select all"
-                    />
-                  </TableHead>
-                  <TableHead>Property</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Listed</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property) => (
-                  <TableRow 
-                    key={property.id}
-                    className={selectedIds.has(property.id) ? "bg-muted/50" : ""}
-                  >
-                    <TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedIds.has(property.id)}
-                        onCheckedChange={() => toggleSelect(property.id)}
-                        aria-label={`Select ${property.title}`}
+                        checked={isAllSelected}
+                        ref={(ref) => {
+                          if (ref) {
+                            (ref as unknown as HTMLInputElement).indeterminate = isSomeSelected;
+                          }
+                        }}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
                       />
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{property.title}</div>
-                        <div className="text-sm text-muted-foreground">{property.location}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {property.profiles?.full_name || "Unknown"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{property.listing_type}</Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {property.listing_type === "rent" 
-                        ? formatLeaseDuration(property.lease_duration_months)
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="font-medium">${property.price.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          property.status === "available" ? "default" :
-                          property.status === "pending" ? "secondary" : "destructive"
-                        }
-                      >
-                        {property.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(property.created_at), "MMM dd, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => window.open(`/property/${property.id}`, "_blank")}
-                          title="View Property"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingPropertyId(property.id);
-                            setEditDialogOpen(true);
-                          }}
-                          title="Edit Property"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        {property.status !== "available" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => updatePropertyStatus(property.id, "available")}
-                            title="Approve Property"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {property.status === "available" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => updatePropertyStatus(property.id, property.listing_type === "rent" ? "rented" : "sold")}
-                            title="Mark Unavailable"
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Owner</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Listed</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedProperties.map((property) => (
+                    <TableRow 
+                      key={property.id}
+                      className={selectedIds.has(property.id) ? "bg-muted/50" : ""}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(property.id)}
+                          onCheckedChange={() => toggleSelect(property.id)}
+                          aria-label={`Select ${property.title}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{property.title}</div>
+                          <div className="text-sm text-muted-foreground">{property.location}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {property.profiles?.full_name || "Unknown"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{property.listing_type}</Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {property.listing_type === "rent" 
+                          ? formatLeaseDuration(property.lease_duration_months)
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="font-medium">${property.price.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            property.status === "available" ? "default" :
+                            property.status === "pending" ? "secondary" : "destructive"
+                          }
+                        >
+                          {property.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(property.created_at), "MMM dd, yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => window.open(`/property/${property.id}`, "_blank")}
+                            title="View Property"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingPropertyId(property.id);
+                              setEditDialogOpen(true);
+                            }}
+                            title="Edit Property"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          {property.status !== "available" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => updatePropertyStatus(property.id, "available")}
+                              title="Approve Property"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {property.status === "available" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => updatePropertyStatus(property.id, property.listing_type === "rent" ? "rented" : "sold")}
+                              title="Mark Unavailable"
+                            >
+                              <Ban className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(endIndex, filteredProperties.length)} of {filteredProperties.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          // Show first, last, current, and adjacent pages
+                          return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                        })
+                        .map((page, index, array) => (
+                          <span key={page} className="flex items-center">
+                            {index > 0 && array[index - 1] !== page - 1 && (
+                              <span className="px-2 text-muted-foreground">...</span>
+                            )}
+                            <Button
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className="min-w-[36px]"
+                            >
+                              {page}
+                            </Button>
+                          </span>
+                        ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

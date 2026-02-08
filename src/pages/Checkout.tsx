@@ -26,7 +26,7 @@ const Checkout = () => {
 
   const [duration, setDuration] = useState(12);
   const [hours, setHours] = useState(8);
-  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexi75" | "flexi50">("flexi50");
+  const [paymentPlan, setPaymentPlan] = useState<"full" | "flexi75" | "flexi50" | "flexmonthly">("flexi50");
   const [paymentMethod, setPaymentMethod] = useState<"card" | "mobile">("card");
   const [mobileProvider, setMobileProvider] = useState("");
   const [transactionReference, setTransactionReference] = useState("");
@@ -77,10 +77,22 @@ const Checkout = () => {
           total: totalDueNow,
           securityDeposit,
         });
-      } else {
+      } else if (paymentPlan === "flexi50") {
         // Flexi50 Plan: 50% upfront at 12% commission
         const commission = fullRent * 0.12;
         const upfrontPayment = fullRent * 0.50; // 50%
+        const totalDueNow = upfrontPayment + securityDeposit + commission;
+        
+        setCalculations({
+          baseAmount: fullRent,
+          commission,
+          total: totalDueNow,
+          securityDeposit,
+        });
+      } else {
+        // FlexMonthly Plan: Pay first month upfront at 15% commission
+        const commission = fullRent * 0.15;
+        const upfrontPayment = monthlyRent; // 1 month
         const totalDueNow = upfrontPayment + securityDeposit + commission;
         
         setCalculations({
@@ -126,7 +138,8 @@ const Checkout = () => {
   const getPaymentPlanLabel = () => {
     if (paymentPlan === "full") return "Full Payment (100%, 8%)";
     if (paymentPlan === "flexi75") return "Flexi75 (75%, 10%)";
-    return "Flexi50 (50%, 12%)";
+    if (paymentPlan === "flexi50") return "Flexi50 (50%, 12%)";
+    return "FlexMonthly (Monthly, 15%)";
   };
 
   const createInitialPaymentRecord = async () => {
@@ -551,7 +564,7 @@ const Checkout = () => {
 
                     <div className="space-y-3">
                       <Label>Payment Plan</Label>
-                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexi75" | "flexi50") => setPaymentPlan(value)}>
+                      <RadioGroup value={paymentPlan} onValueChange={(value: "full" | "flexi75" | "flexi50" | "flexmonthly") => setPaymentPlan(value)}>
                         <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "full" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
                           <RadioGroupItem value="full" id="full" />
                           <Label htmlFor="full" className="cursor-pointer flex-1">
@@ -559,7 +572,7 @@ const Checkout = () => {
                               <span className="font-semibold">Full Payment</span>
                               <span className="text-xs bg-green-500/20 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">Best Value</span>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-1">Pay 100% upfront at 8% commission - Save 4%</div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 100% upfront at 8% commission - Save 7%</div>
                           </Label>
                         </div>
                         <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi75" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
@@ -569,7 +582,7 @@ const Checkout = () => {
                               <span className="font-semibold">Flexi75 Plan</span>
                               <span className="text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">Balanced</span>
                             </div>
-                            <div className="text-xs text-muted-foreground mt-1">Pay 75% upfront at 10% commission - Save 2%</div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay 75% upfront at 10% commission - Save 5%</div>
                           </Label>
                         </div>
                         <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexi50" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
@@ -577,9 +590,19 @@ const Checkout = () => {
                           <Label htmlFor="flexi50" className="cursor-pointer flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">Flexi50 Plan</span>
-                              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">Most Flexible</span>
+                              <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">Flexible</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">Pay 50% upfront at 12% commission</div>
+                          </Label>
+                        </div>
+                        <div className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${paymentPlan === "flexmonthly" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"}`}>
+                          <RadioGroupItem value="flexmonthly" id="flexmonthly" />
+                          <Label htmlFor="flexmonthly" className="cursor-pointer flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">FlexMonthly</span>
+                              <span className="text-xs bg-orange-500/20 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full">Most Flexible</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">Pay month-by-month at 15% commission</div>
                           </Label>
                         </div>
                       </RadioGroup>
@@ -691,6 +714,38 @@ const Checkout = () => {
                           </div>
                           <div className="text-xs text-muted-foreground text-right">
                             Remaining balance: {formatPrice(calculations.baseAmount * 0.50)} (payable later)
+                          </div>
+                        </>
+                      )}
+                      
+                      {paymentPlan === "flexmonthly" && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">First Month Payment</span>
+                            <span className="font-semibold">
+                              {duration > 0 ? formatPrice(calculations.baseAmount / duration) : formatPrice(0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Security Deposit (1 month, refundable)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.securityDeposit)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Commission (15%)</span>
+                            <span className="font-semibold">
+                              {formatPrice(calculations.commission)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                            <span>Total Due Now</span>
+                            <span className="text-orange-600 dark:text-orange-400">
+                              {formatPrice(calculations.total)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground text-right">
+                            Remaining: {duration > 0 ? formatPrice(calculations.baseAmount - (calculations.baseAmount / duration)) : formatPrice(0)} over {duration - 1} monthly payments
                           </div>
                         </>
                       )}

@@ -84,7 +84,17 @@ interface Notification {
   read: boolean;
 }
 
-const COMMISSION_RATE = 0.10;
+// Commission rates by payment plan type
+const getCommissionRate = (notes: string | null): number => {
+  if (!notes) return 0.10;
+  const lower = notes.toLowerCase();
+  if (lower.includes("flexmonthly") || lower.includes("15%")) return 0.15;
+  if (lower.includes("flexi50") || lower.includes("12%")) return 0.12;
+  if (lower.includes("flexi75") || lower.includes("10%")) return 0.10;
+  if (lower.includes("full payment") || lower.includes("8%")) return 0.08;
+  if (lower.includes("sale")) return 0.05;
+  return 0.10;
+};
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -220,7 +230,7 @@ export default function AdminDashboard() {
           supabase.from("viewing_schedules").select("*", { count: "exact", head: true }).eq("status", "confirmed"),
           supabase.from("viewing_schedules").select("*", { count: "exact", head: true }).eq("status", "completed"),
           supabase.from("reviews").select("*", { count: "exact", head: true }),
-          supabase.from("rental_payments").select("amount, payment_type, created_at").eq("verification_status", "verified"),
+          supabase.from("rental_payments").select("amount, payment_type, created_at, notes").eq("verification_status", "verified"),
           supabase.from("rental_payments").select("amount").eq("verification_status", "unverified").eq("status", "pending"),
           supabase.from("user_verification").select("*", { count: "exact", head: true }).eq("status", "approved"),
           supabase.from("user_verification").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -231,16 +241,16 @@ export default function AdminDashboard() {
         ]);
 
         const totalRevenue = verifiedPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-        const totalProfit = totalRevenue * COMMISSION_RATE;
+        const totalProfit = verifiedPayments?.reduce((sum, p) => sum + (p.amount || 0) * getCommissionRate(p.notes), 0) || 0;
         const pendingAmount = pendingPaymentsData?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
         const currentMonthPayments = verifiedPayments?.filter(p => p.created_at >= currentMonthStart) || [];
         const lastMonthPayments = verifiedPayments?.filter(p => p.created_at >= lastMonthStart && p.created_at <= lastMonthEnd) || [];
 
         const monthlyRevenue = currentMonthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-        const monthlyProfit = monthlyRevenue * COMMISSION_RATE;
+        const monthlyProfit = currentMonthPayments.reduce((sum, p) => sum + (p.amount || 0) * getCommissionRate(p.notes), 0);
         const lastMonthRevenue = lastMonthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-        const lastMonthProfit = lastMonthRevenue * COMMISSION_RATE;
+        const lastMonthProfit = lastMonthPayments.reduce((sum, p) => sum + (p.amount || 0) * getCommissionRate(p.notes), 0);
 
         const profitGrowth = lastMonthProfit > 0 
           ? ((monthlyProfit - lastMonthProfit) / lastMonthProfit) * 100 
@@ -249,7 +259,8 @@ export default function AdminDashboard() {
         const chartData: MonthlyData[] = months.map(month => {
           const monthPayments = verifiedPayments?.filter(p => p.created_at >= month.start && p.created_at <= month.end) || [];
           const revenue = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-          return { month: month.label, revenue, profit: revenue * COMMISSION_RATE };
+          const profit = monthPayments.reduce((sum, p) => sum + (p.amount || 0) * getCommissionRate(p.notes), 0);
+          return { month: month.label, revenue, profit };
         });
 
         // Region data

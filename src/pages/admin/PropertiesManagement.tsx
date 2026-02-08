@@ -10,8 +10,31 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Eye, Ban, CheckCircle, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Eye, Ban, CheckCircle, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, Download } from "lucide-react";
 import { PropertyEditDialog } from "@/components/admin/PropertyEditDialog";
+
+const exportToCSV = (properties: Property[]) => {
+  const headers = ["Title", "Location", "Owner", "Type", "Property Type", "Duration", "Price", "Status", "Listed Date"];
+  const rows = properties.map((p) => [
+    `"${p.title.replace(/"/g, '""')}"`,
+    `"${p.location.replace(/"/g, '""')}"`,
+    `"${p.profiles?.full_name || "Unknown"}"`,
+    p.listing_type,
+    p.property_type,
+    p.listing_type === "rent" ? formatLeaseDuration(p.lease_duration_months) : "-",
+    p.price,
+    p.status,
+    format(new Date(p.created_at), "yyyy-MM-dd"),
+  ]);
+  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `properties-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
 interface Property {
   id: string;
@@ -304,6 +327,15 @@ export default function PropertiesManagement() {
                 <X className="h-4 w-4" />
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => exportToCSV(filteredProperties)}
+              disabled={filteredProperties.length === 0}
+              title="Export filtered properties as CSV"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
           {hasActiveFilters && (
             <p className="text-sm text-muted-foreground mt-3">

@@ -14,7 +14,17 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
-const COMMISSION_RATE = 0.10;
+// Commission rates by payment plan type
+const getCommissionRate = (notes: string | null): number => {
+  if (!notes) return 0.10;
+  const lower = notes.toLowerCase();
+  if (lower.includes("flexmonthly") || lower.includes("15%")) return 0.15;
+  if (lower.includes("flexi50") || lower.includes("12%")) return 0.12;
+  if (lower.includes("flexi75") || lower.includes("10%")) return 0.10;
+  if (lower.includes("full payment") || lower.includes("8%")) return 0.08;
+  if (lower.includes("sale")) return 0.05;
+  return 0.10; // default
+};
 
 interface PaymentData {
   id: string;
@@ -25,6 +35,7 @@ interface PaymentData {
   status: string;
   verification_status: string;
   created_at: string;
+  notes: string | null;
 }
 
 interface ReportData {
@@ -70,7 +81,7 @@ export default function FinancialReportsPage() {
       
       const { data: payments, error } = await supabase
         .from("rental_payments")
-        .select("id, amount, payment_type, payment_date, due_date, status, verification_status, created_at")
+        .select("id, amount, payment_type, payment_date, due_date, status, verification_status, created_at, notes")
         .gte("created_at", start.toISOString())
         .lte("created_at", end.toISOString())
         .order("created_at", { ascending: false });
@@ -81,7 +92,7 @@ export default function FinancialReportsPage() {
       const pendingPayments = payments?.filter(p => p.verification_status !== "verified") || [];
 
       const totalRevenue = verifiedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-      const totalProfit = totalRevenue * COMMISSION_RATE;
+      const totalProfit = verifiedPayments.reduce((sum, p) => sum + (p.amount || 0) * getCommissionRate(p.notes), 0);
 
       // Group by payment type
       const paymentsByType: Record<string, { count: number; amount: number; profit: number }> = {};
@@ -92,7 +103,7 @@ export default function FinancialReportsPage() {
         }
         paymentsByType[type].count++;
         paymentsByType[type].amount += p.amount || 0;
-        paymentsByType[type].profit += (p.amount || 0) * COMMISSION_RATE;
+        paymentsByType[type].profit += (p.amount || 0) * getCommissionRate(p.notes);
       });
 
       // Monthly breakdown
@@ -103,7 +114,7 @@ export default function FinancialReportsPage() {
           monthlyMap[month] = { revenue: 0, profit: 0, count: 0 };
         }
         monthlyMap[month].revenue += p.amount || 0;
-        monthlyMap[month].profit += (p.amount || 0) * COMMISSION_RATE;
+        monthlyMap[month].profit += (p.amount || 0) * getCommissionRate(p.notes);
         monthlyMap[month].count++;
       });
 
@@ -148,7 +159,7 @@ export default function FinancialReportsPage() {
 
       const summaryData = [
         ["Total Revenue", `$${reportData.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
-        ["Total Profit (10% Commission)", `$${reportData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
+        ["Total Profit (Variable Commission)", `$${reportData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
         ["Verified Payments", reportData.verifiedPayments.toString()],
         ["Pending Payments", reportData.pendingPayments.toString()],
       ];
@@ -349,7 +360,7 @@ export default function FinancialReportsPage() {
                 <div className="text-2xl font-bold text-green-600">
                   ${reportData?.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}
                 </div>
-                <p className="text-xs text-muted-foreground">{COMMISSION_RATE * 100}% commission</p>
+                <p className="text-xs text-muted-foreground">Variable commission (8-15%)</p>
               </>
             )}
           </CardContent>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -340,6 +340,15 @@ export default function PaymentApprovalManagement() {
                       </TableRow>
                     ))}
                   </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-right font-bold">Total Profit</TableCell>
+                      <TableCell className="font-bold text-green-600 dark:text-green-400">
+                        ${payments.reduce((sum, p) => sum + p.amount * getCommissionRate(p.notes), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell colSpan={3} />
+                    </TableRow>
+                  </TableFooter>
                 </Table>
               )}
             </CardContent>
@@ -418,6 +427,15 @@ export default function PaymentApprovalManagement() {
                       </TableRow>
                     ))}
                   </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-right font-bold">Total Profit</TableCell>
+                      <TableCell className="font-bold text-green-600 dark:text-green-400">
+                        ${payments.reduce((sum, p) => sum + p.amount * getCommissionRate(p.notes), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell colSpan={3} />
+                    </TableRow>
+                  </TableFooter>
                 </Table>
               )}
             </CardContent>

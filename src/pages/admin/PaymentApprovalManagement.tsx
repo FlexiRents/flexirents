@@ -13,6 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Payment {
   id: string;
@@ -60,6 +64,8 @@ export default function PaymentApprovalManagement() {
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<"pending" | "approved">("pending");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [editForm, setEditForm] = useState({
     amount: "",
     payment_date: "",
@@ -70,7 +76,7 @@ export default function PaymentApprovalManagement() {
 
   useEffect(() => {
     fetchPayments(activeTab);
-  }, [activeTab]);
+  }, [activeTab, dateFrom, dateTo]);
 
   const fetchPayments = async (tab: "pending" | "approved") => {
     try {
@@ -81,6 +87,13 @@ export default function PaymentApprovalManagement() {
         query = query.in("verification_status", ["unverified", "pending_review"]);
       } else {
         query = query.eq("verification_status", "verified");
+      }
+
+      if (dateFrom) {
+        query = query.gte("due_date", format(dateFrom, "yyyy-MM-dd"));
+      }
+      if (dateTo) {
+        query = query.lte("due_date", format(dateTo, "yyyy-MM-dd"));
       }
       
       const { data, error } = await query
@@ -254,6 +267,35 @@ export default function PaymentApprovalManagement() {
         <p className="text-muted-foreground">Review and verify all payments (rentals, sales, and services)</p>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("w-[180px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateTo ? format(dateTo, "MMM dd, yyyy") : "To date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className={cn("p-3 pointer-events-auto")} />
+          </PopoverContent>
+        </Popover>
+        {(dateFrom || dateTo) && (
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+            <X className="h-4 w-4 mr-1" /> Clear
+          </Button>
+        )}
+      </div>
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "pending" | "approved")}>
         <TabsList>
           <TabsTrigger value="pending">Pending Reviews</TabsTrigger>

@@ -35,6 +35,22 @@ interface Payment {
   payment_type: string;
 }
 
+const getCommissionRate = (notes: string | null): number => {
+  if (!notes) return 0.10;
+  const lower = notes.toLowerCase();
+  if (lower.includes('flexmonthly') || lower.includes('flex monthly')) return 0.15;
+  if (lower.includes('flexi50') || lower.includes('flex 50')) return 0.12;
+  if (lower.includes('flexi75') || lower.includes('flex 75')) return 0.10;
+  if (lower.includes('full payment')) return 0.08;
+  if (lower.includes('sale')) return 0.05;
+  return 0.10;
+};
+
+const getCommissionLabel = (notes: string | null): string => {
+  const rate = getCommissionRate(notes);
+  return `${(rate * 100).toFixed(0)}%`;
+};
+
 export default function PaymentApprovalManagement() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -264,6 +280,7 @@ export default function PaymentApprovalManagement() {
                       <TableHead>Amount</TableHead>
                       <TableHead>Method</TableHead>
                       <TableHead>Transaction Ref</TableHead>
+                      <TableHead>Commission</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Verification</TableHead>
                       <TableHead>Actions</TableHead>
@@ -293,6 +310,9 @@ export default function PaymentApprovalManagement() {
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {payment.transaction_reference || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{getCommissionLabel(payment.notes)}</Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
@@ -342,6 +362,7 @@ export default function PaymentApprovalManagement() {
                       <TableHead>Amount</TableHead>
                       <TableHead>Method</TableHead>
                       <TableHead>Transaction Ref</TableHead>
+                      <TableHead>Commission</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Verification</TableHead>
                       <TableHead>Actions</TableHead>
@@ -371,6 +392,9 @@ export default function PaymentApprovalManagement() {
                         </TableCell>
                         <TableCell className="font-mono text-sm">
                           {payment.transaction_reference || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{getCommissionLabel(payment.notes)}</Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>

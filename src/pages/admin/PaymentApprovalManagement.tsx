@@ -281,6 +281,7 @@ export default function PaymentApprovalManagement() {
                       <TableHead>Method</TableHead>
                       <TableHead>Transaction Ref</TableHead>
                       <TableHead>Commission</TableHead>
+                      <TableHead>Profit</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Verification</TableHead>
                       <TableHead>Actions</TableHead>
@@ -313,6 +314,9 @@ export default function PaymentApprovalManagement() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{getCommissionLabel(payment.notes)}</Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold text-green-600 dark:text-green-400">
+                          ${(payment.amount * getCommissionRate(payment.notes)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>
@@ -363,6 +367,7 @@ export default function PaymentApprovalManagement() {
                       <TableHead>Method</TableHead>
                       <TableHead>Transaction Ref</TableHead>
                       <TableHead>Commission</TableHead>
+                      <TableHead>Profit</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Verification</TableHead>
                       <TableHead>Actions</TableHead>
@@ -395,6 +400,9 @@ export default function PaymentApprovalManagement() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{getCommissionLabel(payment.notes)}</Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold text-green-600 dark:text-green-400">
+                          ${(payment.amount * getCommissionRate(payment.notes)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell>{getStatusBadge(payment.status)}</TableCell>
                         <TableCell>{getVerificationBadge(payment.verification_status)}</TableCell>

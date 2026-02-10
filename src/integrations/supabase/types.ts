@@ -413,6 +413,99 @@ export type Database = {
           },
         ]
       }
+      financial_assessments: {
+        Row: {
+          affordability_score: number | null
+          bank_verified: boolean | null
+          behaviour_score: number | null
+          created_at: string
+          employer_tier: string | null
+          employment_duration_months: number | null
+          employment_score: number | null
+          employment_verified: boolean | null
+          frozen_at: string | null
+          gov_id_verified: boolean | null
+          has_prior_flexirent_history: boolean | null
+          id: string
+          income_score: number | null
+          income_source: string | null
+          is_overridden: boolean | null
+          monthly_net_income: number | null
+          overridden_at: string | null
+          overridden_by: string | null
+          override_reason: string | null
+          override_tier: string | null
+          payment_behaviour: string | null
+          score_frozen: boolean | null
+          target_rent: number | null
+          tier: string | null
+          total_score: number | null
+          updated_at: string
+          user_id: string
+          verification_score: number | null
+        }
+        Insert: {
+          affordability_score?: number | null
+          bank_verified?: boolean | null
+          behaviour_score?: number | null
+          created_at?: string
+          employer_tier?: string | null
+          employment_duration_months?: number | null
+          employment_score?: number | null
+          employment_verified?: boolean | null
+          frozen_at?: string | null
+          gov_id_verified?: boolean | null
+          has_prior_flexirent_history?: boolean | null
+          id?: string
+          income_score?: number | null
+          income_source?: string | null
+          is_overridden?: boolean | null
+          monthly_net_income?: number | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_tier?: string | null
+          payment_behaviour?: string | null
+          score_frozen?: boolean | null
+          target_rent?: number | null
+          tier?: string | null
+          total_score?: number | null
+          updated_at?: string
+          user_id: string
+          verification_score?: number | null
+        }
+        Update: {
+          affordability_score?: number | null
+          bank_verified?: boolean | null
+          behaviour_score?: number | null
+          created_at?: string
+          employer_tier?: string | null
+          employment_duration_months?: number | null
+          employment_score?: number | null
+          employment_verified?: boolean | null
+          frozen_at?: string | null
+          gov_id_verified?: boolean | null
+          has_prior_flexirent_history?: boolean | null
+          id?: string
+          income_score?: number | null
+          income_source?: string | null
+          is_overridden?: boolean | null
+          monthly_net_income?: number | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_reason?: string | null
+          override_tier?: string | null
+          payment_behaviour?: string | null
+          score_frozen?: boolean | null
+          target_rent?: number | null
+          tier?: string | null
+          total_score?: number | null
+          updated_at?: string
+          user_id?: string
+          verification_score?: number | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           booking_id: string

@@ -4,14 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, FileText, Image as ImageIcon } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, FileText, Image as ImageIcon, ShieldCheck, BarChart3 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FinancialAssessment from "@/components/admin/FinancialAssessment";
 
 interface VerificationSubmission {
   id: string;
@@ -181,6 +183,17 @@ export default function VerificationManagement() {
         </p>
       </div>
 
+      <Tabs defaultValue="identity" className="w-full">
+        <TabsList>
+          <TabsTrigger value="identity">
+            <ShieldCheck className="h-4 w-4 mr-2" />Identity Verification
+          </TabsTrigger>
+          <TabsTrigger value="financial">
+            <BarChart3 className="h-4 w-4 mr-2" />Financial Assessment (FIG)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="identity" className="space-y-4">
       <div className="grid gap-4">
         {submissions.map((submission) => (
           <Card key={submission.id}>
@@ -358,6 +371,12 @@ export default function VerificationManagement() {
           <img src={imagePreview || ""} alt="Preview" className="w-full h-auto" />
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="financial">
+          <FinancialAssessment />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

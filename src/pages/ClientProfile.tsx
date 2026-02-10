@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
+import FlexiScoreView from "@/components/FlexiScoreView";
 import PropertyPreferences from "@/components/PropertyPreferences";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 import ClientDashboard from "@/components/ClientDashboard";
@@ -778,7 +779,18 @@ export default function ClientProfile() {
             )}
 
             {activePanel === "verification" && (
-              <VerificationForm />
+              <Tabs defaultValue="identity" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="identity">Identity Verification</TabsTrigger>
+                  <TabsTrigger value="flexi-score">Flexi Score</TabsTrigger>
+                </TabsList>
+                <TabsContent value="identity">
+                  <VerificationForm />
+                </TabsContent>
+                <TabsContent value="flexi-score">
+                  <FlexiScoreView />
+                </TabsContent>
+              </Tabs>
             )}
 
             {activePanel === "preferences" && (

@@ -69,6 +69,39 @@ export default function FlexiScoreView() {
   useEffect(() => {
     if (user) {
       Promise.all([fetchAssessment(), fetchVerificationStatus()]);
+
+      // Subscribe to realtime changes on financial_assessments for notifications
+      const channel = supabase
+        .channel('flexi-score-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'financial_assessments',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newData = payload.new as any;
+            const oldData = payload.old as any;
+            
+            // Check if admin-managed fields changed
+            const adminFields = ['employer_tier', 'payment_behaviour', 'bank_verified', 'employment_verified', 'gov_id_verified', 'is_overridden', 'override_tier', 'score_frozen'];
+            const changed = adminFields.filter(f => newData[f] !== oldData[f]);
+            
+            if (changed.length > 0) {
+              toast.success("Your Flexi Score has been updated by an administrator. Refreshing...");
+            }
+            
+            // Refresh data
+            fetchAssessment();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -320,6 +353,7 @@ export default function FlexiScoreView() {
                     <SelectItem value="informal">Informal</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Auto-linked from your identity verification employment status</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="employment_duration">Employment Duration (months)</Label>

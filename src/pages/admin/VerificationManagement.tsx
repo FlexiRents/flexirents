@@ -89,6 +89,9 @@ export default function VerificationManagement() {
   const handleApprove = async (submissionId: string) => {
     setProcessing(true);
     try {
+      const submission = submissions.find(s => s.id === submissionId);
+      if (!submission) throw new Error("Submission not found");
+
       const { error } = await supabase
         .from("user_verification")
         .update({ status: "verified" })
@@ -96,9 +99,48 @@ export default function VerificationManagement() {
 
       if (error) throw error;
 
+      // Auto-create or update financial assessment with gov_id_verified
+      const { data: existingAssessment } = await supabase
+        .from("financial_assessments")
+        .select("id")
+        .eq("user_id", submission.user_id)
+        .maybeSingle();
+
+      // Map employment_status to income_source
+      const incomeSourceMap: Record<string, string> = {
+        employed: "salary",
+        self_employed: "business",
+        unemployed: "informal",
+        student: "informal",
+        retired: "informal",
+      };
+      const incomeSource = incomeSourceMap[submission.employment_status || ""] || "informal";
+
+      if (existingAssessment) {
+        await supabase
+          .from("financial_assessments")
+          .update({
+            gov_id_verified: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingAssessment.id);
+      } else {
+        await supabase
+          .from("financial_assessments")
+          .insert({
+            user_id: submission.user_id,
+            gov_id_verified: true,
+            income_source: incomeSource,
+            employer_tier: "informal",
+            payment_behaviour: "frequent_issues",
+            bank_verified: false,
+            employment_verified: false,
+          });
+      }
+
       toast({
         title: "Success",
-        description: "Verification approved successfully",
+        description: "Verification approved and financial assessment updated",
       });
       
       fetchSubmissions();

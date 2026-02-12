@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Shield, Lock, CheckCircle, AlertTriangle, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { calculateFIGScore, TIER_PLANS, type FIGResult } from "@/lib/figScoring";
+import { calculateFIGScore, TIER_PLANS, type FIGInput } from "@/lib/figScoring";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Assessment {
@@ -39,9 +39,37 @@ interface Assessment {
   override_tier: string | null;
   override_reason: string | null;
   score_frozen: boolean;
+  income_category: string;
+  previous_flexirent_repayment: boolean;
+  guarantor_credibility: string;
+  mobile_money_consistency: boolean;
+  rent_dispute_history: boolean;
+  social_support_type: string;
+  rent_burden_score: number;
+  social_support_score: number;
   created_at: string;
   updated_at: string;
   profiles?: { full_name: string | null } | null;
+}
+
+function buildFIGInput(form: Partial<Assessment>): FIGInput {
+  return {
+    income_category: form.income_category || "irregular",
+    employment_duration_months: Number(form.employment_duration_months) || 0,
+    previous_flexirent_repayment: form.previous_flexirent_repayment || false,
+    guarantor_credibility: form.guarantor_credibility || "none",
+    mobile_money_consistency: form.mobile_money_consistency || false,
+    rent_dispute_history: form.rent_dispute_history || false,
+    monthly_net_income: Number(form.monthly_net_income) || 0,
+    target_rent: Number(form.target_rent) || 0,
+    social_support_type: form.social_support_type || "none",
+    income_source: form.income_source || "salary",
+    employer_tier: form.employer_tier || "sme",
+    payment_behaviour: form.payment_behaviour || "clean",
+    gov_id_verified: form.gov_id_verified || false,
+    bank_verified: form.bank_verified || false,
+    employment_verified: form.employment_verified || false,
+  };
 }
 
 export default function FinancialAssessment() {
@@ -87,17 +115,7 @@ export default function FinancialAssessment() {
     if (!selected) return;
     setProcessing(true);
     try {
-      const scores = calculateFIGScore({
-        monthly_net_income: Number(editForm.monthly_net_income) || 0,
-        target_rent: Number(editForm.target_rent) || 0,
-        income_source: editForm.income_source || "salary",
-        employer_tier: editForm.employer_tier || "sme",
-        employment_duration_months: Number(editForm.employment_duration_months) || 0,
-        payment_behaviour: editForm.payment_behaviour || "clean",
-        gov_id_verified: editForm.gov_id_verified || false,
-        bank_verified: editForm.bank_verified || false,
-        employment_verified: editForm.employment_verified || false,
-      });
+      const scores = calculateFIGScore(buildFIGInput(editForm));
 
       const { error } = await supabase
         .from("financial_assessments")
@@ -111,7 +129,21 @@ export default function FinancialAssessment() {
           gov_id_verified: editForm.gov_id_verified,
           bank_verified: editForm.bank_verified,
           employment_verified: editForm.employment_verified,
-          ...scores,
+          income_category: editForm.income_category,
+          previous_flexirent_repayment: editForm.previous_flexirent_repayment,
+          guarantor_credibility: editForm.guarantor_credibility,
+          mobile_money_consistency: editForm.mobile_money_consistency,
+          rent_dispute_history: editForm.rent_dispute_history,
+          social_support_type: editForm.social_support_type,
+          income_score: scores.income_stability_score,
+          affordability_score: scores.rent_burden_score,
+          employment_score: scores.employment_score,
+          behaviour_score: scores.payment_behaviour_score,
+          verification_score: scores.verification_score,
+          rent_burden_score: scores.rent_burden_score,
+          social_support_score: scores.social_support_score,
+          total_score: scores.total_score,
+          tier: scores.tier,
           updated_at: new Date().toISOString(),
         })
         .eq("id", selected.id);
@@ -197,7 +229,7 @@ export default function FinancialAssessment() {
       <div>
         <h2 className="text-3xl font-bold text-foreground">Financial Assessment (FIG)</h2>
         <p className="text-muted-foreground mt-2">
-          Flexi-Instalment Gauge — review scores, tiers, and manage overrides
+          FlexiRents Risk Scoring — 4 dimensions, 100 points total
         </p>
       </div>
 
@@ -219,7 +251,7 @@ export default function FinancialAssessment() {
                     <div>
                       <CardTitle className="text-lg">{a.profiles?.full_name || "Unknown User"}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Score: {a.total_score}% • Updated: {new Date(a.updated_at).toLocaleDateString()}
+                        Score: {a.total_score}/100 • Updated: {new Date(a.updated_at).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -229,12 +261,11 @@ export default function FinancialAssessment() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-                    <ScoreBar label="Income" score={a.income_score} max={35} />
-                    <ScoreBar label="Affordability" score={a.affordability_score} max={25} />
-                    <ScoreBar label="Employment" score={a.employment_score} max={15} />
-                    <ScoreBar label="Behaviour" score={a.behaviour_score} max={15} />
-                    <ScoreBar label="Verification" score={a.verification_score} max={10} />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <ScoreBar label="Income Stability" score={Number(a.income_score) || 0} max={40} />
+                    <ScoreBar label="Payment History" score={Number(a.behaviour_score) || 0} max={25} />
+                    <ScoreBar label="Rent Burden" score={Number(a.rent_burden_score) || 0} max={20} />
+                    <ScoreBar label="Social Support" score={Number(a.social_support_score) || 0} max={15} />
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -279,88 +310,91 @@ export default function FinancialAssessment() {
           <DialogHeader>
             <DialogTitle>Edit Financial Assessment</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Monthly Net Income (GHS)</Label>
-              <Input type="number" value={editForm.monthly_net_income || ""} onChange={(e) => setEditForm({ ...editForm, monthly_net_income: Number(e.target.value) })} />
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase">A. Income Stability (40 pts)</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Income Category</Label>
+                <Select value={editForm.income_category || "irregular"} onValueChange={(v) => setEditForm({ ...editForm, income_category: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="salaried_permanent">Salaried – Permanent (40 pts)</SelectItem>
+                    <SelectItem value="salaried_contract">Salaried – Contract (34 pts)</SelectItem>
+                    <SelectItem value="mixed_income">Mixed Income (29 pts)</SelectItem>
+                    <SelectItem value="informal_consistent">Informal but Consistent (24 pts)</SelectItem>
+                    <SelectItem value="irregular">Irregular / Unverifiable (14 pts)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Monthly Net Income (GHS)</Label>
+                <Input type="number" value={editForm.monthly_net_income || ""} onChange={(e) => setEditForm({ ...editForm, monthly_net_income: Number(e.target.value) })} />
+              </div>
             </div>
-            <div>
-              <Label>Target Rent (GHS)</Label>
-              <Input type="number" value={editForm.target_rent || ""} onChange={(e) => setEditForm({ ...editForm, target_rent: Number(e.target.value) })} />
-            </div>
-            <div>
-              <Label>Income Source</Label>
-              <Select value={editForm.income_source || "salary"} onValueChange={(v) => setEditForm({ ...editForm, income_source: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="salary">Salary</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="informal">Informal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Employer Tier</Label>
-              <Select value={editForm.employer_tier || "sme"} onValueChange={(v) => setEditForm({ ...editForm, employer_tier: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="govt_tier1">Govt / Tier-1 Corp</SelectItem>
-                  <SelectItem value="sme">SME</SelectItem>
-                  <SelectItem value="contract">Contract / Consultant</SelectItem>
-                  <SelectItem value="self_employed">Self-employed</SelectItem>
-                  <SelectItem value="informal">Informal / Unverified</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Employment Duration (months)</Label>
-              <Input type="number" value={editForm.employment_duration_months || ""} onChange={(e) => setEditForm({ ...editForm, employment_duration_months: Number(e.target.value) })} />
-            </div>
-            <div>
-              <Label>Payment Behaviour</Label>
-              <Select value={editForm.payment_behaviour || "clean"} onValueChange={(v) => setEditForm({ ...editForm, payment_behaviour: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="clean">Clean & Consistent</SelectItem>
-                  <SelectItem value="minor_volatility">Minor Volatility</SelectItem>
-                  <SelectItem value="frequent_issues">Frequent Issues</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2 flex gap-6">
+
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase mt-4">B. Payment History & Behaviour (25 pts)</h4>
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
-                <Switch checked={editForm.gov_id_verified || false} onCheckedChange={(v) => setEditForm({ ...editForm, gov_id_verified: v })} />
-                <Label>Gov ID Verified</Label>
+                <Switch checked={editForm.previous_flexirent_repayment || false} onCheckedChange={(v) => setEditForm({ ...editForm, previous_flexirent_repayment: v })} />
+                <Label>Previous FlexiRent Repayment (+15)</Label>
+              </div>
+              <div>
+                <Label>Guarantor Credibility</Label>
+                <Select value={editForm.guarantor_credibility || "none"} onValueChange={(v) => setEditForm({ ...editForm, guarantor_credibility: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="strong">Strong Guarantor (+10)</SelectItem>
+                    <SelectItem value="none">None (0)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Switch checked={editForm.bank_verified || false} onCheckedChange={(v) => setEditForm({ ...editForm, bank_verified: v })} />
-                <Label>Bank Verified</Label>
+                <Switch checked={editForm.mobile_money_consistency || false} onCheckedChange={(v) => setEditForm({ ...editForm, mobile_money_consistency: v })} />
+                <Label>Mobile Money / Bank Consistency (+10)</Label>
               </div>
               <div className="flex items-center gap-2">
-                <Switch checked={editForm.employment_verified || false} onCheckedChange={(v) => setEditForm({ ...editForm, employment_verified: v })} />
-                <Label>Employment Verified</Label>
+                <Switch checked={editForm.rent_dispute_history || false} onCheckedChange={(v) => setEditForm({ ...editForm, rent_dispute_history: v })} />
+                <Label className="text-destructive">Rent Dispute History (−10)</Label>
               </div>
+            </div>
+
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase mt-4">C. Rent Burden Ratio (20 pts)</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Target Rent (GHS)</Label>
+                <Input type="number" value={editForm.target_rent || ""} onChange={(e) => setEditForm({ ...editForm, target_rent: Number(e.target.value) })} />
+              </div>
+              <div className="text-sm text-muted-foreground pt-6">
+                {editForm.monthly_net_income && editForm.target_rent
+                  ? `Rent is ${Math.round((Number(editForm.target_rent) / Number(editForm.monthly_net_income)) * 100)}% of income`
+                  : "Enter income and rent to see ratio"}
+              </div>
+            </div>
+
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase mt-4">D. Social & Structural Support (15 pts)</h4>
+            <div>
+              <Label>Support Type</Label>
+              <Select value={editForm.social_support_type || "none"} onValueChange={(v) => setEditForm({ ...editForm, social_support_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employer_backed">Employer-Backed Deduction (15 pts)</SelectItem>
+                  <SelectItem value="strong_guarantor">Strong Guarantor (12 pts)</SelectItem>
+                  <SelectItem value="family_fallback">Family Fallback (6 pts)</SelectItem>
+                  <SelectItem value="none">None (0 pts)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
+          {/* Live Preview */}
           {editForm.monthly_net_income && editForm.target_rent ? (
             <div className="mt-4 p-4 rounded-lg border bg-muted/50">
               <p className="text-sm font-medium mb-2">Live Score Preview</p>
               {(() => {
-                const preview = calculateFIGScore({
-                  monthly_net_income: Number(editForm.monthly_net_income) || 0,
-                  target_rent: Number(editForm.target_rent) || 0,
-                  income_source: editForm.income_source || "salary",
-                  employer_tier: editForm.employer_tier || "sme",
-                  employment_duration_months: Number(editForm.employment_duration_months) || 0,
-                  payment_behaviour: editForm.payment_behaviour || "clean",
-                  gov_id_verified: editForm.gov_id_verified || false,
-                  bank_verified: editForm.bank_verified || false,
-                  employment_verified: editForm.employment_verified || false,
-                });
+                const preview = calculateFIGScore(buildFIGInput(editForm));
                 return (
                   <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold">{preview.total_score}%</span>
+                    <span className="text-2xl font-bold">{preview.total_score}/100</span>
                     {getTierBadge(preview.tier)}
                   </div>
                 );
@@ -387,7 +421,7 @@ export default function FinancialAssessment() {
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Current calculated score: {selected?.total_score}% (Tier {selected?.tier}). Overrides are logged and auditable.
+            Current calculated score: {selected?.total_score}/100 (Tier {selected?.tier}). Overrides are logged and auditable.
           </p>
           <div className="space-y-4 mt-4">
             <div>
@@ -395,23 +429,23 @@ export default function FinancialAssessment() {
               <Select value={overrideTier} onValueChange={setOverrideTier}>
                 <SelectTrigger><SelectValue placeholder="Select tier" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="A">Tier A</SelectItem>
-                  <SelectItem value="B">Tier B</SelectItem>
-                  <SelectItem value="C">Tier C</SelectItem>
-                  <SelectItem value="D">Tier D</SelectItem>
+                  <SelectItem value="A">Tier A (75-100)</SelectItem>
+                  <SelectItem value="B">Tier B (60-74)</SelectItem>
+                  <SelectItem value="C">Tier C (45-59)</SelectItem>
+                  <SelectItem value="D">Tier D (&lt;45)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Reason (required, logged)</Label>
-              <Textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} placeholder="Provide justification for this override..." rows={3} />
+              <Label>Reason for Override</Label>
+              <Textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} placeholder="Explain why this tier is being overridden..." rows={3} />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setSelected(null)}>Cancel</Button>
-            <Button onClick={handleOverride} disabled={processing} className="bg-orange-600 hover:bg-orange-700">
+            <Button onClick={handleOverride} disabled={processing} variant="destructive">
               {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
-              Apply Override
+              Confirm Override
             </Button>
           </div>
         </DialogContent>

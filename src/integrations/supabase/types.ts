@@ -425,18 +425,26 @@ export type Database = {
           employment_verified: boolean | null
           frozen_at: string | null
           gov_id_verified: boolean | null
+          guarantor_credibility: string | null
           has_prior_flexirent_history: boolean | null
           id: string
+          income_category: string | null
           income_score: number | null
           income_source: string | null
           is_overridden: boolean | null
+          mobile_money_consistency: boolean | null
           monthly_net_income: number | null
           overridden_at: string | null
           overridden_by: string | null
           override_reason: string | null
           override_tier: string | null
           payment_behaviour: string | null
+          previous_flexirent_repayment: boolean | null
+          rent_burden_score: number | null
+          rent_dispute_history: boolean | null
           score_frozen: boolean | null
+          social_support_score: number | null
+          social_support_type: string | null
           target_rent: number | null
           tier: string | null
           total_score: number | null
@@ -455,18 +463,26 @@ export type Database = {
           employment_verified?: boolean | null
           frozen_at?: string | null
           gov_id_verified?: boolean | null
+          guarantor_credibility?: string | null
           has_prior_flexirent_history?: boolean | null
           id?: string
+          income_category?: string | null
           income_score?: number | null
           income_source?: string | null
           is_overridden?: boolean | null
+          mobile_money_consistency?: boolean | null
           monthly_net_income?: number | null
           overridden_at?: string | null
           overridden_by?: string | null
           override_reason?: string | null
           override_tier?: string | null
           payment_behaviour?: string | null
+          previous_flexirent_repayment?: boolean | null
+          rent_burden_score?: number | null
+          rent_dispute_history?: boolean | null
           score_frozen?: boolean | null
+          social_support_score?: number | null
+          social_support_type?: string | null
           target_rent?: number | null
           tier?: string | null
           total_score?: number | null
@@ -485,24 +501,71 @@ export type Database = {
           employment_verified?: boolean | null
           frozen_at?: string | null
           gov_id_verified?: boolean | null
+          guarantor_credibility?: string | null
           has_prior_flexirent_history?: boolean | null
           id?: string
+          income_category?: string | null
           income_score?: number | null
           income_source?: string | null
           is_overridden?: boolean | null
+          mobile_money_consistency?: boolean | null
           monthly_net_income?: number | null
           overridden_at?: string | null
           overridden_by?: string | null
           override_reason?: string | null
           override_tier?: string | null
           payment_behaviour?: string | null
+          previous_flexirent_repayment?: boolean | null
+          rent_burden_score?: number | null
+          rent_dispute_history?: boolean | null
           score_frozen?: boolean | null
+          social_support_score?: number | null
+          social_support_type?: string | null
           target_rent?: number | null
           tier?: string | null
           total_score?: number | null
           updated_at?: string
           user_id?: string
           verification_score?: number | null
+        }
+        Relationships: []
+      }
+      flexi_score_history: {
+        Row: {
+          created_at: string
+          id: string
+          income_stability_score: number | null
+          payment_behaviour_score: number | null
+          recorded_at: string
+          rent_burden_score: number | null
+          social_support_score: number | null
+          tier: string | null
+          total_score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          income_stability_score?: number | null
+          payment_behaviour_score?: number | null
+          recorded_at?: string
+          rent_burden_score?: number | null
+          social_support_score?: number | null
+          tier?: string | null
+          total_score?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          income_stability_score?: number | null
+          payment_behaviour_score?: number | null
+          recorded_at?: string
+          rent_burden_score?: number | null
+          social_support_score?: number | null
+          tier?: string | null
+          total_score?: number
+          user_id?: string
         }
         Relationships: []
       }

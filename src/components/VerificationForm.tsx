@@ -351,32 +351,9 @@ export default function VerificationForm() {
             </div>
           </div>
 
-          {/* Personal Picture */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Personal Picture</h3>
-            
-            <div className="space-y-2">
-              <Label>Upload Personal Picture</Label>
-              <div className="flex flex-col gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileUpload(e, "personal_picture", "personal_picture_url")}
-                  disabled={uploading.personal_picture}
-                />
-                <p className="text-sm text-muted-foreground">Upload a clear portrait picture of yourself</p>
-                {uploading.personal_picture && <Loader2 className="h-4 w-4 animate-spin" />}
-                {verification.personal_picture_url && (
-                  <div className="mt-2">
-                    <img
-                      src={verification.personal_picture_url}
-                      alt="Personal Picture Preview"
-                      className="w-full h-40 object-cover rounded-lg border"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* Note: Personal picture uses your profile display picture */}
+          <div className="p-3 rounded-lg bg-muted/30 border text-sm text-muted-foreground">
+            <p>📸 Your profile display picture is used for identity verification. Update it from your profile settings.</p>
           </div>
 
           {/* Employment Information */}

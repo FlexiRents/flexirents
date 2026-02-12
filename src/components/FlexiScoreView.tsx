@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Lock, CheckCircle2, ShieldCheck, Briefcase, Wallet, CreditCard, TrendingUp, Clock, AlertCircle, Save } from "lucide-react";
 import { TIER_PLANS, calculateFIGScore, type FIGInput } from "@/lib/figScoring";
+import { FlexiScoreImprovementTips } from "@/components/FlexiScoreImprovementTips";
 import { toast } from "sonner";
 
 interface Assessment {
@@ -562,6 +563,25 @@ export default function FlexiScoreView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Improvement Tips */}
+      <FlexiScoreImprovementTips
+        incomeScore={liveScore.income_score}
+        affordabilityScore={liveScore.affordability_score}
+        employmentScore={liveScore.employment_score}
+        behaviourScore={liveScore.behaviour_score}
+        verificationScore={liveScore.verification_score}
+        totalScore={totalScore}
+        tier={effectiveTier}
+        isPendingEmployerTier={isPendingEmployerTier}
+        isPendingBehaviour={isPendingBehaviour}
+        isPendingBankVerified={isPendingBankVerified}
+        isPendingEmploymentVerified={isPendingEmploymentVerified}
+        isIdVerified={isIdVerified}
+        monthlyIncome={parseFloat(monthlyIncome) || 0}
+        targetRent={parseFloat(targetRent) || 0}
+        employmentDurationMonths={parseInt(employmentDuration) || 0}
+      />
 
       {/* Eligible Payment Plans */}
       <Card>

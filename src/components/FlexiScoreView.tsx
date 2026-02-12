@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Lock, CheckCircle2, ShieldCheck, Briefcase, Wallet, CreditCard, TrendingUp, Clock, AlertCircle, Save } from "lucide-react";
+import { Loader2, Lock, CheckCircle2, ShieldCheck, Briefcase, Wallet, CreditCard, TrendingUp, Clock, AlertCircle, Save, Users, HandCoins } from "lucide-react";
 import { TIER_PLANS, calculateFIGScore, type FIGInput } from "@/lib/figScoring";
 import { FlexiScoreImprovementTips } from "@/components/FlexiScoreImprovementTips";
+import { FlexiScoreHistoryChart } from "@/components/FlexiScoreHistoryChart";
 import { toast } from "sonner";
 
 interface Assessment {
@@ -33,30 +34,40 @@ interface Assessment {
   bank_verified: boolean | null;
   employment_verified: boolean | null;
   score_frozen: boolean | null;
+  income_category: string | null;
+  previous_flexirent_repayment: boolean | null;
+  guarantor_credibility: string | null;
+  mobile_money_consistency: boolean | null;
+  rent_dispute_history: boolean | null;
+  social_support_type: string | null;
+  rent_burden_score: number | null;
+  social_support_score: number | null;
 }
 
-interface VerificationStatus {
-  status: string;
+interface ScoreHistoryRecord {
+  total_score: number;
+  tier: string;
+  recorded_at: string;
 }
 
 const tierConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  A: { label: "Tier A – Premium", color: "text-green-700", bg: "bg-green-50", border: "border-green-200" },
-  B: { label: "Tier B – Standard", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" },
-  C: { label: "Tier C – Basic", color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200" },
-  D: { label: "Tier D – Limited", color: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
+  A: { label: "Tier A – Low Risk", color: "text-green-700", bg: "bg-green-50", border: "border-green-200" },
+  B: { label: "Tier B – Medium", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" },
+  C: { label: "Tier C – Managed Risk", color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200" },
+  D: { label: "Tier D – Decline", color: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
 };
 
 const scoreBreakdown = [
-  { key: "income_score", label: "Income Strength", max: 35, icon: Wallet },
-  { key: "affordability_score", label: "Rent Affordability", max: 25, icon: TrendingUp },
-  { key: "employment_score", label: "Employment Type", max: 15, icon: Briefcase, needsApproval: true },
-  { key: "behaviour_score", label: "Payment Behaviour", max: 15, icon: CreditCard, needsApproval: true },
-  { key: "verification_score", label: "Verification Strength", max: 10, icon: ShieldCheck, needsApproval: true },
+  { key: "income_stability_score", label: "A. Income Stability", max: 40, icon: Wallet },
+  { key: "payment_behaviour_score", label: "B. Payment History & Behaviour", max: 25, icon: CreditCard, needsApproval: true },
+  { key: "rent_burden_score", label: "C. Rent Burden Ratio", max: 20, icon: TrendingUp },
+  { key: "social_support_score", label: "D. Social & Structural Support", max: 15, icon: Users, needsApproval: true },
 ];
 
 export default function FlexiScoreView() {
   const { user } = useAuth();
   const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [scoreHistory, setScoreHistory] = useState<ScoreHistoryRecord[]>([]);
   const [verificationStatus, setVerificationStatus] = useState<string>("not_verified");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,45 +75,34 @@ export default function FlexiScoreView() {
   // User-editable form fields
   const [monthlyIncome, setMonthlyIncome] = useState("");
   const [targetRent, setTargetRent] = useState("");
-  const [incomeSource, setIncomeSource] = useState("salary");
+  const [incomeCategory, setIncomeCategory] = useState("irregular");
   const [employmentDuration, setEmploymentDuration] = useState("");
 
   useEffect(() => {
     if (user) {
-      Promise.all([fetchAssessment(), fetchVerificationStatus()]);
+      Promise.all([fetchAssessment(), fetchVerificationStatus(), fetchScoreHistory()]);
 
-      // Subscribe to realtime changes on financial_assessments for notifications
       const channel = supabase
         .channel('flexi-score-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'financial_assessments',
-            filter: `user_id=eq.${user.id}`,
-          },
-          (payload) => {
-            const newData = payload.new as any;
-            const oldData = payload.old as any;
-            
-            // Check if admin-managed fields changed
-            const adminFields = ['employer_tier', 'payment_behaviour', 'bank_verified', 'employment_verified', 'gov_id_verified', 'is_overridden', 'override_tier', 'score_frozen'];
-            const changed = adminFields.filter(f => newData[f] !== oldData[f]);
-            
-            if (changed.length > 0) {
-              toast.success("Your Flexi Score has been updated by an administrator. Refreshing...");
-            }
-            
-            // Refresh data
-            fetchAssessment();
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'financial_assessments',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload) => {
+          const newData = payload.new as any;
+          const oldData = payload.old as any;
+          const adminFields = ['income_category', 'previous_flexirent_repayment', 'guarantor_credibility', 'mobile_money_consistency', 'rent_dispute_history', 'social_support_type', 'is_overridden', 'override_tier', 'score_frozen'];
+          const changed = adminFields.filter(f => newData[f] !== oldData[f]);
+          if (changed.length > 0) {
+            toast.success("Your Flexi Score has been updated by an administrator. Refreshing...");
           }
-        )
+          fetchAssessment();
+          fetchScoreHistory();
+        })
         .subscribe();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      return () => { supabase.removeChannel(channel); };
     }
   }, [user]);
 
@@ -111,16 +111,15 @@ export default function FlexiScoreView() {
     try {
       const { data, error } = await supabase
         .from("financial_assessments")
-        .select("total_score, tier, income_score, affordability_score, employment_score, behaviour_score, verification_score, is_overridden, override_tier, monthly_net_income, target_rent, income_source, employer_tier, employment_duration_months, payment_behaviour, gov_id_verified, bank_verified, employment_verified, score_frozen")
+        .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
-
       if (error) throw error;
       if (data) {
-        setAssessment(data);
+        setAssessment(data as any);
         setMonthlyIncome(data.monthly_net_income?.toString() || "");
         setTargetRent(data.target_rent?.toString() || "");
-        setIncomeSource(data.income_source || "salary");
+        setIncomeCategory((data as any).income_category || "irregular");
         setEmploymentDuration(data.employment_duration_months?.toString() || "");
       }
     } catch (error) {
@@ -145,117 +144,110 @@ export default function FlexiScoreView() {
     }
   };
 
-  // Live preview score from user-editable fields
-  const liveScore = useMemo(() => {
-    const income = parseFloat(monthlyIncome) || 0;
-    const rent = parseFloat(targetRent) || 0;
-    const duration = parseInt(employmentDuration) || 0;
+  const fetchScoreHistory = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("flexi_score_history")
+        .select("total_score, tier, recorded_at")
+        .eq("user_id", user.id)
+        .order("recorded_at", { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      setScoreHistory((data as any[]) || []);
+    } catch (error) {
+      console.error("Error fetching score history:", error);
+    }
+  };
 
-    // Use existing admin-set values for fields that need approval
+  const liveScore = useMemo(() => {
     const input: FIGInput = {
-      monthly_net_income: income,
-      target_rent: rent,
-      income_source: incomeSource,
+      income_category: incomeCategory,
+      employment_duration_months: parseInt(employmentDuration) || 0,
+      previous_flexirent_repayment: assessment?.previous_flexirent_repayment || false,
+      guarantor_credibility: assessment?.guarantor_credibility || "none",
+      mobile_money_consistency: assessment?.mobile_money_consistency || false,
+      rent_dispute_history: assessment?.rent_dispute_history || false,
+      monthly_net_income: parseFloat(monthlyIncome) || 0,
+      target_rent: parseFloat(targetRent) || 0,
+      social_support_type: assessment?.social_support_type || "none",
+      income_source: assessment?.income_source || "salary",
       employer_tier: assessment?.employer_tier || "informal",
-      employment_duration_months: duration,
       payment_behaviour: assessment?.payment_behaviour || "frequent_issues",
       gov_id_verified: assessment?.gov_id_verified || verificationStatus === "verified",
       bank_verified: assessment?.bank_verified || false,
       employment_verified: assessment?.employment_verified || false,
     };
-
     return calculateFIGScore(input);
-  }, [monthlyIncome, targetRent, incomeSource, employmentDuration, assessment, verificationStatus]);
+  }, [monthlyIncome, targetRent, incomeCategory, employmentDuration, assessment, verificationStatus]);
 
   const handleSave = async () => {
     if (!user) return;
-
     const income = parseFloat(monthlyIncome);
     const rent = parseFloat(targetRent);
     const duration = parseInt(employmentDuration);
 
-    if (!income || income <= 0) {
-      toast.error("Please enter a valid monthly income");
-      return;
-    }
-    if (!rent || rent <= 0) {
-      toast.error("Please enter a valid target rent");
-      return;
-    }
+    if (!income || income <= 0) { toast.error("Please enter a valid monthly income"); return; }
+    if (!rent || rent <= 0) { toast.error("Please enter a valid target rent"); return; }
 
     setSaving(true);
     try {
-      const upsertData = {
+      const baseData = {
         user_id: user.id,
         monthly_net_income: income,
         target_rent: rent,
-        income_source: incomeSource,
+        income_category: incomeCategory,
         employment_duration_months: duration || 0,
-        // Auto-score these fields
-        income_score: liveScore.income_score,
-        affordability_score: liveScore.affordability_score,
-        // Recalculate total with existing admin fields
+        income_score: liveScore.income_stability_score,
+        affordability_score: liveScore.rent_burden_score,
+        rent_burden_score: liveScore.rent_burden_score,
         total_score: liveScore.total_score,
         tier: liveScore.tier,
-        // Link verification status
         gov_id_verified: verificationStatus === "verified",
-        // Keep existing admin-managed fields
-        ...(assessment ? {} : {
-          employer_tier: "informal",
-          payment_behaviour: "frequent_issues",
-          bank_verified: false,
-          employment_verified: false,
-          employment_score: liveScore.employment_score,
-          behaviour_score: liveScore.behaviour_score,
-          verification_score: liveScore.verification_score,
-        }),
+        verification_score: liveScore.verification_score,
       };
 
-      // If assessment exists, update; otherwise insert
       if (assessment) {
         const { error } = await supabase
           .from("financial_assessments")
-          .update({
-            monthly_net_income: income,
-            target_rent: rent,
-            income_source: incomeSource,
-            employment_duration_months: duration || 0,
-            income_score: liveScore.income_score,
-            affordability_score: liveScore.affordability_score,
-            total_score: liveScore.total_score,
-            tier: liveScore.tier,
-            gov_id_verified: verificationStatus === "verified",
-            verification_score: liveScore.verification_score,
-          })
+          .update(baseData)
           .eq("user_id", user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("financial_assessments")
           .insert({
-            user_id: user.id,
-            monthly_net_income: income,
-            target_rent: rent,
-            income_source: incomeSource,
-            employment_duration_months: duration || 0,
-            income_score: liveScore.income_score,
-            affordability_score: liveScore.affordability_score,
-            employment_score: liveScore.employment_score,
-            behaviour_score: liveScore.behaviour_score,
-            verification_score: liveScore.verification_score,
-            total_score: liveScore.total_score,
-            tier: liveScore.tier,
+            ...baseData,
+            income_source: "salary",
             employer_tier: "informal",
             payment_behaviour: "frequent_issues",
-            gov_id_verified: verificationStatus === "verified",
             bank_verified: false,
             employment_verified: false,
+            employment_score: liveScore.employment_score,
+            behaviour_score: liveScore.payment_behaviour_score,
+            previous_flexirent_repayment: false,
+            guarantor_credibility: "none",
+            mobile_money_consistency: false,
+            rent_dispute_history: false,
+            social_support_type: "none",
+            social_support_score: 0,
           });
         if (error) throw error;
       }
 
+      // Record score history
+      await supabase.from("flexi_score_history").insert({
+        user_id: user.id,
+        total_score: liveScore.total_score,
+        income_stability_score: liveScore.income_stability_score,
+        payment_behaviour_score: liveScore.payment_behaviour_score,
+        rent_burden_score: liveScore.rent_burden_score,
+        social_support_score: liveScore.social_support_score,
+        tier: liveScore.tier,
+      });
+
       toast.success("Financial data saved and score updated");
-      await fetchAssessment();
+      await Promise.all([fetchAssessment(), fetchScoreHistory()]);
     } catch (error) {
       console.error("Error saving assessment:", error);
       toast.error("Failed to save financial data");
@@ -278,224 +270,25 @@ export default function FlexiScoreView() {
   const totalScore = liveScore.total_score;
   const tierInfo = tierConfig[effectiveTier] || tierConfig.D;
   const plans = TIER_PLANS[effectiveTier] || TIER_PLANS.D;
-
   const isFrozen = assessment?.score_frozen === true;
 
-  // Determine which fields are pending admin approval
-  const isPendingEmployerTier = !assessment?.employer_tier || assessment.employer_tier === "informal";
-  const isPendingBehaviour = !assessment?.payment_behaviour || assessment.payment_behaviour === "frequent_issues";
-  const isPendingBankVerified = !assessment?.bank_verified;
-  const isPendingEmploymentVerified = !assessment?.employment_verified;
-  const isIdVerificationPending = verificationStatus === "pending";
-  const isIdVerified = verificationStatus === "verified";
+  const rentRatio = (parseFloat(monthlyIncome) || 0) > 0
+    ? Math.round((parseFloat(targetRent) / parseFloat(monthlyIncome)) * 100)
+    : null;
+
+  // Pending approval flags
+  const isPendingBehaviour = !assessment?.previous_flexirent_repayment && !assessment?.mobile_money_consistency;
+  const isPendingSocialSupport = !assessment?.social_support_type || assessment.social_support_type === "none";
 
   return (
     <div className="space-y-6">
-      {/* Data Entry Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Financial Information</CardTitle>
-          <CardDescription>
-            Enter your financial details to calculate your Flexi Score. Some fields require admin verification.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {isFrozen && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
-              <Lock className="h-4 w-4 flex-shrink-0" />
-              <span>Your score is currently frozen by an administrator. Data cannot be modified.</span>
-            </div>
-          )}
-
-          {/* User-Editable Fields */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Your Financial Data</h4>
-            
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="monthly_income">Monthly Net Income (GHS)</Label>
-                <Input
-                  id="monthly_income"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={monthlyIncome}
-                  onChange={(e) => setMonthlyIncome(e.target.value)}
-                  placeholder="e.g. 3000"
-                  disabled={isFrozen}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="target_rent">Target Monthly Rent (GHS)</Label>
-                <Input
-                  id="target_rent"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={targetRent}
-                  onChange={(e) => setTargetRent(e.target.value)}
-                  placeholder="e.g. 800"
-                  disabled={isFrozen}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="income_source">Income Source</Label>
-                <Select value={incomeSource} onValueChange={setIncomeSource} disabled={isFrozen}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select income source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="salary">Salary</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="informal">Informal</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">Auto-linked from your identity verification employment status</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employment_duration">Employment Duration (months)</Label>
-                <Input
-                  id="employment_duration"
-                  type="number"
-                  min="0"
-                  value={employmentDuration}
-                  onChange={(e) => setEmploymentDuration(e.target.value)}
-                  placeholder="e.g. 24"
-                  disabled={isFrozen}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Admin-Managed Fields (Read-only with Pending Approval indicators) */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Admin-Verified Fields</h4>
-            
-            <div className="grid gap-3 sm:grid-cols-2">
-              {/* Employer Tier */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Employer Tier</p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {assessment?.employer_tier?.replace("_", " ") || "Not set"}
-                  </p>
-                </div>
-                {isPendingEmployerTier ? (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending Approval
-                  </Badge>
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                )}
-              </div>
-
-              {/* Payment Behaviour */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Payment Behaviour</p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {assessment?.payment_behaviour?.replace("_", " ") || "Not assessed"}
-                  </p>
-                </div>
-                {isPendingBehaviour ? (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending Approval
-                  </Badge>
-                ) : (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                )}
-              </div>
-
-              {/* Gov ID Verification */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Government ID</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isIdVerified ? "Verified" : isIdVerificationPending ? "Submitted for review" : "Not submitted"}
-                  </p>
-                </div>
-                {isIdVerified ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                ) : isIdVerificationPending ? (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending Approval
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-xs gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Not Submitted
-                  </Badge>
-                )}
-              </div>
-
-              {/* Bank Verification */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Bank Verified</p>
-                  <p className="text-xs text-muted-foreground">
-                    {assessment?.bank_verified ? "Verified" : "Not verified"}
-                  </p>
-                </div>
-                {assessment?.bank_verified ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending Approval
-                  </Badge>
-                )}
-              </div>
-
-              {/* Employment Verification */}
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Employment Verified</p>
-                  <p className="text-xs text-muted-foreground">
-                    {assessment?.employment_verified ? "Verified" : "Not verified"}
-                  </p>
-                </div>
-                {assessment?.employment_verified ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending Approval
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Button onClick={handleSave} disabled={saving || isFrozen} className="w-full">
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save & Update Score
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Live Score Gauge */}
+      {/* Overall Score Gauge - TOP */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Flexi Score</CardTitle>
-              <CardDescription>Your financial eligibility for payment plans</CardDescription>
+              <CardDescription>FlexiRents Risk Scoring — Can you pay? How much flexibility?</CardDescription>
             </div>
             <div className={`px-3 py-1.5 rounded-full border font-semibold text-sm ${tierInfo.bg} ${tierInfo.border} ${tierInfo.color}`}>
               {tierInfo.label}
@@ -503,14 +296,13 @@ export default function FlexiScoreView() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Main Score Gauge */}
           <div className="text-center">
             <div className="relative inline-flex items-center justify-center">
               <svg className="w-40 h-40 -rotate-90" viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
                 <circle
                   cx="60" cy="60" r="52" fill="none"
-                  stroke={totalScore >= 70 ? "hsl(142, 76%, 36%)" : totalScore >= 50 ? "hsl(217, 91%, 60%)" : totalScore >= 25 ? "hsl(45, 93%, 47%)" : "hsl(0, 84%, 60%)"}
+                  stroke={totalScore >= 75 ? "hsl(142, 76%, 36%)" : totalScore >= 60 ? "hsl(217, 91%, 60%)" : totalScore >= 45 ? "hsl(45, 93%, 47%)" : "hsl(0, 84%, 60%)"}
                   strokeWidth="10"
                   strokeLinecap="round"
                   strokeDasharray={`${(totalScore / 100) * 327} 327`}
@@ -525,16 +317,15 @@ export default function FlexiScoreView() {
             <p className="text-sm text-muted-foreground mt-2">Overall Flexi Score</p>
           </div>
 
-          {/* Score Breakdown */}
+          {/* 4-Dimension Breakdown */}
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Score Breakdown</h4>
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Score Breakdown (4 Dimensions)</h4>
             {scoreBreakdown.map(({ key, label, max, icon: Icon, needsApproval }) => {
               const value = (liveScore as any)[key] || 0;
               const pct = max > 0 ? (value / max) * 100 : 0;
-              const isDefaultPending = needsApproval && assessment && (
-                (key === "employment_score" && isPendingEmployerTier) ||
-                (key === "behaviour_score" && isPendingBehaviour) ||
-                (key === "verification_score" && (isPendingBankVerified || isPendingEmploymentVerified || !isIdVerified))
+              const isPending = needsApproval && (
+                (key === "payment_behaviour_score" && isPendingBehaviour) ||
+                (key === "social_support_score" && isPendingSocialSupport)
               );
 
               return (
@@ -545,7 +336,7 @@ export default function FlexiScoreView() {
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-foreground flex items-center gap-2">
                           {label}
-                          {isDefaultPending && (
+                          {isPending && (
                             <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-[10px] px-1.5 py-0 gap-0.5">
                               <Clock className="h-2.5 w-2.5" />
                               Pending
@@ -564,20 +355,205 @@ export default function FlexiScoreView() {
         </CardContent>
       </Card>
 
+      {/* Score History Chart */}
+      <FlexiScoreHistoryChart history={scoreHistory} />
+
+      {/* Data Entry Sections */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Financial Information</CardTitle>
+          <CardDescription>
+            Enter your details. Sections B & D require admin verification for full scoring.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {isFrozen && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+              <Lock className="h-4 w-4 flex-shrink-0" />
+              <span>Your score is currently frozen by an administrator.</span>
+            </div>
+          )}
+
+          {/* A. Income Stability (40 pts) */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Wallet className="h-4 w-4" /> A. Income Stability (40 pts)
+            </h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Income Category</Label>
+                <Select value={incomeCategory} onValueChange={setIncomeCategory} disabled={isFrozen}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="salaried_permanent">Salaried – Permanent (40 pts)</SelectItem>
+                    <SelectItem value="salaried_contract">Salaried – Contract (34 pts)</SelectItem>
+                    <SelectItem value="mixed_income">Mixed Income (29 pts)</SelectItem>
+                    <SelectItem value="informal_consistent">Informal but Consistent (24 pts)</SelectItem>
+                    <SelectItem value="irregular">Irregular / Unverifiable (14 pts)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Monthly Net Income (GHS)</Label>
+                <Input type="number" min="0" step="0.01" value={monthlyIncome} onChange={(e) => setMonthlyIncome(e.target.value)} placeholder="e.g. 3000" disabled={isFrozen} />
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30 text-sm">
+              <span className="font-medium">Score: </span>
+              <span className="text-primary font-bold">{liveScore.income_stability_score}/40</span>
+              <span className="text-muted-foreground ml-2">— Defaults correlate more with income volatility than income size.</span>
+            </div>
+          </div>
+
+          {/* B. Payment History & Behaviour (25 pts) */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <CreditCard className="h-4 w-4" /> B. Payment History & Behaviour (25 pts)
+              <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
+                <Clock className="h-3 w-3" /> Admin Verified
+              </Badge>
+            </h4>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">Previous FlexiRent Repayment</p>
+                  <p className="text-xs text-muted-foreground">+15 points if verified</p>
+                </div>
+                {assessment?.previous_flexirent_repayment ? (
+                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +15</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">Guarantor Credibility</p>
+                  <p className="text-xs text-muted-foreground capitalize">{assessment?.guarantor_credibility === "strong" ? "+10 points" : "Not verified"}</p>
+                </div>
+                {assessment?.guarantor_credibility === "strong" ? (
+                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +10</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">Mobile Money / Bank Consistency</p>
+                  <p className="text-xs text-muted-foreground">+10 points if verified</p>
+                </div>
+                {assessment?.mobile_money_consistency ? (
+                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +10</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
+                )}
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium">Rent Dispute History</p>
+                  <p className="text-xs text-muted-foreground">−10 points if flagged</p>
+                </div>
+                {assessment?.rent_dispute_history ? (
+                  <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-xs gap-1"><AlertCircle className="h-3 w-3" /> −10</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> Clear</Badge>
+                )}
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30 text-sm">
+              <span className="font-medium">Score: </span>
+              <span className="text-primary font-bold">{liveScore.payment_behaviour_score}/25</span>
+              <span className="text-muted-foreground ml-2">— Behaviour beats promises.</span>
+            </div>
+          </div>
+
+          {/* C. Rent Burden Ratio (20 pts) */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" /> C. Rent Burden Ratio (20 pts)
+            </h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Target Monthly Rent (GHS)</Label>
+                <Input type="number" min="0" step="0.01" value={targetRent} onChange={(e) => setTargetRent(e.target.value)} placeholder="e.g. 800" disabled={isFrozen} />
+              </div>
+              <div className="space-y-2">
+                <Label>Employment Duration (months)</Label>
+                <Input type="number" min="0" value={employmentDuration} onChange={(e) => setEmploymentDuration(e.target.value)} placeholder="e.g. 24" disabled={isFrozen} />
+              </div>
+            </div>
+            {rentRatio !== null && (
+              <div className={`p-3 rounded-lg text-sm border ${rentRatio <= 30 ? "bg-green-50 border-green-200" : rentRatio <= 40 ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200"}`}>
+                <span className="font-medium">Rent is {rentRatio}% of income</span>
+                {rentRatio <= 30 && <span className="text-green-700 ml-2">→ 20 pts (Comfortable)</span>}
+                {rentRatio > 30 && rentRatio <= 35 && <span className="text-yellow-700 ml-2">→ 17 pts</span>}
+                {rentRatio > 35 && rentRatio <= 40 && <span className="text-yellow-700 ml-2">→ 13 pts</span>}
+                {rentRatio > 40 && <span className="text-red-700 ml-2">→ 7 pts (Usually reject)</span>}
+              </div>
+            )}
+            <div className="p-3 rounded-lg bg-muted/30 text-sm">
+              <span className="font-medium">Score: </span>
+              <span className="text-primary font-bold">{liveScore.rent_burden_score}/20</span>
+              <span className="text-muted-foreground ml-2">— Prevents silent stress that leads to default.</span>
+            </div>
+          </div>
+
+          {/* D. Social & Structural Support (15 pts) */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Users className="h-4 w-4" /> D. Social & Structural Support (15 pts)
+              <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
+                <Clock className="h-3 w-3" /> Admin Verified
+              </Badge>
+            </h4>
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div>
+                <p className="text-sm font-medium">Support Type</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {assessment?.social_support_type === "employer_backed" ? "Employer-Backed Deduction (15 pts)" :
+                   assessment?.social_support_type === "strong_guarantor" ? "Strong Guarantor (12 pts)" :
+                   assessment?.social_support_type === "family_fallback" ? "Family Fallback (6 pts)" :
+                   "None (0 pts)"}
+                </p>
+              </div>
+              {assessment?.social_support_type && assessment.social_support_type !== "none" ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              ) : (
+                <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
+                  <Clock className="h-3 w-3" /> Pending
+                </Badge>
+              )}
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30 text-sm">
+              <span className="font-medium">Score: </span>
+              <span className="text-primary font-bold">{liveScore.social_support_score}/15</span>
+              <span className="text-muted-foreground ml-2">— Improves recovery, not approval.</span>
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving || isFrozen} className="w-full">
+            {saving ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+            ) : (
+              <><Save className="mr-2 h-4 w-4" /> Save & Update Score</>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Improvement Tips */}
       <FlexiScoreImprovementTips
-        incomeScore={liveScore.income_score}
-        affordabilityScore={liveScore.affordability_score}
+        incomeScore={liveScore.income_stability_score}
+        affordabilityScore={liveScore.rent_burden_score}
         employmentScore={liveScore.employment_score}
-        behaviourScore={liveScore.behaviour_score}
+        behaviourScore={liveScore.payment_behaviour_score}
         verificationScore={liveScore.verification_score}
         totalScore={totalScore}
         tier={effectiveTier}
-        isPendingEmployerTier={isPendingEmployerTier}
+        isPendingEmployerTier={false}
         isPendingBehaviour={isPendingBehaviour}
-        isPendingBankVerified={isPendingBankVerified}
-        isPendingEmploymentVerified={isPendingEmploymentVerified}
-        isIdVerified={isIdVerified}
+        isPendingBankVerified={!assessment?.bank_verified}
+        isPendingEmploymentVerified={!assessment?.employment_verified}
+        isIdVerified={verificationStatus === "verified"}
         monthlyIncome={parseFloat(monthlyIncome) || 0}
         targetRent={parseFloat(targetRent) || 0}
         employmentDurationMonths={parseInt(employmentDuration) || 0}
@@ -587,7 +563,7 @@ export default function FlexiScoreView() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Eligible Payment Plans</CardTitle>
-          <CardDescription>Plans available based on your Flexi Score tier</CardDescription>
+          <CardDescription>Based on your tier. Decline ≠ rejection forever — it means not now, not this product.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -5,9 +5,8 @@ import {
   Lightbulb,
   Wallet,
   TrendingUp,
-  Briefcase,
   CreditCard,
-  ShieldCheck,
+  Users,
   Target,
   ArrowUp,
 } from "lucide-react";
@@ -15,19 +14,14 @@ import {
 interface FlexiScoreImprovementTipsProps {
   incomeScore: number;
   affordabilityScore: number;
-  employmentScore: number;
   behaviourScore: number;
-  verificationScore: number;
+  socialSupportScore: number;
   totalScore: number;
   tier: string;
-  isPendingEmployerTier: boolean;
-  isPendingBehaviour: boolean;
-  isPendingBankVerified: boolean;
-  isPendingEmploymentVerified: boolean;
-  isIdVerified: boolean;
   monthlyIncome: number;
   targetRent: number;
   employmentDurationMonths: number;
+  isPendingBehaviour: boolean;
 }
 
 interface Tip {
@@ -42,150 +36,110 @@ interface Tip {
 export const FlexiScoreImprovementTips = ({
   incomeScore,
   affordabilityScore,
-  employmentScore,
   behaviourScore,
-  verificationScore,
+  socialSupportScore,
   totalScore,
   tier,
-  isPendingEmployerTier,
-  isPendingBehaviour,
-  isPendingBankVerified,
-  isPendingEmploymentVerified,
-  isIdVerified,
   monthlyIncome,
   targetRent,
   employmentDurationMonths,
+  isPendingBehaviour,
 }: FlexiScoreImprovementTipsProps) => {
   const tips = useMemo((): Tip[] => {
     const generated: Tip[] = [];
 
-    // Sort factors by gap (max - current) to find weakest areas
-    const factors = [
-      { key: "income", score: incomeScore, max: 35 },
-      { key: "affordability", score: affordabilityScore, max: 25 },
-      { key: "employment", score: employmentScore, max: 15 },
-      { key: "behaviour", score: behaviourScore, max: 15 },
-      { key: "verification", score: verificationScore, max: 10 },
-    ].sort((a, b) => (b.max - b.score) - (a.max - a.score));
-
-    const weakest = factors[0];
-
-    // Income tips
-    if (incomeScore < 25) {
-      const gap = 35 - incomeScore;
+    // A. Income Stability (max 40)
+    if (incomeScore < 40) {
+      const gap = 40 - incomeScore;
       generated.push({
         id: "income",
         icon: Wallet,
-        title: "Boost Your Income Score",
-        description: monthlyIncome > 0 && targetRent > 0
-          ? `Your income-to-rent ratio is ${(monthlyIncome / targetRent).toFixed(1)}x. Aim for 3x or higher to maximize this score. Consider additional income streams or a lower rent target.`
-          : "Enter your income and target rent to see personalized advice on improving this score.",
+        title: "Boost Income Stability",
+        description: incomeScore <= 14
+          ? "You're scored as irregular income. Documenting 12+ months of consistent income or moving to salaried employment can significantly increase this score."
+          : incomeScore <= 29
+          ? "Consider formalizing your income sources. A permanent salaried role earns the maximum 40 points."
+          : "You're close to the top! A permanent salaried position would max this out at 40 points.",
         impact: gap > 15 ? "high" : gap > 8 ? "medium" : "low",
         potentialPoints: gap,
       });
     }
 
-    if (employmentDurationMonths < 12 && incomeScore < 35) {
+    // B. Payment History (max 25)
+    if (behaviourScore < 25) {
+      const gap = 25 - behaviourScore;
       generated.push({
-        id: "tenure",
-        icon: Briefcase,
-        title: "Build Employment Tenure",
-        description: employmentDurationMonths < 6
-          ? `At ${employmentDurationMonths} months, you're missing the stability bonus. Reaching 6 months adds +2 points, and 12 months adds +5 points.`
-          : `At ${employmentDurationMonths} months, you earn a +2 bonus. Reaching 12 months will upgrade this to +5 points.`,
-        impact: "medium",
-        potentialPoints: employmentDurationMonths < 6 ? 5 : 3,
+        id: "behaviour",
+        icon: CreditCard,
+        title: "Improve Payment History",
+        description: isPendingBehaviour
+          ? "Submit your bank/mobile money statements and build a clean FlexiRent repayment record. A strong guarantor can add +10 points."
+          : "Continue building your payment track record. Each verified positive signal increases your score.",
+        impact: gap > 12 ? "high" : "medium",
+        potentialPoints: gap,
       });
     }
 
-    // Affordability tips
-    if (affordabilityScore < 18 && monthlyIncome > 0 && targetRent > 0) {
+    // C. Rent Burden (max 20)
+    if (affordabilityScore < 20 && monthlyIncome > 0 && targetRent > 0) {
       const rentRatio = targetRent / monthlyIncome;
       generated.push({
         id: "affordability",
         icon: TrendingUp,
-        title: "Improve Rent Affordability",
-        description: `Your rent is ${Math.round(rentRatio * 100)}% of income. Keeping rent under 30% of income earns the maximum 25 points. Consider properties with lower rent to improve this score.`,
-        impact: affordabilityScore < 10 ? "high" : "medium",
-        potentialPoints: 25 - affordabilityScore,
+        title: "Reduce Rent Burden",
+        description: `Your rent is ${Math.round(rentRatio * 100)}% of income. Keeping rent ≤30% earns the maximum 20 points. ${rentRatio > 0.4 ? "Consider properties with lower rent to avoid rejection." : "A small income increase or rent reduction could boost this score."}`,
+        impact: affordabilityScore <= 7 ? "high" : "medium",
+        potentialPoints: 20 - affordabilityScore,
       });
     }
 
-    // Verification tips
-    if (verificationScore < 10) {
-      const missing: string[] = [];
-      if (!isIdVerified) missing.push("Government ID");
-      if (isPendingBankVerified) missing.push("Bank Account");
-      if (isPendingEmploymentVerified) missing.push("Employment");
-
-      if (missing.length > 0) {
-        generated.push({
-          id: "verification",
-          icon: ShieldCheck,
-          title: "Complete Your Verifications",
-          description: `Verify your ${missing.join(", ")} to earn up to ${10 - verificationScore} more points. ${!isIdVerified ? "Start by submitting your Government ID in the Identity Verification tab." : "Pending verifications will be reviewed by an administrator."}`,
-          impact: missing.length >= 2 ? "high" : "medium",
-          potentialPoints: 10 - verificationScore,
-        });
-      }
-    }
-
-    // Admin-dependent tips
-    if (isPendingEmployerTier) {
+    // D. Social Support (max 15)
+    if (socialSupportScore < 15) {
+      const gap = 15 - socialSupportScore;
       generated.push({
-        id: "employer",
-        icon: Briefcase,
-        title: "Get Your Employer Tier Verified",
-        description: "Your employer tier is set to 'Informal' by default. Once an administrator verifies your employer, your Employment Type score could increase from 3 to up to 15 points.",
-        impact: "high",
-        potentialPoints: 15 - employmentScore,
+        id: "social",
+        icon: Users,
+        title: "Add Social Support",
+        description: socialSupportScore === 0
+          ? "Having an employer-backed salary deduction (15 pts), strong guarantor (12 pts), or family fallback (6 pts) significantly reduces risk and boosts your score."
+          : "Upgrading to employer-backed deduction could maximize this dimension at 15 points.",
+        impact: gap > 10 ? "high" : "medium",
+        potentialPoints: gap,
       });
     }
 
-    if (isPendingBehaviour) {
+    // Tier progression
+    if (tier === "D" && totalScore < 45) {
       generated.push({
-        id: "behaviour",
-        icon: CreditCard,
-        title: "Build a Clean Payment Record",
-        description: "Your payment behaviour defaults to 'Frequent Issues' until verified. A clean payment history can boost this score from 3 to 15 points. Pay all bills on time consistently.",
-        impact: "high",
-        potentialPoints: 15 - behaviourScore,
-      });
-    }
-
-    // Tier-based encouragement
-    if (tier === "D" && totalScore < 25) {
-      generated.push({
-        id: "tier-up-d",
+        id: "tier-up",
         icon: Target,
-        title: "Reach Tier C for More Plans",
-        description: `You need ${25 - totalScore} more points to unlock Tier C and access the Flexi75 payment plan. Focus on the highest-impact tips above.`,
+        title: `${45 - totalScore} pts to Tier C`,
+        description: "Reaching Tier C unlocks the Flexi75 payment plan. Focus on the highest-impact areas above.",
         impact: "high",
-        potentialPoints: 25 - totalScore,
+        potentialPoints: 45 - totalScore,
       });
-    } else if (tier === "C" && totalScore < 50) {
+    } else if (tier === "C" && totalScore < 60) {
       generated.push({
-        id: "tier-up-c",
+        id: "tier-up",
         icon: Target,
-        title: "Reach Tier B for Flexi50",
-        description: `You're ${50 - totalScore} points away from Tier B, which unlocks the Flexi50 payment plan. Keep improving your weakest factors.`,
+        title: `${60 - totalScore} pts to Tier B`,
+        description: "Tier B unlocks Flexi50 — moderate flexibility with caps.",
         impact: "medium",
-        potentialPoints: 50 - totalScore,
+        potentialPoints: 60 - totalScore,
       });
-    } else if (tier === "B" && totalScore < 70) {
+    } else if (tier === "B" && totalScore < 75) {
       generated.push({
-        id: "tier-up-b",
+        id: "tier-up",
         icon: Target,
-        title: "Push for Tier A – Premium",
-        description: `Only ${70 - totalScore} points to Tier A! This unlocks FlexiMonthly, the most flexible payment plan available.`,
+        title: `${75 - totalScore} pts to Tier A`,
+        description: "Tier A unlocks FlexiMonthly — the best terms and longest flexibility.",
         impact: "medium",
-        potentialPoints: 70 - totalScore,
+        potentialPoints: 75 - totalScore,
       });
     }
 
-    // Sort by potential points descending, take top 4
     return generated.sort((a, b) => b.potentialPoints - a.potentialPoints).slice(0, 4);
-  }, [incomeScore, affordabilityScore, employmentScore, behaviourScore, verificationScore, totalScore, tier, isPendingEmployerTier, isPendingBehaviour, isPendingBankVerified, isPendingEmploymentVerified, isIdVerified, monthlyIncome, targetRent, employmentDurationMonths]);
+  }, [incomeScore, affordabilityScore, behaviourScore, socialSupportScore, totalScore, tier, isPendingBehaviour, monthlyIncome, targetRent, employmentDurationMonths]);
 
   const getImpactBadge = (impact: Tip["impact"]) => {
     switch (impact) {

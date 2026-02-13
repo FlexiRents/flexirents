@@ -8,11 +8,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Lock, CheckCircle2, ShieldCheck, Briefcase, Wallet, CreditCard, TrendingUp, Clock, AlertCircle, Save, Users, HandCoins } from "lucide-react";
+import { Loader2, Lock, CheckCircle2, ShieldCheck, Briefcase, Wallet, CreditCard, TrendingUp, Clock, AlertCircle, Save, Users, HandCoins, Upload, FileText } from "lucide-react";
 import { TIER_PLANS, calculateFIGScore, type FIGInput } from "@/lib/figScoring";
 import { FlexiScoreImprovementTips } from "@/components/FlexiScoreImprovementTips";
 import { FlexiScoreHistoryChart } from "@/components/FlexiScoreHistoryChart";
 import { toast } from "sonner";
+
+const FileUploadField = ({ label, description, onUpload, uploading, uploadedUrl }: {
+  label: string;
+  description: string;
+  onUpload: (file: File) => void;
+  uploading: boolean;
+  uploadedUrl?: string | null;
+}) => (
+  <div className="space-y-2">
+    <Label className="text-sm">{label}</Label>
+    <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 px-3 py-2 rounded-md border border-input bg-background text-sm cursor-pointer hover:bg-accent transition-colors">
+        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+        <span>{uploading ? "Uploading..." : "Upload PDF / Image"}</span>
+        <input
+          type="file"
+          accept="image/*,.pdf"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onUpload(file);
+            e.target.value = "";
+          }}
+          disabled={uploading}
+        />
+      </label>
+      {uploadedUrl && (
+        <a href={uploadedUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:underline">
+          <FileText className="h-3 w-3" /> View
+        </a>
+      )}
+    </div>
+  </div>
+);
 
 interface Assessment {
   total_score: number | null;
@@ -78,6 +113,44 @@ export default function FlexiScoreView() {
   const [incomeCategory, setIncomeCategory] = useState("irregular");
   const [employmentDuration, setEmploymentDuration] = useState("");
 
+  // B. Payment History user-editable fields
+  const [guarantorCredibility, setGuarantorCredibility] = useState("none");
+  const [rentDisputeHistory, setRentDisputeHistory] = useState("no");
+
+  // D. Social Support user-editable field
+  const [socialSupportType, setSocialSupportType] = useState("none");
+
+  // File upload states
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
+
+  const handleFileUpload = async (file: File, fieldName: string) => {
+    if (!user) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large. Max 10MB.");
+      return;
+    }
+    setUploadingField(fieldName);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${user.id}/${fieldName}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("verification-documents")
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from("verification-documents")
+        .getPublicUrl(filePath);
+      setUploadedFiles(prev => ({ ...prev, [fieldName]: urlData.publicUrl }));
+      toast.success(`${fieldName.replace(/_/g, ' ')} uploaded successfully`);
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       Promise.all([fetchAssessment(), fetchVerificationStatus(), fetchScoreHistory()]);
@@ -121,6 +194,9 @@ export default function FlexiScoreView() {
         setTargetRent(data.target_rent?.toString() || "");
         setIncomeCategory((data as any).income_category || "irregular");
         setEmploymentDuration(data.employment_duration_months?.toString() || "");
+        setGuarantorCredibility((data as any).guarantor_credibility || "none");
+        setRentDisputeHistory((data as any).rent_dispute_history ? "yes" : "no");
+        setSocialSupportType((data as any).social_support_type || "none");
       }
     } catch (error) {
       console.error("Error fetching assessment:", error);
@@ -165,12 +241,12 @@ export default function FlexiScoreView() {
       income_category: incomeCategory,
       employment_duration_months: parseInt(employmentDuration) || 0,
       previous_flexirent_repayment: assessment?.previous_flexirent_repayment || false,
-      guarantor_credibility: assessment?.guarantor_credibility || "none",
+      guarantor_credibility: guarantorCredibility,
       mobile_money_consistency: assessment?.mobile_money_consistency || false,
-      rent_dispute_history: assessment?.rent_dispute_history || false,
+      rent_dispute_history: rentDisputeHistory === "yes",
       monthly_net_income: parseFloat(monthlyIncome) || 0,
       target_rent: parseFloat(targetRent) || 0,
-      social_support_type: assessment?.social_support_type || "none",
+      social_support_type: socialSupportType,
       income_source: assessment?.income_source || "salary",
       employer_tier: assessment?.employer_tier || "informal",
       payment_behaviour: assessment?.payment_behaviour || "frequent_issues",
@@ -179,7 +255,7 @@ export default function FlexiScoreView() {
       employment_verified: assessment?.employment_verified || false,
     };
     return calculateFIGScore(input);
-  }, [monthlyIncome, targetRent, incomeCategory, employmentDuration, assessment, verificationStatus]);
+  }, [monthlyIncome, targetRent, incomeCategory, employmentDuration, guarantorCredibility, rentDisputeHistory, socialSupportType, assessment, verificationStatus]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -198,9 +274,14 @@ export default function FlexiScoreView() {
         target_rent: rent,
         income_category: incomeCategory,
         employment_duration_months: duration || 0,
+        guarantor_credibility: guarantorCredibility,
+        rent_dispute_history: rentDisputeHistory === "yes",
+        social_support_type: socialSupportType,
         income_score: liveScore.income_stability_score,
         affordability_score: liveScore.rent_burden_score,
         rent_burden_score: liveScore.rent_burden_score,
+        social_support_score: liveScore.social_support_score,
+        behaviour_score: liveScore.payment_behaviour_score,
         total_score: liveScore.total_score,
         tier: liveScore.tier,
         gov_id_verified: verificationStatus === "verified",
@@ -224,13 +305,8 @@ export default function FlexiScoreView() {
             bank_verified: false,
             employment_verified: false,
             employment_score: liveScore.employment_score,
-            behaviour_score: liveScore.payment_behaviour_score,
             previous_flexirent_repayment: false,
-            guarantor_credibility: "none",
             mobile_money_consistency: false,
-            rent_dispute_history: false,
-            social_support_type: "none",
-            social_support_score: 0,
           });
         if (error) throw error;
       }
@@ -409,56 +485,78 @@ export default function FlexiScoreView() {
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <CreditCard className="h-4 w-4" /> B. Payment History & Behaviour (25 pts)
-              <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                <Clock className="h-3 w-3" /> Admin Verified
-              </Badge>
             </h4>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium">Previous FlexiRent Repayment</p>
-                  <p className="text-xs text-muted-foreground">+15 points if verified</p>
-                </div>
-                {assessment?.previous_flexirent_repayment ? (
-                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +15</Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
-                )}
+
+            {/* Previous FlexiRent Repayment - Admin verified */}
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div>
+                <p className="text-sm font-medium">Previous FlexiRent Repayment</p>
+                <p className="text-xs text-muted-foreground">+15 points if verified by admin</p>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium">Guarantor Credibility</p>
-                  <p className="text-xs text-muted-foreground capitalize">{assessment?.guarantor_credibility === "strong" ? "+10 points" : "Not verified"}</p>
+              {assessment?.previous_flexirent_repayment ? (
+                <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +15</Badge>
+              ) : (
+                <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Admin Pending</Badge>
+              )}
+            </div>
+
+            {/* Guarantor Credibility - User selectable + file upload */}
+            <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Guarantor Credibility</Label>
+                  <Select value={guarantorCredibility} onValueChange={setGuarantorCredibility} disabled={isFrozen}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="strong">Strong Guarantor (+10 pts)</SelectItem>
+                      <SelectItem value="none">None (0 pts)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                {assessment?.guarantor_credibility === "strong" ? (
-                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +10</Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
-                )}
+                <FileUploadField
+                  label="Guarantor Evidence"
+                  description="Upload guarantor letter or agreement (PDF/Image)"
+                  onUpload={(f) => handleFileUpload(f, "guarantor_evidence")}
+                  uploading={uploadingField === "guarantor_evidence"}
+                  uploadedUrl={uploadedFiles.guarantor_evidence}
+                />
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+            </div>
+
+            {/* Mobile Money / Bank Consistency - Admin verified + file upload */}
+            <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Mobile Money / Bank Consistency</p>
-                  <p className="text-xs text-muted-foreground">+10 points if verified</p>
+                  <p className="text-xs text-muted-foreground">+10 points if verified by admin</p>
                 </div>
                 {assessment?.mobile_money_consistency ? (
                   <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> +10</Badge>
                 ) : (
-                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Pending</Badge>
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1"><Clock className="h-3 w-3" /> Admin Pending</Badge>
                 )}
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div>
-                  <p className="text-sm font-medium">Rent Dispute History</p>
-                  <p className="text-xs text-muted-foreground">−10 points if flagged</p>
-                </div>
-                {assessment?.rent_dispute_history ? (
-                  <Badge variant="outline" className="bg-red-50 border-red-300 text-red-700 text-xs gap-1"><AlertCircle className="h-3 w-3" /> −10</Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 text-xs gap-1"><CheckCircle2 className="h-3 w-3" /> Clear</Badge>
-                )}
-              </div>
+              <FileUploadField
+                label="Bank/MoMo Statement"
+                description="Upload bank or mobile money statement showing 12+ months consistency (PDF/Image)"
+                onUpload={(f) => handleFileUpload(f, "bank_statement")}
+                uploading={uploadingField === "bank_statement"}
+                uploadedUrl={uploadedFiles.bank_statement}
+              />
             </div>
+
+            {/* Rent Dispute History - User selectable */}
+            <div className="space-y-2 p-3 rounded-lg border bg-muted/30">
+              <Label>History of Rent Disputes</Label>
+              <Select value={rentDisputeHistory} onValueChange={setRentDisputeHistory} disabled={isFrozen}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No Disputes (0 pts deduction)</SelectItem>
+                  <SelectItem value="yes">Has Dispute History (−10 pts)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="p-3 rounded-lg bg-muted/30 text-sm">
               <span className="font-medium">Score: </span>
               <span className="text-primary font-bold">{liveScore.payment_behaviour_score}/25</span>
@@ -501,28 +599,32 @@ export default function FlexiScoreView() {
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               <Users className="h-4 w-4" /> D. Social & Structural Support (15 pts)
-              <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                <Clock className="h-3 w-3" /> Admin Verified
-              </Badge>
             </h4>
-            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-              <div>
-                <p className="text-sm font-medium">Support Type</p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {assessment?.social_support_type === "employer_backed" ? "Employer-Backed Deduction (15 pts)" :
-                   assessment?.social_support_type === "strong_guarantor" ? "Strong Guarantor (12 pts)" :
-                   assessment?.social_support_type === "family_fallback" ? "Family Fallback (6 pts)" :
-                   "None (0 pts)"}
-                </p>
+
+            <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Support Type</Label>
+                  <Select value={socialSupportType} onValueChange={setSocialSupportType} disabled={isFrozen}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="employer_backed">Employer-Backed Deduction (15 pts)</SelectItem>
+                      <SelectItem value="strong_guarantor">Strong Guarantor (12 pts)</SelectItem>
+                      <SelectItem value="family_fallback">Family Fallback (6 pts)</SelectItem>
+                      <SelectItem value="none">None (0 pts)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <FileUploadField
+                  label="Support Evidence"
+                  description="Upload employer letter, guarantor form, or family support document (PDF/Image)"
+                  onUpload={(f) => handleFileUpload(f, "social_support_evidence")}
+                  uploading={uploadingField === "social_support_evidence"}
+                  uploadedUrl={uploadedFiles.social_support_evidence}
+                />
               </div>
-              {assessment?.social_support_type && assessment.social_support_type !== "none" ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-              ) : (
-                <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs gap-1">
-                  <Clock className="h-3 w-3" /> Pending
-                </Badge>
-              )}
             </div>
+
             <div className="p-3 rounded-lg bg-muted/30 text-sm">
               <span className="font-medium">Score: </span>
               <span className="text-primary font-bold">{liveScore.social_support_score}/15</span>
@@ -544,16 +646,11 @@ export default function FlexiScoreView() {
       <FlexiScoreImprovementTips
         incomeScore={liveScore.income_stability_score}
         affordabilityScore={liveScore.rent_burden_score}
-        employmentScore={liveScore.employment_score}
         behaviourScore={liveScore.payment_behaviour_score}
-        verificationScore={liveScore.verification_score}
+        socialSupportScore={liveScore.social_support_score}
         totalScore={totalScore}
         tier={effectiveTier}
-        isPendingEmployerTier={false}
         isPendingBehaviour={isPendingBehaviour}
-        isPendingBankVerified={!assessment?.bank_verified}
-        isPendingEmploymentVerified={!assessment?.employment_verified}
-        isIdVerified={verificationStatus === "verified"}
         monthlyIncome={parseFloat(monthlyIncome) || 0}
         targetRent={parseFloat(targetRent) || 0}
         employmentDurationMonths={parseInt(employmentDuration) || 0}

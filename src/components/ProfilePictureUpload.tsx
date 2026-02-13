@@ -124,14 +124,14 @@ export const ProfilePictureUpload = ({
       const croppedBlob = await getCroppedImg(selectedImage, croppedAreaPixels);
 
       // Create file name
-      const fileName = `${userId}-${Date.now()}.jpg`;
-      const filePath = `${fileName}`;
+      const fileName = `${Date.now()}.jpg`;
+      const filePath = `${userId}/${fileName}`;
 
       // Delete old image if exists
       if (currentImageUrl) {
-        const oldFileName = currentImageUrl.split("/").pop();
-        if (oldFileName) {
-          await supabase.storage.from(bucketName).remove([oldFileName]);
+        const urlParts = currentImageUrl.split("/storage/v1/object/public/" + bucketName + "/");
+        if (urlParts[1]) {
+          await supabase.storage.from(bucketName).remove([decodeURIComponent(urlParts[1])]);
         }
       }
 

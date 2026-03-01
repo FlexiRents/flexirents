@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Shield, Lock, CheckCircle, AlertTriangle, Save } from "lucide-react";
+import { Loader2, Shield, Lock, CheckCircle, AlertTriangle, Save, FileText, ExternalLink, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { calculateFIGScore, TIER_PLANS, type FIGInput } from "@/lib/figScoring";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,6 +47,9 @@ interface Assessment {
   social_support_type: string;
   rent_burden_score: number;
   social_support_score: number;
+  guarantor_evidence_url: string | null;
+  bank_statement_url: string | null;
+  social_support_evidence_url: string | null;
   created_at: string;
   updated_at: string;
   profiles?: { full_name: string | null } | null;
@@ -297,6 +300,62 @@ export default function FinancialAssessment() {
                       <Shield className="h-4 w-4 mr-1" />Override Tier
                     </Button>
                   </div>
+
+                  {/* Evidence Documents Review */}
+                  {(a.guarantor_evidence_url || a.bank_statement_url || a.social_support_evidence_url) && (
+                    <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Uploaded Evidence Documents
+                      </h4>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {a.guarantor_evidence_url && (
+                          <a
+                            href={a.guarantor_evidence_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-3 rounded-lg border bg-background hover:bg-accent transition-colors text-sm"
+                          >
+                            <Eye className="h-4 w-4 text-primary flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">Guarantor Evidence</p>
+                              <p className="text-xs text-muted-foreground">Letter / Agreement</p>
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto flex-shrink-0" />
+                          </a>
+                        )}
+                        {a.bank_statement_url && (
+                          <a
+                            href={a.bank_statement_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-3 rounded-lg border bg-background hover:bg-accent transition-colors text-sm"
+                          >
+                            <Eye className="h-4 w-4 text-primary flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">Bank / MoMo Statement</p>
+                              <p className="text-xs text-muted-foreground">12+ months consistency</p>
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto flex-shrink-0" />
+                          </a>
+                        )}
+                        {a.social_support_evidence_url && (
+                          <a
+                            href={a.social_support_evidence_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-3 rounded-lg border bg-background hover:bg-accent transition-colors text-sm"
+                          >
+                            <Eye className="h-4 w-4 text-primary flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">Support Evidence</p>
+                              <p className="text-xs text-muted-foreground">Employer / Guarantor / Family</p>
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground ml-auto flex-shrink-0" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

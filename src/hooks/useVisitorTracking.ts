@@ -12,14 +12,35 @@ const generateSessionId = () => {
 };
 
 const detectDeviceType = () => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  if (/mobile|android|iphone|ipad|ipod|blackberry|windows phone/.test(userAgent)) {
-    return "mobile";
-  }
-  if (/tablet|ipad/.test(userAgent)) {
+  const ua = navigator.userAgent;
+  // Check tablet first (iPads, Android tablets, etc.)
+  if (/iPad|Android(?!.*Mobile)/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua))) {
     return "tablet";
   }
+  // Then check mobile
+  if (/Mobile|iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera Mini|Windows Phone/i.test(ua)) {
+    return "mobile";
+  }
   return "desktop";
+};
+
+const detectCountry = async (): Promise<string> => {
+  try {
+    const response = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
+    if (!response.ok) throw new Error("Failed");
+    const data = await response.json();
+    return data.country_name || "Unknown";
+  } catch {
+    try {
+      // Fallback API
+      const response = await fetch("https://ip-api.com/json/?fields=country", { signal: AbortSignal.timeout(3000) });
+      if (!response.ok) throw new Error("Failed");
+      const data = await response.json();
+      return data.country || "Unknown";
+    } catch {
+      return "Unknown";
+    }
+  }
 };
 
 const getSource = () => {
@@ -47,6 +68,7 @@ export const useVisitorTracking = () => {
       const sessionId = generateSessionId();
       const deviceType = detectDeviceType();
       const source = getSource();
+      const country = await detectCountry();
 
       try {
         const { data, error } = await supabase
@@ -56,6 +78,7 @@ export const useVisitorTracking = () => {
             page_path: location.pathname,
             device_type: deviceType,
             source: source,
+            country: country,
           })
           .select("id")
           .single();

@@ -77,6 +77,9 @@ interface Assessment {
   social_support_type: string | null;
   rent_burden_score: number | null;
   social_support_score: number | null;
+  guarantor_evidence_url: string | null;
+  bank_statement_url: string | null;
+  social_support_evidence_url: string | null;
 }
 
 interface ScoreHistoryRecord {
@@ -197,6 +200,14 @@ export default function FlexiScoreView() {
         setGuarantorCredibility((data as any).guarantor_credibility || "none");
         setRentDisputeHistory((data as any).rent_dispute_history ? "yes" : "no");
         setSocialSupportType((data as any).social_support_type || "none");
+        // Load persisted evidence URLs
+        const d = data as any;
+        setUploadedFiles(prev => ({
+          ...prev,
+          ...(d.guarantor_evidence_url ? { guarantor_evidence: d.guarantor_evidence_url } : {}),
+          ...(d.bank_statement_url ? { bank_statement: d.bank_statement_url } : {}),
+          ...(d.social_support_evidence_url ? { social_support_evidence: d.social_support_evidence_url } : {}),
+        }));
       }
     } catch (error) {
       console.error("Error fetching assessment:", error);
@@ -286,6 +297,9 @@ export default function FlexiScoreView() {
         tier: liveScore.tier,
         gov_id_verified: verificationStatus === "verified",
         verification_score: liveScore.verification_score,
+        guarantor_evidence_url: uploadedFiles.guarantor_evidence || null,
+        bank_statement_url: uploadedFiles.bank_statement || null,
+        social_support_evidence_url: uploadedFiles.social_support_evidence || null,
       };
 
       if (assessment) {

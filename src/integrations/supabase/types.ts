@@ -416,6 +416,7 @@ export type Database = {
       financial_assessments: {
         Row: {
           affordability_score: number | null
+          bank_statement_url: string | null
           bank_verified: boolean | null
           behaviour_score: number | null
           created_at: string
@@ -426,6 +427,7 @@ export type Database = {
           frozen_at: string | null
           gov_id_verified: boolean | null
           guarantor_credibility: string | null
+          guarantor_evidence_url: string | null
           has_prior_flexirent_history: boolean | null
           id: string
           income_category: string | null
@@ -443,6 +445,7 @@ export type Database = {
           rent_burden_score: number | null
           rent_dispute_history: boolean | null
           score_frozen: boolean | null
+          social_support_evidence_url: string | null
           social_support_score: number | null
           social_support_type: string | null
           target_rent: number | null
@@ -454,6 +457,7 @@ export type Database = {
         }
         Insert: {
           affordability_score?: number | null
+          bank_statement_url?: string | null
           bank_verified?: boolean | null
           behaviour_score?: number | null
           created_at?: string
@@ -464,6 +468,7 @@ export type Database = {
           frozen_at?: string | null
           gov_id_verified?: boolean | null
           guarantor_credibility?: string | null
+          guarantor_evidence_url?: string | null
           has_prior_flexirent_history?: boolean | null
           id?: string
           income_category?: string | null
@@ -481,6 +486,7 @@ export type Database = {
           rent_burden_score?: number | null
           rent_dispute_history?: boolean | null
           score_frozen?: boolean | null
+          social_support_evidence_url?: string | null
           social_support_score?: number | null
           social_support_type?: string | null
           target_rent?: number | null
@@ -492,6 +498,7 @@ export type Database = {
         }
         Update: {
           affordability_score?: number | null
+          bank_statement_url?: string | null
           bank_verified?: boolean | null
           behaviour_score?: number | null
           created_at?: string
@@ -502,6 +509,7 @@ export type Database = {
           frozen_at?: string | null
           gov_id_verified?: boolean | null
           guarantor_credibility?: string | null
+          guarantor_evidence_url?: string | null
           has_prior_flexirent_history?: boolean | null
           id?: string
           income_category?: string | null
@@ -519,6 +527,7 @@ export type Database = {
           rent_burden_score?: number | null
           rent_dispute_history?: boolean | null
           score_frozen?: boolean | null
+          social_support_evidence_url?: string | null
           social_support_score?: number | null
           social_support_type?: string | null
           target_rent?: number | null

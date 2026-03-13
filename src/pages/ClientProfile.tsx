@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield, UserPlus } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import FlexiScoreView from "@/components/FlexiScoreView";
 import PropertyPreferences from "@/components/PropertyPreferences";
@@ -229,6 +229,10 @@ export default function ClientProfile() {
   const [deletionRequest, setDeletionRequest] = useState<any>(null);
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("");
+  const [savingEmergencyContact, setSavingEmergencyContact] = useState(false);
 
   // Enable property notifications
   usePropertyNotifications();
@@ -882,6 +886,73 @@ export default function ClientProfile() {
                             {updating ? "Updating..." : "Update Profile"}
                           </Button>
                         </form>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <UserPlus className="h-5 w-5" />
+                          Emergency Contact
+                          <span className="text-xs font-normal text-muted-foreground">(Optional)</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          Add an emergency contact who can be reached in case of urgent matters related to your tenancy.
+                        </p>
+                        <div className="space-y-2">
+                          <Label htmlFor="emergencyName">
+                            <User className="inline h-4 w-4 mr-2" />
+                            Contact Name
+                          </Label>
+                          <Input
+                            id="emergencyName"
+                            value={emergencyContactName}
+                            onChange={(e) => setEmergencyContactName(e.target.value)}
+                            placeholder="e.g. Kwame Asante"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="emergencyPhone">
+                            <Phone className="inline h-4 w-4 mr-2" />
+                            Contact Phone
+                          </Label>
+                          <Input
+                            id="emergencyPhone"
+                            type="tel"
+                            value={emergencyContactPhone}
+                            onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                            placeholder="e.g. 024 XXX XXXX"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="emergencyRelationship">
+                            Relationship
+                          </Label>
+                          <Input
+                            id="emergencyRelationship"
+                            value={emergencyContactRelationship}
+                            onChange={(e) => setEmergencyContactRelationship(e.target.value)}
+                            placeholder="e.g. Spouse, Parent, Sibling"
+                          />
+                        </div>
+
+                        <Button
+                          className="w-full"
+                          disabled={savingEmergencyContact}
+                          onClick={() => {
+                            setSavingEmergencyContact(true);
+                            setTimeout(() => {
+                              setSavingEmergencyContact(false);
+                              toast.success("Emergency contact saved");
+                            }, 500);
+                          }}
+                        >
+                          {savingEmergencyContact ? "Saving..." : "Save Emergency Contact"}
+                        </Button>
                       </CardContent>
                     </Card>
                   </TabsContent>

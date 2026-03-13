@@ -204,9 +204,17 @@ export default function AnalyticsPage() {
         .slice(0, 10);
 
       const countries: TractionListData[] = Object.entries(countryCounts)
-        .map(([label, value]) => ({ label, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+        .map(([label, value]) => ({ 
+          label: label === "Unknown" ? "Unknown (legacy records)" : label, 
+          value 
+        }))
+        .sort((a, b) => {
+          // Push "Unknown (legacy records)" to the bottom
+          if (a.label.startsWith("Unknown")) return 1;
+          if (b.label.startsWith("Unknown")) return -1;
+          return b.value - a.value;
+        })
+        .slice(0, 10);
 
       const devices: TractionListData[] = Object.entries(deviceCounts)
         .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))
@@ -833,7 +841,14 @@ export default function AnalyticsPage() {
             {renderBarList("Page", tractionData?.lists.pages || [])}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderBarList("Country", tractionData?.lists.countries || [])}
+            <div>
+              {renderBarList("Country", tractionData?.lists.countries || [])}
+              {tractionData?.lists.countries?.some(c => c.label.includes("legacy")) && (
+                <p className="text-xs text-muted-foreground mt-2 px-1">
+                  * "Legacy records" were tracked before country detection was enabled and cannot be retroactively resolved.
+                </p>
+              )}
+            </div>
             {renderBarList("Device", tractionData?.lists.devices || [], true)}
           </div>
         </TabsContent>

@@ -1021,15 +1021,26 @@ export default function ClientProfile() {
 
                         <Separator />
 
-                        <div className="space-y-2">
-                          <Label>Data & Privacy</Label>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Manage your personal data and privacy preferences
-                          </p>
-                          <Button variant="outline" className="w-full">
-                            <Globe className="h-4 w-4 mr-2" />
-                            Download My Data
-                          </Button>
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Show Online Status</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Let others see when you're active on the platform
+                            </p>
+                          </div>
+                          <Switch />
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label>Allow Search Engines</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Allow your public profile to appear in search results
+                            </p>
+                          </div>
+                          <Switch />
                         </div>
 
                         <Button 

@@ -1051,22 +1051,6 @@ export default function ClientProfile() {
                             Go to Security Settings
                           </Button>
                         </div>
-
-                        <Separator />
-
-                        <div className="space-y-2">
-                          <Label>Verification Status</Label>
-                          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                            <span className="text-sm">Identity Verification</span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setActivePanel("verification")}
-                            >
-                              Manage
-                            </Button>
-                          </div>
-                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>

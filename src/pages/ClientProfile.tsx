@@ -229,6 +229,10 @@ export default function ClientProfile() {
   const [deletionRequest, setDeletionRequest] = useState<any>(null);
   const [deletionReason, setDeletionReason] = useState("");
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("");
+  const [savingEmergencyContact, setSavingEmergencyContact] = useState(false);
 
   // Enable property notifications
   usePropertyNotifications();

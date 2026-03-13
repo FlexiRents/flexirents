@@ -841,7 +841,14 @@ export default function AnalyticsPage() {
             {renderBarList("Page", tractionData?.lists.pages || [])}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderBarList("Country", tractionData?.lists.countries || [])}
+            <div>
+              {renderBarList("Country", tractionData?.lists.countries || [])}
+              {tractionData?.lists.countries?.some(c => c.label.includes("legacy")) && (
+                <p className="text-xs text-muted-foreground mt-2 px-1">
+                  * "Legacy records" were tracked before country detection was enabled and cannot be retroactively resolved.
+                </p>
+              )}
+            </div>
             {renderBarList("Device", tractionData?.lists.devices || [], true)}
           </div>
         </TabsContent>

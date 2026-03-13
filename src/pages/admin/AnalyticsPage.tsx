@@ -204,9 +204,17 @@ export default function AnalyticsPage() {
         .slice(0, 10);
 
       const countries: TractionListData[] = Object.entries(countryCounts)
-        .map(([label, value]) => ({ label, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+        .map(([label, value]) => ({ 
+          label: label === "Unknown" ? "Unknown (legacy records)" : label, 
+          value 
+        }))
+        .sort((a, b) => {
+          // Push "Unknown (legacy records)" to the bottom
+          if (a.label.startsWith("Unknown")) return 1;
+          if (b.label.startsWith("Unknown")) return -1;
+          return b.value - a.value;
+        })
+        .slice(0, 10);
 
       const devices: TractionListData[] = Object.entries(deviceCounts)
         .map(([label, value]) => ({ label: label.charAt(0).toUpperCase() + label.slice(1), value }))

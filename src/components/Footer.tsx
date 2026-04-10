@@ -147,11 +147,6 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/flexi-assist" className="hover:text-accent transition-colors" onClick={scrollToTop}>
-                  Flexi-Assist Services
-                </Link>
-              </li>
-              <li>
                 <Link to="/marketplace" className="hover:text-accent transition-colors" onClick={scrollToTop}>
                   Market Place
                 </Link>

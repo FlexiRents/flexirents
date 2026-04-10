@@ -37,20 +37,12 @@ const Navbar = () => {
             <Link to="/sales" className="text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
               For Sale
             </Link>
-            <Link to="/flexi-assist" className="text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
-              Flexi-Assist
-            </Link>
             <Link to="/list-property" className="text-foreground hover:text-accent transition-colors" onClick={scrollToTop}>
               List Property
             </Link>
             {isAdmin && (
               <Link to="/admin" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
                 Admin
-              </Link>
-            )}
-            {isServiceProvider && (
-              <Link to="/service-provider-dashboard" className="text-foreground hover:text-accent transition-colors font-semibold" onClick={scrollToTop}>
-                Provider Panel
               </Link>
             )}
             {isVendor && (
@@ -113,13 +105,6 @@ const Navbar = () => {
                 For Sale
               </Link>
               <Link
-                to="/flexi-assist"
-                className="text-foreground hover:text-accent transition-colors"
-                onClick={() => { setIsOpen(false); scrollToTop(); }}
-              >
-                Flexi-Assist
-              </Link>
-              <Link
                 to="/list-property"
                 className="text-foreground hover:text-accent transition-colors"
                 onClick={() => { setIsOpen(false); scrollToTop(); }}
@@ -133,15 +118,6 @@ const Navbar = () => {
                   onClick={() => { setIsOpen(false); scrollToTop(); }}
                 >
                   Admin
-                </Link>
-              )}
-              {isServiceProvider && (
-                <Link
-                  to="/service-provider-dashboard"
-                  className="text-foreground hover:text-accent transition-colors font-semibold"
-                  onClick={() => { setIsOpen(false); scrollToTop(); }}
-                >
-                  Provider Panel
                 </Link>
               )}
               {isVendor && (

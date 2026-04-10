@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Car, Heart as HeartIcon, Sparkles, ChevronLeft, ChevronRight, Monitor, Hammer, Sofa, Wrench } from "lucide-react";
+import { ArrowRight, Building2, Home, Users, CheckCircle, Search, Sparkles, ChevronLeft, ChevronRight, Monitor, Hammer, Sofa, Wrench } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import ServiceCard from "@/components/ServiceCard";
+
 import VendorCard from "@/components/VendorCard";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,29 +117,6 @@ const featuredSales = [
   },
 ];
 
-const featuredServices = [
-  {
-    id: 1,
-    icon: <Car className="h-7 w-7" />,
-    title: "Professional Driver",
-    description: "Experienced and reliable drivers for your daily commute or special occasions.",
-    rate: "$25",
-  },
-  {
-    id: 2,
-    icon: <HeartIcon className="h-7 w-7" />,
-    title: "Elderly Caregiver",
-    description: "Compassionate caregivers providing quality care for your loved ones.",
-    rate: "$20",
-  },
-  {
-    id: 3,
-    icon: <Sparkles className="h-7 w-7" />,
-    title: "Housekeeper",
-    description: "Professional housekeeping services to keep your home spotless.",
-    rate: "$18",
-  },
-];
 
 const vendorCategories = [
   {
@@ -183,8 +160,6 @@ const Index = () => {
   const [saleProperties, setSaleProperties] = useState<any[]>([]);
   const [loadingRentals, setLoadingRentals] = useState(true);
   const [loadingSales, setLoadingSales] = useState(true);
-  const [services, setServices] = useState<any[]>([]);
-  const [loadingServices, setLoadingServices] = useState(true);
   const [vendorCategories, setVendorCategories] = useState<any[]>([]);
   const [loadingVendors, setLoadingVendors] = useState(true);
 
@@ -279,34 +254,6 @@ const Index = () => {
     fetchSales();
   }, []);
 
-  // Fetch service providers
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('service_provider_registrations')
-          .select('*')
-          .eq('status', 'approved')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setServices(data);
-        } else {
-          setServices(featuredServices);
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        setServices(featuredServices);
-      } finally {
-        setLoadingServices(false);
-      }
-    };
-
-    fetchServices();
-  }, []);
 
   // Fetch vendor categories with counts
   useEffect(() => {
@@ -608,47 +555,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Flexi-Assist Services Section */}
-      <section className="py-10 bg-muted/50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Flexi-Assist Services</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Personal assistance from drivers to caregivers. Get help when you need it.
-            </p>
-          </div>
-
-          {loadingServices ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-muted-foreground">Loading services...</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid md:grid-cols-3 gap-8 mb-8">
-                {services.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    id={service.id}
-                    title={service.provider_name || service.title}
-                    description={service.description}
-                    rate={service.hourly_rate || service.rate}
-                    icon={service.icon || <Sparkles className="h-7 w-7" />}
-                    onSelect={() => navigate("/flexi-assist")}
-                  />
-                ))}
-              </div>
-
-              <div className="text-center">
-                <Button variant="default" size="lg" asChild>
-                  <Link to="/flexi-assist">
-                    Book Services <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
 
       {/* Marketplace Section */}
       <section className="py-10 bg-background">
@@ -775,7 +681,7 @@ const Index = () => {
                 ))}
               </div>
               <p className="text-foreground mb-6 leading-relaxed">
-                "The Flexi-Assist service is a lifesaver! Having a reliable driver and caregiver on demand has made managing my busy schedule so much easier."
+                "FlexiRents made finding my dream home incredibly easy. The platform is intuitive and the support team was always responsive."
               </p>
               <div className="flex items-center gap-3 pt-4 border-t border-border/50">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center font-bold text-accent text-lg">
@@ -783,7 +689,7 @@ const Index = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">Emeka Afolabi</p>
-                  <p className="text-sm text-muted-foreground">Flexi-Assist Client</p>
+                  <p className="text-sm text-muted-foreground">Happy Tenant</p>
                 </div>
               </div>
             </div>
@@ -818,9 +724,9 @@ const Index = () => {
               <div className="flex gap-3">
                 <CheckCircle className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
                 <div>
-                  <h4 className="font-semibold mb-1">Vetted Service Providers</h4>
+                  <h4 className="font-semibold mb-1">Vetted Vendors</h4>
                   <p className="text-muted-foreground text-sm">
-                    All Flexi-Assist professionals are background-checked and rated.
+                    All marketplace vendors are verified and rated by the community.
                   </p>
                 </div>
               </div>
@@ -843,7 +749,7 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-4 text-white">Ready to Get Started?</h2>
           <p className="text-xl mb-8 text-white/90 max-w-2xl mx-auto">
-            Whether you're looking for a property or need assistance services, FlexiRents has you covered.
+            Whether you're looking to rent, buy, or explore the marketplace, FlexiRents has you covered.
           </p>
         </div>
       </section>

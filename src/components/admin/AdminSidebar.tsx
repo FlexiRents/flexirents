@@ -40,7 +40,7 @@ const menuItems = [
   { title: "Financial Reports", url: "/admin/financial-reports", icon: FileBarChart },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Verification", url: "/admin/verification", icon: ShieldCheck },
-  { title: "Service Providers", url: "/admin/service-providers", icon: Briefcase },
+  
   { title: "Vendors", url: "/admin/vendors", icon: Store },
   { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },

@@ -59,13 +59,13 @@ export const RoleSelector = () => {
           </div>
           <CardTitle>Property Buyer/Renter</CardTitle>
           <CardDescription>
-            Access to property listings, bookings, and FlexiAssist services
+            Access to property listings, bookings, and marketplace services
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="space-y-2 text-sm text-muted-foreground mb-4">
             <li>✓ Browse and save properties</li>
-            <li>✓ Book FlexiAssist services</li>
+            <li>✓ Browse marketplace products</li>
             <li>✓ Manage bookings and requests</li>
             <li>✓ Leave reviews</li>
           </ul>
@@ -75,35 +75,6 @@ export const RoleSelector = () => {
         </CardContent>
       </Card>
 
-      <Card className={isServiceProvider ? "border-accent" : ""}>
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <Briefcase className="h-8 w-8 text-accent" />
-            <Badge variant={isServiceProvider ? "secondary" : "outline"}>
-              {isServiceProvider ? "Active" : "Available"}
-            </Badge>
-          </div>
-          <CardTitle>Service Provider</CardTitle>
-          <CardDescription>
-            Offer your services and manage appointments
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-            <li>✓ Register as a service provider</li>
-            <li>✓ Manage availability calendar</li>
-            <li>✓ Accept booking requests</li>
-            <li>✓ Build your reputation</li>
-          </ul>
-          <Button 
-            onClick={() => handleAddRole('service_provider')}
-            disabled={loading || isServiceProvider}
-            className="w-full"
-          >
-            {isServiceProvider ? "Already Registered" : loading ? "Adding..." : "Become a Service Provider"}
-          </Button>
-        </CardContent>
-      </Card>
 
       <Card className={isVendor ? "border-accent" : ""}>
         <CardHeader>

@@ -151,6 +151,11 @@ const Footer = () => {
                   Market Place
                 </Link>
               </li>
+              <li>
+                <Link to="/projects" className="hover:text-accent transition-colors" onClick={scrollToTop}>
+                  Projects
+                </Link>
+              </li>
             </ul>
           </div>
 

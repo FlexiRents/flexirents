@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

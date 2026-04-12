@@ -85,6 +85,7 @@ const App = () => (
                 <Route path="/install" element={<Install />} />
                 <Route path="/shared/:shareToken" element={<SharedDocument />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/projects" element={<Projects />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>

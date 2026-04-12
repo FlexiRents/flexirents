@@ -780,6 +780,10 @@ export default function ClientProfile() {
               <MyRents />
             )}
 
+            {activePanel === "projects" && (
+              <MyProjects />
+            )}
+
             {activePanel === "billing" && (
               <RentalBillingHistory />
             )}

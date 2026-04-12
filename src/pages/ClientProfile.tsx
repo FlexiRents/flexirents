@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
-import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield, UserPlus } from "lucide-react";
+import { User, Mail, Phone, LogOut, Settings, LayoutDashboard, FileText, MapPin, ShieldCheck, Bell, Lock, Trash2, Globe, Moon, Sun, Award, Medal, Trophy, Crown, Star, Camera, Home as HomeIcon, Shield, UserPlus, Building2 } from "lucide-react";
 import VerificationForm from "@/components/VerificationForm";
 import FlexiScoreView from "@/components/FlexiScoreView";
 import PropertyPreferences from "@/components/PropertyPreferences";
@@ -27,6 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import { formatDistanceToNow } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MyRents } from "@/components/MyRents";
+import MyProjects from "@/components/MyProjects";
 import {
   Sidebar,
   SidebarContent,
@@ -52,11 +53,12 @@ interface VerificationStatus {
   status: string;
 }
 
-type ActivePanel = "dashboard" | "rents" | "billing" | "verification" | "preferences" | "settings";
+type ActivePanel = "dashboard" | "rents" | "projects" | "billing" | "verification" | "preferences" | "settings";
 
 const menuItems = [
   { id: "dashboard" as ActivePanel, title: "Dashboard", icon: LayoutDashboard },
   { id: "rents" as ActivePanel, title: "My Rents", icon: HomeIcon },
+  { id: "projects" as ActivePanel, title: "My Projects", icon: Building2 },
   { id: "billing" as ActivePanel, title: "Billing History", icon: FileText },
   { id: "verification" as ActivePanel, title: "Verification", icon: ShieldCheck },
   { id: "preferences" as ActivePanel, title: "Property Alerts", icon: Bell },
@@ -776,6 +778,10 @@ export default function ClientProfile() {
 
             {activePanel === "rents" && (
               <MyRents />
+            )}
+
+            {activePanel === "projects" && (
+              <MyProjects />
             )}
 
             {activePanel === "billing" && (

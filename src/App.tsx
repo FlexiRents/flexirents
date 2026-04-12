@@ -28,6 +28,7 @@ import Documents from "./pages/Documents";
 import Install from "./pages/Install";
 import SharedDocument from "./pages/SharedDocument";
 import Pricing from "./pages/Pricing";
+import Projects from "./pages/Projects";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";

@@ -28,6 +28,8 @@ import Documents from "./pages/Documents";
 import Install from "./pages/Install";
 import SharedDocument from "./pages/SharedDocument";
 import Pricing from "./pages/Pricing";
+import Projects from "./pages/Projects";
+import ClientProjectsPage from "./pages/ClientProjectsPage";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -40,6 +42,7 @@ import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
 import CurrencyManagement from "./pages/admin/CurrencyManagement";
 import FinancialReportsPage from "./pages/admin/FinancialReportsPage";
+import AdminProjectsDashboardPage from "./pages/admin/AdminProjectsDashboard";
 import PaymentApprovalManagement from "./pages/admin/PaymentApprovalManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";
@@ -84,6 +87,8 @@ const App = () => (
                 <Route path="/install" element={<Install />} />
                 <Route path="/shared/:shareToken" element={<SharedDocument />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/account/projects" element={<ClientProjectsPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>
@@ -98,6 +103,7 @@ const App = () => (
                   <Route path="reviews" element={<ReviewsManagement />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="currency-rates" element={<CurrencyManagement />} />
+                  <Route path="projects" element={<AdminProjectsDashboardPage />} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

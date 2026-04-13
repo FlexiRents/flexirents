@@ -184,6 +184,75 @@ export type Database = {
           },
         ]
       }
+      construction_projects: {
+        Row: {
+          budget_ghs: number
+          client_id: string | null
+          created_at: string
+          current_phase: number
+          current_phase_name: string
+          current_phase_percent: number
+          estimated_completion: string | null
+          id: string
+          is_public: boolean
+          location: string
+          name: string
+          neighbourhood: string
+          overall_percent: number
+          public_description: string | null
+          spent_ghs: number
+          start_date: string | null
+          status: string
+          total_phases: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          budget_ghs?: number
+          client_id?: string | null
+          created_at?: string
+          current_phase?: number
+          current_phase_name?: string
+          current_phase_percent?: number
+          estimated_completion?: string | null
+          id?: string
+          is_public?: boolean
+          location: string
+          name: string
+          neighbourhood?: string
+          overall_percent?: number
+          public_description?: string | null
+          spent_ghs?: number
+          start_date?: string | null
+          status?: string
+          total_phases?: number
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          budget_ghs?: number
+          client_id?: string | null
+          created_at?: string
+          current_phase?: number
+          current_phase_name?: string
+          current_phase_percent?: number
+          estimated_completion?: string | null
+          id?: string
+          is_public?: boolean
+          location?: string
+          name?: string
+          neighbourhood?: string
+          overall_percent?: number
+          public_description?: string | null
+          spent_ghs?: number
+          start_date?: string | null
+          status?: string
+          total_phases?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       currency_rates: {
         Row: {
           created_at: string | null
@@ -718,6 +787,45 @@ export type Database = {
         }
         Relationships: []
       }
+      phase_experts: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          expert_id: string
+          id: string
+          phase_id: string
+        }
+        Insert: {
+          assigned_by?: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          phase_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          phase_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_experts_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "project_experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phase_experts_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "project_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_images: {
         Row: {
           category: string | null
@@ -793,6 +901,520 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      project_automation_events: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          description: string
+          id: string
+          metadata: Json
+          project_id: string | null
+          rule_id: string | null
+          success: boolean
+          timestamp: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json
+          project_id?: string | null
+          rule_id?: string | null
+          success?: boolean
+          timestamp?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json
+          project_id?: string | null
+          rule_id?: string | null
+          success?: boolean
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_automation_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "project_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_automation_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_automation_events_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "project_automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_automation_rules: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          enabled: boolean
+          fire_count: number
+          id: string
+          last_fired_at: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          fire_count?: number
+          id?: string
+          last_fired_at?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          enabled?: boolean
+          fire_count?: number
+          id?: string
+          last_fired_at?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_clients: {
+        Row: {
+          client_type: string
+          country: string
+          created_at: string
+          email: string
+          flag: string
+          id: string
+          location: string
+          name: string
+          payment_status: string
+          portal_active: boolean
+          satisfaction_rating: number | null
+          updated_at: string
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          client_type?: string
+          country?: string
+          created_at?: string
+          email: string
+          flag?: string
+          id?: string
+          location?: string
+          name: string
+          payment_status?: string
+          portal_active?: boolean
+          satisfaction_rating?: number | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          client_type?: string
+          country?: string
+          created_at?: string
+          email?: string
+          flag?: string
+          id?: string
+          location?: string
+          name?: string
+          payment_status?: string
+          portal_active?: boolean
+          satisfaction_rating?: number | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      project_documents: {
+        Row: {
+          auto_generated: boolean
+          client_id: string | null
+          created_at: string
+          id: string
+          name: string
+          project_id: string
+          size_kb: number
+          type: string
+          uploaded_at: string
+          url: string
+        }
+        Insert: {
+          auto_generated?: boolean
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          project_id: string
+          size_kb?: number
+          type?: string
+          uploaded_at?: string
+          url?: string
+        }
+        Update: {
+          auto_generated?: boolean
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          project_id?: string
+          size_kb?: number
+          type?: string
+          uploaded_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "project_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_experts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phase_group: string
+          required: boolean
+          role: string
+          unit_types: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phase_group?: string
+          required?: boolean
+          role: string
+          unit_types?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phase_group?: string
+          required?: boolean
+          role?: string
+          unit_types?: string[]
+        }
+        Relationships: []
+      }
+      project_payments: {
+        Row: {
+          amount_ghs: number
+          client_id: string | null
+          created_at: string
+          id: string
+          invoice_sent_date: string | null
+          paid_date: string | null
+          paid_via: string | null
+          payment_trigger: string | null
+          phase_name: string
+          project_id: string
+          receipt_auto_generated: boolean
+          receipt_sent_date: string | null
+          status: string
+          tranche_number: number
+          updated_at: string
+        }
+        Insert: {
+          amount_ghs?: number
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_sent_date?: string | null
+          paid_date?: string | null
+          paid_via?: string | null
+          payment_trigger?: string | null
+          phase_name?: string
+          project_id: string
+          receipt_auto_generated?: boolean
+          receipt_sent_date?: string | null
+          status?: string
+          tranche_number?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_ghs?: number
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          invoice_sent_date?: string | null
+          paid_date?: string | null
+          paid_via?: string | null
+          payment_trigger?: string | null
+          phase_name?: string
+          project_id?: string
+          receipt_auto_generated?: boolean
+          receipt_sent_date?: string | null
+          status?: string
+          tranche_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "project_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_phases: {
+        Row: {
+          budget_ghs: number
+          completion_date: string | null
+          created_at: string
+          id: string
+          invoice_auto_generated: boolean
+          name: string
+          number: number
+          payment_trigger: string | null
+          percent_complete: number
+          project_id: string
+          sign_off_date: string | null
+          signed_off_by: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget_ghs?: number
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          invoice_auto_generated?: boolean
+          name: string
+          number: number
+          payment_trigger?: string | null
+          percent_complete?: number
+          project_id: string
+          sign_off_date?: string | null
+          signed_off_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget_ghs?: number
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          invoice_auto_generated?: boolean
+          name?: string
+          number?: number
+          payment_trigger?: string | null
+          percent_complete?: number
+          project_id?: string
+          sign_off_date?: string | null
+          signed_off_by?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_phases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_risks: {
+        Row: {
+          auto_alert_enabled: boolean
+          created_at: string
+          description: string
+          id: string
+          level: string
+          mitigation: string
+          owner: string
+          project_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_alert_enabled?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          level?: string
+          mitigation?: string
+          owner?: string
+          project_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_alert_enabled?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          level?: string
+          mitigation?: string
+          owner?: string
+          project_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_risks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_site_updates: {
+        Row: {
+          attachment_url: string | null
+          author: string
+          auto_generated: boolean
+          body: string
+          created_at: string
+          id: string
+          photo_urls: string[]
+          project_id: string
+          timestamp: string
+          title: string
+          type: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          author?: string
+          auto_generated?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          photo_urls?: string[]
+          project_id: string
+          timestamp?: string
+          title: string
+          type?: string
+        }
+        Update: {
+          attachment_url?: string | null
+          author?: string
+          auto_generated?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          photo_urls?: string[]
+          project_id?: string
+          timestamp?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_site_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "construction_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_submissions: {
+        Row: {
+          admin_notes: string | null
+          budget_range: string | null
+          completion_target: string | null
+          created_at: string
+          design_style: string | null
+          expert_selections: Json
+          finishes_level: string
+          id: string
+          land_ownership: string
+          project_name: string
+          special_requirements: string | null
+          status: string
+          unit_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          budget_range?: string | null
+          completion_target?: string | null
+          created_at?: string
+          design_style?: string | null
+          expert_selections?: Json
+          finishes_level?: string
+          id?: string
+          land_ownership?: string
+          project_name: string
+          special_requirements?: string | null
+          status?: string
+          unit_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          budget_range?: string | null
+          completion_target?: string | null
+          created_at?: string
+          design_style?: string | null
+          expert_selections?: Json
+          finishes_level?: string
+          id?: string
+          land_ownership?: string
+          project_name?: string
+          special_requirements?: string | null
+          status?: string
+          unit_type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

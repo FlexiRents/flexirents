@@ -86,6 +86,8 @@ const App = () => (
                 <Route path="/install" element={<Install />} />
                 <Route path="/shared/:shareToken" element={<SharedDocument />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/account/projects" element={<ClientProjectsPage />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>
@@ -100,6 +102,7 @@ const App = () => (
                   <Route path="reviews" element={<ReviewsManagement />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="currency-rates" element={<CurrencyManagement />} />
+                  <Route path="projects" element={<AdminProjectsDashboardPage />} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

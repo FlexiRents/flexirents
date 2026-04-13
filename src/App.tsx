@@ -42,6 +42,7 @@ import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import VerificationManagement from "./pages/admin/VerificationManagement";
 import CurrencyManagement from "./pages/admin/CurrencyManagement";
 import FinancialReportsPage from "./pages/admin/FinancialReportsPage";
+import AdminProjectsDashboardPage from "./pages/admin/AdminProjectsDashboard";
 import PaymentApprovalManagement from "./pages/admin/PaymentApprovalManagement";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgressIndicator } from "./components/ScrollProgressIndicator";

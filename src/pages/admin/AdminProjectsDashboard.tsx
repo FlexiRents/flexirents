@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { ProjectStatusBadge } from "@/components/projects/ProjectStatusBadge";
 import { PhaseProgressBar } from "@/components/projects/PhaseProgressBar";
-import { AutomationTag } from "@/components/projects/AutomationTag";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

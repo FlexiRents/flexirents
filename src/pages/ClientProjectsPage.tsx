@@ -6,7 +6,6 @@ import { Navigate } from "react-router-dom";
 import { PhaseProgressBar } from "@/components/projects/PhaseProgressBar";
 import { PhaseTimeline } from "@/components/projects/PhaseTimeline";
 import { ProjectStatusBadge } from "@/components/projects/ProjectStatusBadge";
-import { AutomationTag } from "@/components/projects/AutomationTag";
 import { ExpertDropdownBlock } from "@/components/projects/ExpertDropdownBlock";
 import { getExpertsForUnitType, UnitType } from "@/data/projectExperts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -201,13 +200,12 @@ const ClientDashboard = ({ userId }: { userId: string }) => {
                  u.type === 'advisory' ? <AlertTriangle className="h-4 w-4" /> :
                  <FileCheck className="h-4 w-4" />}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-white/80 truncate">{u.title}</p>
-                  {u.auto_generated && <AutomationTag />}
-                </div>
-                <p className="text-xs text-white/40 mt-0.5">{new Date(u.timestamp).toLocaleDateString()}</p>
-              </div>
+               <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-2">
+                   <p className="text-sm font-medium text-white/80 truncate">{u.title}</p>
+                 </div>
+                 <p className="text-xs text-white/40 mt-0.5">{new Date(u.timestamp).toLocaleDateString()}</p>
+               </div>
             </div>
           ))}
         </CardContent>
@@ -420,21 +418,20 @@ const ClientDocuments = ({ userId }: { userId: string }) => {
         <Card className="border-0" style={{ backgroundColor: '#1C1916' }}>
           <CardHeader><CardTitle className="text-sm text-white/80">Receipts & Photos</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {receipts.map(d => (
-              <div key={d.id} className="flex items-center justify-between p-2 rounded hover:bg-white/5">
-                <div className="flex items-center gap-2">
-                  {d.type === 'photos' ? <Camera className="h-4 w-4 text-purple-400" /> : <FileCheck className="h-4 w-4 text-green-400" />}
-                  <div>
-                    <p className="text-sm text-white/80">{d.name}</p>
-                    <p className="text-[10px] text-white/30">{d.size_kb > 0 ? `${(d.size_kb / 1024).toFixed(1)} MB` : ''} · {new Date(d.uploaded_at).toLocaleDateString()}</p>
-                  </div>
-                  {d.auto_generated && <AutomationTag />}
-                </div>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-white/40 hover:text-white">
-                  <Download className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
+             {receipts.map(d => (
+               <div key={d.id} className="flex items-center justify-between p-2 rounded hover:bg-white/5">
+                 <div className="flex items-center gap-2">
+                   {d.type === 'photos' ? <Camera className="h-4 w-4 text-purple-400" /> : <FileCheck className="h-4 w-4 text-green-400" />}
+                   <div>
+                     <p className="text-sm text-white/80">{d.name}</p>
+                     <p className="text-[10px] text-white/30">{d.size_kb > 0 ? `${(d.size_kb / 1024).toFixed(1)} MB` : ''} · {new Date(d.uploaded_at).toLocaleDateString()}</p>
+                   </div>
+                 </div>
+                 <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-white/40 hover:text-white">
+                   <Download className="h-3.5 w-3.5" />
+                 </Button>
+               </div>
+             ))}
             {receipts.length === 0 && <p className="text-xs text-white/30">No receipts yet.</p>}
           </CardContent>
         </Card>
@@ -473,12 +470,11 @@ const ClientSiteUpdates = ({ userId }: { userId: string }) => {
                    u.type === 'advisory' ? <AlertTriangle className="h-5 w-5" /> :
                    <FileCheck className="h-5 w-5" />}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-semibold text-white/90">{u.title}</h3>
-                    {u.auto_generated && <AutomationTag />}
-                  </div>
-                  <p className="text-xs text-white/40 mb-2">{new Date(u.timestamp).toLocaleString()} · {u.author}</p>
+                 <div className="flex-1">
+                   <div className="flex items-center gap-2 mb-1">
+                     <h3 className="text-sm font-semibold text-white/90">{u.title}</h3>
+                   </div>
+                   <p className="text-xs text-white/40 mb-2">{new Date(u.timestamp).toLocaleString()} · {u.author}</p>
                   <p className="text-sm text-white/60">{u.body}</p>
                   {u.photo_urls && u.photo_urls.length > 0 && (
                     <div className="grid grid-cols-4 gap-2 mt-3">

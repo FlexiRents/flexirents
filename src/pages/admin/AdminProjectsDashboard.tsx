@@ -317,7 +317,6 @@ const AdminOverview = () => {
                   <div>
                     <p className="text-xs text-white/70">{e.description}</p>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <AutomationTag />
                       <span className="text-[10px] text-white/20">{new Date(e.timestamp).toLocaleTimeString()}</span>
                     </div>
                   </div>
@@ -522,7 +521,7 @@ const AdminRiskRegister = () => {
           <table className="w-full text-xs">
             <thead><tr className="border-b border-white/5 text-white/30">
               <th className="text-left p-3">Risk</th><th className="text-left p-3">Level</th><th className="text-left p-3">Mitigation</th>
-              <th className="text-left p-3">Owner</th><th className="text-left p-3">Auto</th><th className="text-left p-3">Status</th>
+              <th className="text-left p-3">Owner</th><th className="text-left p-3">Status</th>
             </tr></thead>
             <tbody>
               {risks.map(r => (
@@ -536,7 +535,6 @@ const AdminRiskRegister = () => {
                   </td>
                   <td className="p-3 text-white/50 max-w-[200px]">{r.mitigation}</td>
                   <td className="p-3 text-white/60">{r.owner}</td>
-                  <td className="p-3">{r.auto_alert_enabled ? <AutomationTag label="AUTO ✓" /> : <span className="text-white/20 text-[10px]">Manual</span>}</td>
                   <td className="p-3">
                     <Badge className={`text-[10px] ${
                       r.status === 'active' ? 'bg-red-500/15 text-red-400' :

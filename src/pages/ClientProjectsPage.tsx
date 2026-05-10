@@ -6,7 +6,6 @@ import { Navigate } from "react-router-dom";
 import { PhaseProgressBar } from "@/components/projects/PhaseProgressBar";
 import { PhaseTimeline } from "@/components/projects/PhaseTimeline";
 import { ProjectStatusBadge } from "@/components/projects/ProjectStatusBadge";
-import { AutomationTag } from "@/components/projects/AutomationTag";
 import { ExpertDropdownBlock } from "@/components/projects/ExpertDropdownBlock";
 import { getExpertsForUnitType, UnitType } from "@/data/projectExperts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
